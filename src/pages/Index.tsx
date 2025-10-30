@@ -1,17 +1,18 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Play, Trophy, Swords, Sparkles, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import i18n from "@/data/i18n.en.json";
 
 const Index = () => {
-  const menuItems = [
-    { icon: Play, label: i18n.quick_play, path: "/quick-play", gradient: "from-primary to-accent" },
-    { icon: Swords, label: i18n.campaign, path: "/campaign", gradient: "from-accent to-primary" },
-    { icon: Shield, label: i18n.horde, path: "/horde", gradient: "from-secondary to-accent" },
-    { icon: Trophy, label: i18n.leaderboards, path: "/leaderboards", gradient: "from-accent to-secondary" },
-    { icon: Sparkles, label: i18n.legends, path: "/legends", gradient: "from-primary to-secondary" },
-    { icon: Settings, label: i18n.settings, path: "/settings", gradient: "from-muted-foreground to-muted-foreground" },
-  ];
+  const menuItems = useMemo(() => [
+    { icon: Play, label: i18n.quick_play, path: "/quick-play", gradient: "from-primary to-accent", ariaLabel: "Navigate to Quick Play mode" },
+    { icon: Swords, label: i18n.campaign, path: "/campaign", gradient: "from-accent to-primary", ariaLabel: "Navigate to Campaign mode" },
+    { icon: Shield, label: i18n.horde, path: "/horde", gradient: "from-secondary to-accent", ariaLabel: "Navigate to Horde mode" },
+    { icon: Trophy, label: i18n.leaderboards, path: "/leaderboards", gradient: "from-accent to-secondary", ariaLabel: "View Leaderboards" },
+    { icon: Sparkles, label: i18n.legends, path: "/legends", gradient: "from-primary to-secondary", ariaLabel: "View Legends and Cosmetics" },
+    { icon: Settings, label: i18n.settings, path: "/settings", gradient: "from-muted-foreground to-muted-foreground", ariaLabel: "Open Settings" },
+  ], []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -57,25 +58,25 @@ const Index = () => {
         </div>
 
         {/* Menu Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <nav className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="navigation" aria-label="Main navigation">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
-              <Link key={item.path} to={item.path}>
+              <Link key={item.path} to={item.path} aria-label={item.ariaLabel}>
                 <Button
                   variant="outline"
-                  className="w-full h-32 relative overflow-hidden group border-border hover:border-primary/50 transition-all duration-300"
+                  className="w-full h-32 relative overflow-hidden group border-border hover:border-primary/50 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <div className="relative z-10 flex flex-col items-center gap-3">
-                    <Icon className="w-8 h-8" />
+                    <Icon className="w-8 h-8" aria-hidden="true" />
                     <span className="text-lg font-bold">{item.label}</span>
                   </div>
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} aria-hidden="true"></div>
                 </Button>
               </Link>
             );
           })}
-        </div>
+        </nav>
 
         {/* Footer */}
         <div className="mt-12 text-center">
