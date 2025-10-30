@@ -1,0 +1,39 @@
+{
+  "classes": [
+    {
+      "id": "vanguard",
+      "name": "Vanguard",
+      "role": "tank",
+      "description": "Front-line defender with crowd control",
+      "abilities": ["dash", "shield_wall", "stun_bash"]
+    },
+    {
+      "id": "striker",
+      "name": "Striker",
+      "role": "dps",
+      "description": "High-damage assassin with mobility",
+      "abilities": ["blink", "chain_crit", "grenade"]
+    },
+    {
+      "id": "tactician",
+      "name": "Tactician",
+      "role": "utility",
+      "description": "Area control specialist",
+      "abilities": ["turret", "decoy", "slow_field"]
+    },
+    {
+      "id": "support",
+      "name": "Support",
+      "role": "healer",
+      "description": "Team sustain and protection",
+      "abilities": ["heal_pulse", "cleanse", "barrier"]
+    },
+    {
+      "id": "wildcard",
+      "name": "Wildcard",
+      "role": "chaos",
+      "description": "Unpredictable powerhouse",
+      "abilities": ["random_ultimate", "gadget_swap"]
+    }
+  ]
+}

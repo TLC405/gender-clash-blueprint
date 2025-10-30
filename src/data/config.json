@@ -1,0 +1,27 @@
+{
+  "sides": ["men", "women"],
+  "defaultTeamSize": 5,
+  "matchSeconds": 240,
+  "score": {
+    "ko": 50,
+    "assist": 20,
+    "objPerSecond": 5,
+    "streakStep": 10
+  },
+  "respawn": {
+    "base": 5,
+    "min": 2,
+    "leadReducePerTier": 1
+  },
+  "ai": {
+    "bots": true,
+    "difficulty": "adaptive"
+  },
+  "cosmetics": {
+    "allowCrossSide": false
+  },
+  "leaderboards": {
+    "splitBySide": true,
+    "global": true
+  }
+}

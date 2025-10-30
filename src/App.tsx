@@ -4,6 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import QuickPlay from "./pages/QuickPlay";
+import Campaign from "./pages/Campaign";
+import Horde from "./pages/Horde";
+import Leaderboards from "./pages/Leaderboards";
+import Legends from "./pages/Legends";
+import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -16,6 +23,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/quick-play" element={<QuickPlay />} />
+          <Route path="/campaign" element={<Campaign />} />
+          <Route path="/horde" element={<Horde />} />
+          <Route path="/leaderboards" element={<Leaderboards />} />
+          <Route path="/legends" element={<Legends />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

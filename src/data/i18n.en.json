@@ -1,0 +1,23 @@
+{
+  "title": "MEN vs WOMEN",
+  "subtitle": "TLC Battle Arena",
+  "cta_pick_side": "Pick your side",
+  "side_men": "Men",
+  "side_women": "Women",
+  "quick_play": "Quick Play",
+  "campaign": "Campaign",
+  "horde": "Horde",
+  "leaderboards": "Leaderboards",
+  "legends": "Legends & Cosmetics",
+  "admin": "Admin",
+  "settings": "Settings",
+  "victory_men": "Men take the win!",
+  "victory_women": "Women take the win!",
+  "tie_break": "Sudden Death! Capture the ring!",
+  "match_duration": "Match Duration: 4:00",
+  "team_size": "Team Size: 3v3 or 5v5",
+  "first_to": "First to 1000 pts",
+  "choose_class": "Choose Your Class",
+  "select_relic": "Select Your Relic",
+  "choose_map": "Choose Battleground"
+}

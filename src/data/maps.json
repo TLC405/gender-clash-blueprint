@@ -1,0 +1,39 @@
+{
+  "maps": [
+    {
+      "id": "skydance_control",
+      "name": "Skydance Control",
+      "objective": "3_zone",
+      "landmark": "Skydance Bridge",
+      "description": "Iconic downtown bridge with three control zones"
+    },
+    {
+      "id": "bricktown_payload",
+      "name": "Bricktown Payload",
+      "objective": "payload",
+      "landmark": "Bricktown Canal",
+      "description": "Push the payload through the entertainment district"
+    },
+    {
+      "id": "wheeler_domes",
+      "name": "Wheeler Domes",
+      "objective": "rotating_zones",
+      "landmark": "Wheeler Ferris Wheel",
+      "description": "Dynamic zones rotate around the massive Ferris wheel"
+    },
+    {
+      "id": "riversport_surge",
+      "name": "Riversport Surge",
+      "objective": "hazards",
+      "landmark": "Riversport Rapids",
+      "description": "Navigate environmental hazards in the whitewater course"
+    },
+    {
+      "id": "devon_clash",
+      "name": "Devon Tower Clash",
+      "objective": "vertical",
+      "landmark": "Devon Tower",
+      "description": "Multi-level vertical combat in OKC's tallest building"
+    }
+  ]
+}

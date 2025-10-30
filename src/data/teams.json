@@ -1,0 +1,22 @@
+{
+  "teams": [
+    {
+      "id": "men",
+      "name": "Men",
+      "palette": {
+        "primary": "#1F6FEB",
+        "accent": "#00AEEF"
+      },
+      "emblem": "emblems/men.svg"
+    },
+    {
+      "id": "women",
+      "name": "Women",
+      "palette": {
+        "primary": "#E91E63",
+        "accent": "#FF6B9A"
+      },
+      "emblem": "emblems/women.svg"
+    }
+  ]
+}

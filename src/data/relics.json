@@ -1,0 +1,34 @@
+{
+  "relics": [
+    {
+      "id": "jetband",
+      "name": "Sky Reavers Jetband",
+      "effect": "+1 dash charge",
+      "description": "Grants an additional dash charge for enhanced mobility"
+    },
+    {
+      "id": "gauntlet",
+      "name": "Iron Titans Gauntlet",
+      "effect": "+15% stagger resist",
+      "description": "Increases resistance to crowd control effects"
+    },
+    {
+      "id": "charm",
+      "name": "Beast Coliseum Charm",
+      "effect": "10% on-hit bleed",
+      "description": "Attacks apply bleeding damage over time"
+    },
+    {
+      "id": "token",
+      "name": "Arcade Nexus Token",
+      "effect": "+20% ultimate charge",
+      "description": "Charge your ultimate ability faster"
+    },
+    {
+      "id": "feather",
+      "name": "Scissortail Feather",
+      "effect": "+15% speed for 2s after ability",
+      "description": "Gain a speed boost after using any ability"
+    }
+  ]
+}
