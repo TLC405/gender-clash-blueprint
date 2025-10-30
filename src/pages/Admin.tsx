@@ -153,47 +153,55 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <header className="flex items-center justify-between mb-8">
           <Link to="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+            <Button 
+              variant="ghost" 
+              size="sm"
+              aria-label="Back to home"
+              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
               Back
             </Button>
           </Link>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Settings2 className="w-8 h-8 text-accent" />
+            <Settings2 className="w-8 h-8 text-accent" aria-hidden="true" />
             Admin Panel
           </h1>
           <Button
             variant="ghost"
             onClick={() => setIsUnlocked(false)}
+            aria-label="Lock admin panel"
+            className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <Lock className="w-4 h-4" />
           </Button>
-        </div>
+        </header>
 
         <div className="space-y-6">
           {/* Project Updates Section */}
           <Card className="p-6 border-accent/50">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <FileText className="w-5 h-5 text-accent" />
+                <FileText className="w-5 h-5 text-accent" aria-hidden="true" />
                 Project Updates
               </h2>
               <Button
                 onClick={handleCopyUpdates}
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={copied ? "Updates copied to clipboard" : "Copy project updates for ChatGPT"}
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4" aria-hidden="true" />
                     Copied!
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-4 h-4" aria-hidden="true" />
                     Copy for ChatGPT
                   </>
                 )}
@@ -232,65 +240,101 @@ const Admin = () => {
             </div>
           </Card>
 
-          {/* Match Settings */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">Match Settings</h2>
             <div className="space-y-6">
               <div>
-                <Label className="mb-2 block">
+                <Label htmlFor="match-duration" className="mb-2 block">
                   Match Duration: {matchSeconds}s ({Math.floor(matchSeconds / 60)}:{(matchSeconds % 60).toString().padStart(2, '0')})
                 </Label>
                 <Slider
+                  id="match-duration"
                   value={[matchSeconds]}
                   onValueChange={([val]) => setMatchSeconds(val)}
                   min={120}
                   max={480}
                   step={30}
+                  aria-label="Match duration in seconds"
+                  className="cursor-pointer"
                 />
               </div>
 
-              <div>
-                <Label className="mb-2 block">Team Size: {teamSize}v{teamSize}</Label>
+              <fieldset>
+                <legend className="mb-2 block font-medium">Team Size: {teamSize}v{teamSize}</legend>
                 <div className="flex gap-2">
                   {[3, 5].map((size) => (
                     <Button
                       key={size}
                       variant={teamSize === size ? "default" : "outline"}
                       onClick={() => setTeamSize(size)}
+                      aria-pressed={teamSize === size}
+                      aria-label={`Set team size to ${size} versus ${size}`}
+                      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {size}v{size}
                     </Button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
             </div>
           </Card>
 
-          {/* Scoring Settings */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">Scoring Configuration</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <Label>KO Points</Label>
-                <Input type="number" defaultValue={config.score.ko} className="mt-2" />
+                <Label htmlFor="ko-points">KO Points</Label>
+                <Input 
+                  id="ko-points" 
+                  type="number" 
+                  defaultValue={config.score.ko} 
+                  className="mt-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-describedby="ko-points-help"
+                />
+                <p id="ko-points-help" className="sr-only">Points awarded for each knockout</p>
               </div>
               <div>
-                <Label>Assist Points</Label>
-                <Input type="number" defaultValue={config.score.assist} className="mt-2" />
+                <Label htmlFor="assist-points">Assist Points</Label>
+                <Input 
+                  id="assist-points" 
+                  type="number" 
+                  defaultValue={config.score.assist} 
+                  className="mt-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-describedby="assist-points-help"
+                />
+                <p id="assist-points-help" className="sr-only">Points awarded for each assist</p>
               </div>
               <div>
-                <Label>Objective Pts/Sec</Label>
-                <Input type="number" defaultValue={config.score.objPerSecond} className="mt-2" />
+                <Label htmlFor="objective-points">Objective Pts/Sec</Label>
+                <Input 
+                  id="objective-points" 
+                  type="number" 
+                  defaultValue={config.score.objPerSecond} 
+                  className="mt-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-describedby="objective-points-help"
+                />
+                <p id="objective-points-help" className="sr-only">Points per second for holding objectives</p>
               </div>
               <div>
-                <Label>Streak Bonus Step</Label>
-                <Input type="number" defaultValue={config.score.streakStep} className="mt-2" />
+                <Label htmlFor="streak-bonus">Streak Bonus Step</Label>
+                <Input 
+                  id="streak-bonus" 
+                  type="number" 
+                  defaultValue={config.score.streakStep} 
+                  className="mt-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-describedby="streak-bonus-help"
+                />
+                <p id="streak-bonus-help" className="sr-only">Bonus points step for kill streaks</p>
               </div>
             </div>
           </Card>
 
-          {/* Save Button */}
-          <Button onClick={handleSave} className="w-full" size="lg">
+          <Button 
+            onClick={handleSave} 
+            className="w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" 
+            size="lg"
+            aria-label="Save all configuration changes"
+          >
             Save Configuration
           </Button>
 
