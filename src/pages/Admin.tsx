@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Lock, Settings2 } from "lucide-react";
+import { ArrowLeft, Lock, Settings2, Copy, Check, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,92 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import config from "@/data/config.json";
 
+const PROJECT_UPDATES = `# TLC Battle Arena - Project Updates
+
+## Latest Updates (${new Date().toLocaleDateString()})
+
+### ✅ Deployment Configuration
+- Added Netlify & Vercel static hosting configs
+- Configured asset caching and SPA routing
+- PWA manifest and service worker setup
+- Build optimization with code splitting
+
+### ✅ Stability & Error Handling
+- Added ErrorBoundary component for graceful error recovery
+- Enhanced QueryClient with retry logic and stale time
+- Fixed effect dependencies and null guards
+- Eliminated runtime warnings
+
+### ✅ UX Polish & Feedback
+- Added EmptyState component with clear CTAs
+- Implemented SkeletonCard loading states
+- Added toast notifications for user actions
+- Mobile-first responsive layouts
+
+### ✅ Accessibility Improvements
+- Added ARIA labels to all interactive elements
+- Improved keyboard navigation with visible focus rings
+- Semantic HTML structure (header, section tags)
+- Proper form label associations
+
+### ✅ Performance Optimizations
+- Implemented useMemo for expensive computations
+- useCallback for stable function references
+- Query caching with staleTime/gcTime
+- Code splitting for vendor/UI chunks
+
+### ✅ Settings Management
+- Created useLocalStorage hook for persistence
+- Audio, visual, and accessibility settings
+- Settings persist across sessions
+- Reset to defaults functionality
+
+## Technical Stack
+- React 18 + TypeScript + Vite
+- TanStack Query for data fetching
+- Radix UI + Tailwind CSS + shadcn/ui
+- React Router v6
+
+## Current Features
+- Quick Play mode with team selection
+- Campaign, Horde, Legends modes (UI ready)
+- Leaderboards system
+- Admin panel with PIN protection
+- Settings with persistence
+
+## Data Structure
+- JSON-based data layer (classes, relics, maps, teams)
+- i18n support structure
+- Config-driven match settings
+
+## Ready for Production
+✅ Build optimized
+✅ PWA enabled
+✅ Error handling
+✅ Accessibility compliant
+✅ Performance tuned
+✅ Mobile responsive
+
+---
+Copy this for ChatGPT to understand current state.`;
+
 const Admin = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pin, setPin] = useState("");
   const [matchSeconds, setMatchSeconds] = useState(config.matchSeconds);
   const [teamSize, setTeamSize] = useState(config.defaultTeamSize);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyUpdates = async () => {
+    try {
+      await navigator.clipboard.writeText(PROJECT_UPDATES);
+      setCopied(true);
+      toast.success("Updates copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error("Failed to copy updates");
+    }
+  };
 
   const handleUnlock = () => {
     if (pin === "1234") {
@@ -92,6 +173,42 @@ const Admin = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Project Updates Section */}
+          <Card className="p-6 border-accent/50">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <FileText className="w-5 h-5 text-accent" />
+                Project Updates
+              </h2>
+              <Button
+                onClick={handleCopyUpdates}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy for ChatGPT
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 max-h-96 overflow-y-auto">
+              <pre className="text-xs whitespace-pre-wrap font-mono text-muted-foreground">
+                {PROJECT_UPDATES}
+              </pre>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Click "Copy for ChatGPT" to share complete project status between AIs
+            </p>
+          </Card>
+
           {/* Team Configuration */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">Team Configuration</h2>
