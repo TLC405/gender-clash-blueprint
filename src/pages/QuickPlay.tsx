@@ -47,7 +47,7 @@ const QuickPlay = () => {
               Back
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold">{i18n.quick_play}</h1>
+          <h1 className="text-3xl font-bold text-red-700">{i18n.quick_play}</h1>
           <div className="w-20" aria-hidden="true"></div>
         </header>
 
