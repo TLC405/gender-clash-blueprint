@@ -18,8 +18,10 @@ export default function MapCard({ map, selected, onSelect }: MapCardProps) {
   return (
     <button
       onClick={onSelect}
+      aria-label={`Select ${map.name} map${selected ? ' - currently selected' : ''}`}
+      aria-pressed={selected}
       className={`
-        relative overflow-hidden rounded-xl p-6 text-left transition-all duration-300
+        relative overflow-hidden rounded-xl p-6 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
         ${selected 
           ? "bg-card ring-2 ring-secondary shadow-[0_0_20px_hsl(var(--secondary)/0.3)]" 
           : "bg-card/50 hover:bg-card hover:scale-105"
@@ -31,7 +33,7 @@ export default function MapCard({ map, selected, onSelect }: MapCardProps) {
           p-3 rounded-lg transition-colors shrink-0
           ${selected ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground"}
         `}>
-          <MapPin className="w-6 h-6" />
+          <MapPin className="w-6 h-6" aria-hidden="true" />
         </div>
         
         <div className="flex-1">

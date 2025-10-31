@@ -28,8 +28,10 @@ export default function ClassCard({ classData, selected, onSelect }: ClassCardPr
   return (
     <button
       onClick={onSelect}
+      aria-label={`Select ${classData.name} class, ${classData.role} role${selected ? ' - currently selected' : ''}`}
+      aria-pressed={selected}
       className={`
-        relative overflow-hidden rounded-xl p-6 text-left transition-all duration-300
+        relative overflow-hidden rounded-xl p-6 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
         ${selected 
           ? "bg-card ring-2 ring-primary shadow-[0_0_20px_hsl(var(--primary)/0.3)]" 
           : "bg-card/50 hover:bg-card hover:scale-105"
@@ -41,7 +43,7 @@ export default function ClassCard({ classData, selected, onSelect }: ClassCardPr
           p-3 rounded-lg transition-colors
           ${selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}
         `}>
-          <Icon className="w-6 h-6" />
+          <Icon className="w-6 h-6" aria-hidden="true" />
         </div>
         
         <div className="flex-1">

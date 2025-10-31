@@ -17,8 +17,10 @@ export default function RelicCard({ relic, selected, onSelect }: RelicCardProps)
   return (
     <button
       onClick={onSelect}
+      aria-label={`Select ${relic.name} relic${selected ? ' - currently selected' : ''}`}
+      aria-pressed={selected}
       className={`
-        relative overflow-hidden rounded-xl p-5 text-left transition-all duration-300
+        relative overflow-hidden rounded-xl p-5 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
         ${selected 
           ? "bg-card ring-2 ring-accent shadow-[0_0_20px_hsl(var(--accent)/0.3)]" 
           : "bg-card/50 hover:bg-card hover:scale-105"
@@ -30,7 +32,7 @@ export default function RelicCard({ relic, selected, onSelect }: RelicCardProps)
           p-2 rounded-lg transition-colors shrink-0
           ${selected ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}
         `}>
-          <Gem className="w-5 h-5" />
+          <Gem className="w-5 h-5" aria-hidden="true" />
         </div>
         
         <div className="flex-1 min-w-0">
