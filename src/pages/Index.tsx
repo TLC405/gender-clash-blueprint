@@ -1,8 +1,11 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Play, Trophy, Swords, Sparkles, Settings, Shield } from "lucide-react";
+import { Play, Trophy, Swords, Sparkles, Settings, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import BattleSimulation from "@/components/BattleSimulation";
 import i18n from "@/data/i18n.en.json";
+import maps from "@/data/maps.json";
 
 const Index = () => {
   const menuItems = useMemo(() => [
@@ -15,47 +18,40 @@ const Index = () => {
   ], []);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl">
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="w-full max-w-7xl mx-auto space-y-8">
         {/* Hero Section */}
-        <div className="text-center mb-16 space-y-6">
-          <div className="inline-block">
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-2">
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
-                MEN
-              </span>
-              <span className="text-foreground mx-4">vs</span>
-              <span className="bg-gradient-to-r from-secondary via-accent to-secondary bg-clip-text text-transparent animate-pulse">
-                WOMEN
-              </span>
-            </h1>
-          </div>
+        <header className="text-center space-y-4">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter">
+            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
+              MEN
+            </span>
+            <span className="text-foreground mx-4">vs</span>
+            <span className="bg-gradient-to-r from-secondary via-accent to-secondary bg-clip-text text-transparent animate-pulse">
+              WOMEN
+            </span>
+          </h1>
           
-          <div className="space-y-2">
-            <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-              {i18n.subtitle}
-            </p>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Competitive arcade warfare in the heart of OKC. Choose your side, master your class, dominate the arena.
-            </p>
-          </div>
+          <p className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+            {i18n.subtitle}
+          </p>
 
-          {/* Quick Stats */}
-          <div className="flex flex-wrap justify-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-              <span className="text-muted-foreground">{i18n.match_duration}</span>
+          {/* Current Map Display */}
+          <Card className="inline-block px-6 py-3 bg-card/50 border-border">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="w-4 h-4 text-accent" aria-hidden="true" />
+              <span className="text-sm font-medium">Current Map:</span>
+              <span className="text-sm font-bold text-foreground">{maps.maps[0].name}</span>
+              <span className="text-xs">({maps.maps[0].objective.replace(/_/g, " ")})</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
-              <span className="text-muted-foreground">{i18n.team_size}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
-              <span className="text-muted-foreground">{i18n.first_to}</span>
-            </div>
-          </div>
-        </div>
+          </Card>
+        </header>
+
+        {/* Battle Simulation */}
+        <section aria-labelledby="battle-section">
+          <h2 id="battle-section" className="sr-only">Live Battle Simulation</h2>
+          <BattleSimulation />
+        </section>
 
         {/* Menu Grid */}
         <nav className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="navigation" aria-label="Main navigation">
