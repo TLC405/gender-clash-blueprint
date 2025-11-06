@@ -1,0 +1,64 @@
+{
+  "powerups": [
+    {
+      "id": "bro_fist",
+      "name": "Bro Fist",
+      "effect": "+40% damage cone, 5s",
+      "team": "men",
+      "icon": "💪",
+      "duration": 5000,
+      "color": "#1F6FEB",
+      "spawnWeight": 30
+    },
+    {
+      "id": "hug_bomb",
+      "name": "Hug Bomb",
+      "effect": "AOE stun + heal, 3s",
+      "team": "women",
+      "icon": "🤗",
+      "duration": 3000,
+      "color": "#E91E63",
+      "spawnWeight": 30
+    },
+    {
+      "id": "empathy_shield",
+      "name": "Empathy Shield",
+      "effect": "+50% defense, absorb 1 hit",
+      "team": "neutral",
+      "icon": "💞",
+      "duration": 8000,
+      "color": "#00AEEF",
+      "spawnWeight": 20
+    },
+    {
+      "id": "cupid_arrow",
+      "name": "Cupid's Arrow",
+      "effect": "Convert 3 enemies to allies, 10s",
+      "team": "neutral",
+      "icon": "💘",
+      "duration": 10000,
+      "color": "#FF6B9A",
+      "spawnWeight": 10
+    },
+    {
+      "id": "drama_cloud",
+      "name": "Drama Cloud",
+      "effect": "Blind + slow area, 8s",
+      "team": "neutral",
+      "icon": "☁️",
+      "duration": 8000,
+      "color": "#888888",
+      "spawnWeight": 20
+    },
+    {
+      "id": "spartan_shout",
+      "name": "Spartan Shout",
+      "effect": "Team-wide phalanx buff, 6s",
+      "team": "neutral",
+      "icon": "⚔️",
+      "duration": 6000,
+      "color": "#FFD700",
+      "spawnWeight": 15
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Play, Trophy, Swords, Sparkles, Settings, Shield, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import BattleSimulation from "@/components/BattleSimulation";
+import BattleSimulationEnhanced from "@/components/BattleSimulationEnhanced";
 import i18n from "@/data/i18n.en.json";
 import maps from "@/data/maps.json";
 
@@ -50,7 +50,7 @@ const Index = () => {
         {/* Battle Simulation */}
         <section aria-labelledby="battle-section">
           <h2 id="battle-section" className="sr-only">Live Battle Simulation</h2>
-          <BattleSimulation />
+          <BattleSimulationEnhanced />
         </section>
 
         {/* Menu Grid */}
