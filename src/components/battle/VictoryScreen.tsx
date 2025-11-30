@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Trophy, RotateCcw, Home } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Trophy, RotateCcw, Home, Award, Clock } from "lucide-react";
 
 type VictoryScreenProps = {
   winner: "men" | "women";
@@ -19,165 +20,134 @@ export const VictoryScreen = ({
   onPlayAgain,
   onBackHome
 }: VictoryScreenProps) => {
-  const winnerColor = winner === "men" 
-    ? "hsl(var(--men-primary))" 
-    : "hsl(var(--women-primary))";
-  
-  const winnerGradient = winner === "men"
-    ? "var(--gradient-men)"
-    : "var(--gradient-women)";
-
-  const winnerEmoji = winner === "men" ? "🏈💪" : "💖✨";
-  const winnerTitle = winner === "men" ? "TEAM MEN WINS!" : "TEAM WOMEN WINS!";
-  const winnerSubtext = winner === "men" 
-    ? "Bro power prevails! Ultimate chest bumps all around!" 
-    : "Girl power supreme! Squad goals achieved forever!";
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}m ${secs}s`;
-  };
-
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{
-        background: 'rgba(0, 0, 0, 0.95)',
-        backdropFilter: 'blur(10px)'
-      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.8 }}
+      className="fixed inset-0 bg-gradient-to-b from-black via-[hsl(var(--arena-dark))] to-black backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-hidden"
     >
-      <motion.div
-        className="max-w-2xl w-full space-y-8 text-center"
-        initial={{ scale: 0.8, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
-      >
-        {/* Trophy Icon */}
+      {/* Epic Background Effects */}
+      <div className="absolute inset-0">
+        <div className={`absolute inset-0 ${winner === "men" ? "bg-[hsl(var(--men-primary)_/_0.1)]" : "bg-[hsl(var(--women-primary)_/_0.1)]"}`} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[hsl(var(--gold-epic)_/_0.1)] blur-[100px] animate-pulse-glow" />
+      </div>
+
+      <Card className="max-w-3xl w-full p-10 text-center space-y-8 border-4 border-[hsl(var(--gold-epic))] shadow-gold bg-card/95 backdrop-blur-xl relative overflow-hidden">
+        {/* Animated border glow */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--gold-epic)_/_0.3)] to-transparent animate-victory-shine" style={{ backgroundSize: "200% 100%" }} />
+        
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 150, delay: 0.4 }}
+          transition={{ 
+            type: "spring",
+            stiffness: 200,
+            damping: 15,
+            delay: 0.2 
+          }}
+          className="relative"
         >
-          <Trophy 
-            className="w-32 h-32 mx-auto mb-4" 
-            style={{ color: winnerColor }}
-          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full bg-[hsl(var(--gold-epic)_/_0.2)] blur-3xl animate-pulse-glow" />
+          </div>
+          <Trophy className="w-24 h-24 mx-auto mb-6 text-[hsl(var(--gold-epic))] drop-shadow-[0_0_30px_hsl(var(--gold-epic)_/_0.6)] relative z-10" />
+          
+          <motion.h1 
+            className={`text-6xl font-epic mb-4 relative z-10 ${
+              winner === "men" ? "text-neon-blue" : "text-neon-pink"
+            } animate-text-glow`}
+            initial={{ y: -30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            {winner === "men" ? "MEN VICTORIOUS!" : "WOMEN VICTORIOUS!"}
+          </motion.h1>
+          
+          <motion.p 
+            className="text-2xl font-battle text-gold-epic"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            🏆 Epic Battle Complete! 🏆
+          </motion.p>
         </motion.div>
 
-        {/* Winner Announcement */}
-        <div className="space-y-4">
-          <motion.div
-            className="text-8xl"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.6 }}
-          >
-            {winnerEmoji}
-          </motion.div>
-
-          <motion.h1
-            className="text-6xl font-bold tracking-tight"
-            style={{ 
-              background: winnerGradient,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-          >
-            {winnerTitle}
-          </motion.h1>
-
-          <motion.p
-            className="text-xl opacity-80"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.0 }}
-          >
-            {winnerSubtext}
-          </motion.p>
-        </div>
-
-        {/* Battle Stats */}
         <motion.div
-          className="grid grid-cols-3 gap-6 py-8 px-6 rounded-2xl border-2"
-          style={{ 
-            borderColor: winnerColor,
-            background: 'rgba(255, 255, 255, 0.05)'
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.6, type: "spring", stiffness: 150 }}
+          className="grid grid-cols-2 gap-6 py-8"
         >
-          <div className="space-y-2">
-            <div className="text-sm uppercase tracking-wide opacity-60">MEN KOs</div>
-            <div className="text-4xl font-bold" style={{ color: 'hsl(var(--men-primary))' }}>
+          <motion.div 
+            className={`space-y-3 p-6 rounded-xl border-2 backdrop-blur-sm ${
+              winner === "men" 
+                ? "bg-[hsl(var(--men-primary)_/_0.2)] border-neon-blue shadow-neon-blue" 
+                : "bg-[hsl(var(--men-primary)_/_0.1)] border-[hsl(var(--men-primary)_/_0.3)]"
+            }`}
+            whileHover={{ scale: 1.05 }}
+          >
+            <Award className={`w-12 h-12 mx-auto ${winner === "men" ? "text-neon-blue" : "text-[hsl(var(--men-primary))]"}`} />
+            <div className={`text-5xl font-epic ${winner === "men" ? "text-neon-blue" : "text-[hsl(var(--men-primary))]"}`}>
               {menKills}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="text-sm uppercase tracking-wide opacity-60">Duration</div>
-            <div className="text-4xl font-bold" style={{ color: 'hsl(var(--accent))' }}>
-              {formatDuration(battleDuration)}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="text-sm uppercase tracking-wide opacity-60">WOMEN KOs</div>
-            <div className="text-4xl font-bold" style={{ color: 'hsl(var(--women-primary))' }}>
+            <div className="text-sm font-battle text-muted-foreground tracking-wider">MEN KILLS</div>
+          </motion.div>
+          
+          <motion.div 
+            className={`space-y-3 p-6 rounded-xl border-2 backdrop-blur-sm ${
+              winner === "women" 
+                ? "bg-[hsl(var(--women-primary)_/_0.2)] border-neon-pink shadow-neon-pink" 
+                : "bg-[hsl(var(--women-primary)_/_0.1)] border-[hsl(var(--women-primary)_/_0.3)]"
+            }`}
+            whileHover={{ scale: 1.05 }}
+          >
+            <Award className={`w-12 h-12 mx-auto ${winner === "women" ? "text-neon-pink" : "text-[hsl(var(--women-primary))]"}`} />
+            <div className={`text-5xl font-epic ${winner === "women" ? "text-neon-pink" : "text-[hsl(var(--women-primary))]"}`}>
               {womenKills}
             </div>
-          </div>
+            <div className="text-sm font-battle text-muted-foreground tracking-wider">WOMEN KILLS</div>
+          </motion.div>
         </motion.div>
 
-        {/* Action Buttons */}
         <motion.div
-          className="flex gap-4 justify-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.4 }}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-muted/30 backdrop-blur-sm border border-border"
         >
-          <Button
-            onClick={onPlayAgain}
-            size="lg"
-            className="px-8 py-6 text-lg"
-            style={{
-              background: winnerGradient,
-              color: 'white'
-            }}
-          >
-            <RotateCcw className="w-5 h-5 mr-2" />
-            Battle Again
-          </Button>
-
-          <Button
-            onClick={onBackHome}
-            size="lg"
-            variant="outline"
-            className="px-8 py-6 text-lg"
-          >
-            <Home className="w-5 h-5 mr-2" />
-            Home
-          </Button>
+          <Clock className="w-6 h-6 text-accent" />
+          <span className="text-lg font-battle text-foreground">
+            Battle Duration: <span className="text-accent">{Math.floor(battleDuration / 60)}m {Math.floor(battleDuration % 60)}s</span>
+          </span>
         </motion.div>
 
-        {/* Celebration Text */}
         <motion.div
-          className="text-sm opacity-40"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
-          transition={{ delay: 1.6 }}
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="flex gap-4 justify-center pt-6"
         >
-          "This is Sparta... with feelings!" 💕⚔️
+          <Button 
+            onClick={onPlayAgain} 
+            size="lg" 
+            className="gap-3 text-lg font-battle px-8 py-6 bg-men-gradient hover:scale-105 transition-transform shadow-neon-blue border-2 border-[hsl(var(--men-primary))]"
+          >
+            <RotateCcw className="w-6 h-6" />
+            Play Again
+          </Button>
+          <Button 
+            onClick={onBackHome} 
+            variant="outline" 
+            size="lg" 
+            className="gap-3 text-lg font-battle px-8 py-6 hover:scale-105 transition-transform border-2"
+          >
+            <Home className="w-6 h-6" />
+            Back Home
+          </Button>
         </motion.div>
-      </motion.div>
+      </Card>
     </motion.div>
   );
 };

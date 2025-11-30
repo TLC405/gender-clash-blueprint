@@ -514,11 +514,15 @@ const BattleSimulationEnhanced = () => {
   const battleDuration = phase === "victory" ? (Date.now() - battleStartTime) / 1000 : 0;
 
   return (
-    <div className="w-full space-y-4 pb-32">
-      <Card className="p-6 bg-card border-border">
-        <div className="space-y-4">
+    <div className="w-full space-y-6 pb-32">
+      <Card className="p-8 bg-card border-4 border-primary/30 shadow-epic overflow-hidden relative">
+        {/* Epic Background Effects */}
+        <div className="absolute inset-0 bg-arena-gradient opacity-50" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse-glow" />
+        
+        <div className="space-y-6 relative">
           {/* Canvas with overlays */}
-          <div className="relative rounded-lg overflow-hidden border border-border bg-black">
+          <div className="relative rounded-2xl overflow-hidden border-4 border-primary/50 bg-black shadow-neon-blue">
             <canvas
               ref={canvasRef}
               className="w-full h-[600px]"
@@ -536,47 +540,61 @@ const BattleSimulationEnhanced = () => {
             <div className="absolute inset-0 pointer-events-none">
               <ParticleRenderer particles={particleSystem.particles} />
             </div>
+
+            {/* Epic corner accents */}
+            <div className="absolute top-0 left-0 w-20 h-20 border-t-4 border-l-4 border-[hsl(var(--men-primary))] opacity-50" />
+            <div className="absolute top-0 right-0 w-20 h-20 border-t-4 border-r-4 border-[hsl(var(--women-primary))] opacity-50" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 border-b-4 border-l-4 border-[hsl(var(--men-primary))] opacity-50" />
+            <div className="absolute bottom-0 right-0 w-20 h-20 border-b-4 border-r-4 border-[hsl(var(--women-primary))] opacity-50" />
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-wrap gap-2 justify-center">
+          {/* Epic Controls */}
+          <div className="flex flex-wrap gap-3 justify-center">
             <Button
               onClick={handlePlayPause}
               variant="default"
               size="lg"
               disabled={phase === "victory"}
+              className="gap-2 font-battle text-lg px-6 bg-men-gradient hover:scale-105 transition-transform shadow-neon-blue border-2 border-[hsl(var(--men-primary))]"
             >
-              {isRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
-              {isRunning ? "Pause" : "Start"}
+              {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+              {isRunning ? "Pause" : "Start Battle"}
             </Button>
-            <Button onClick={handleReset} variant="outline" size="lg">
-              <RotateCcw className="w-5 h-5 mr-2" />
+            <Button 
+              onClick={handleReset} 
+              variant="outline" 
+              size="lg"
+              className="gap-2 font-battle text-lg px-6 hover:scale-105 transition-transform border-2"
+            >
+              <RotateCcw className="w-6 h-6" />
               Reset
             </Button>
             <Button
               onClick={() => setNarratorEnabled(!narratorEnabled)}
               variant="outline"
               size="lg"
+              className="gap-2 font-battle text-lg px-6 hover:scale-105 transition-transform border-2"
             >
-              {narratorEnabled ? <Volume2 className="w-5 h-5 mr-2" /> : <VolumeX className="w-5 h-5 mr-2" />}
+              {narratorEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
               Narrator
             </Button>
             <Button
               onClick={() => setShowControls(!showControls)}
               variant="outline"
               size="lg"
+              className="gap-2 font-battle text-lg px-6 hover:scale-105 transition-transform border-2"
             >
-              <Settings2 className="w-5 h-5 mr-2" />
+              <Settings2 className="w-6 h-6" />
               Settings
             </Button>
           </div>
 
           {/* Advanced Controls */}
           {showControls && (
-            <div className="space-y-4 pt-4 border-t border-border">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Army Size: {armySize.toLocaleString()} per side
+            <div className="space-y-6 pt-6 border-t-2 border-primary/30">
+              <div className="space-y-3">
+                <label className="text-base font-battle text-foreground">
+                  Army Size: <span className="text-primary">{armySize.toLocaleString()}</span> per side
                 </label>
                 <Slider
                   value={[armySize]}
@@ -585,11 +603,12 @@ const BattleSimulationEnhanced = () => {
                   max={20000}
                   step={1000}
                   disabled={isRunning}
+                  className="cursor-pointer"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Battle Speed: {battleSpeed}x
+              <div className="space-y-3">
+                <label className="text-base font-battle text-foreground">
+                  Battle Speed: <span className="text-primary">{battleSpeed}x</span>
                 </label>
                 <Slider
                   value={[battleSpeed]}
@@ -597,6 +616,7 @@ const BattleSimulationEnhanced = () => {
                   min={0.5}
                   max={5}
                   step={0.5}
+                  className="cursor-pointer"
                 />
               </div>
             </div>

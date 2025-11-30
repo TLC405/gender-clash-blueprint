@@ -63,27 +63,55 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        battle: ['Rajdhani', 'sans-serif'],
+        epic: ['Orbitron', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+      },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
+            transform: "scale(1)"
           },
-          to: {
-            height: "0",
+          "50%": { 
+            boxShadow: "0 0 40px hsl(var(--primary) / 0.6), 0 0 80px hsl(var(--primary) / 0.3)",
+            transform: "scale(1.02)"
           },
+        },
+        "battle-pulse": {
+          "0%, 100%": { transform: "scale(1)", filter: "brightness(1)" },
+          "50%": { transform: "scale(1.05)", filter: "brightness(1.2)" },
+        },
+        "slide-in-epic": {
+          from: { transform: "translateY(-100%) scale(0.8)", opacity: "0" },
+          to: { transform: "translateY(0) scale(1)", opacity: "1" },
+        },
+        "zoom-in-epic": {
+          from: { transform: "scale(0.5) rotate(-10deg)", opacity: "0" },
+          to: { transform: "scale(1) rotate(0deg)", opacity: "1" },
+        },
+        "text-glow": {
+          "0%, 100%": { textShadow: "0 0 10px hsl(var(--primary) / 0.5)" },
+          "50%": { textShadow: "0 0 20px hsl(var(--primary) / 0.8), 0 0 40px hsl(var(--primary) / 0.4)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "battle-pulse": "battle-pulse 1s ease-in-out infinite",
+        "slide-in-epic": "slide-in-epic 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "zoom-in-epic": "zoom-in-epic 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "text-glow": "text-glow 2s ease-in-out infinite",
       },
     },
   },
