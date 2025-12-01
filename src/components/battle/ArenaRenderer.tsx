@@ -18,6 +18,31 @@ export const createArenaRenderer = (): ArenaLayer => {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
+      // Stadium stands/seating tiers on sides (perspective depth)
+      ctx.globalAlpha = 0.3;
+      const standHeight = 60;
+      const standLayers = 3;
+      for (let i = 0; i < standLayers; i++) {
+        const layerY = i * 25;
+        const layerAlpha = 0.4 - (i * 0.1);
+        ctx.globalAlpha = layerAlpha;
+        
+        // Left stands (MEN side)
+        const leftGrad = ctx.createLinearGradient(0, layerY, width * 0.1, layerY);
+        leftGrad.addColorStop(0, 'hsl(217 91% 60%)'); // men-primary
+        leftGrad.addColorStop(1, 'hsl(240 6% 10%)');
+        ctx.fillStyle = leftGrad;
+        ctx.fillRect(0, layerY, width * 0.08, standHeight);
+        
+        // Right stands (WOMEN side)
+        const rightGrad = ctx.createLinearGradient(width, layerY, width * 0.9, layerY);
+        rightGrad.addColorStop(0, 'hsl(340 82% 52%)'); // women-primary
+        rightGrad.addColorStop(1, 'hsl(240 6% 10%)');
+        ctx.fillStyle = rightGrad;
+        ctx.fillRect(width * 0.92, layerY, width * 0.08, standHeight);
+      }
+      ctx.globalAlpha = 1;
+
       // ETFE panel accents (accent color veins)
       ctx.strokeStyle = 'hsl(24 100% 50%)'; // accent
       ctx.lineWidth = 2;
