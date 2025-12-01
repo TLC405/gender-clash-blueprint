@@ -530,11 +530,8 @@ const BattleSimulationEnhanced = () => {
             />
             
             <FormationOverlay
-              canvasRef={canvasRef}
               menFormationActive={menFormationActive}
               womenFormationActive={womenFormationActive}
-              centerX={canvasRef.current ? canvasRef.current.width / 2 : 0}
-              passWidth={200}
             />
 
             <div className="absolute inset-0 pointer-events-none">
