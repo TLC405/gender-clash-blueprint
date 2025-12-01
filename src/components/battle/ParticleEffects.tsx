@@ -127,14 +127,16 @@ export const ParticleRenderer = ({
       {particles.map(p => (
         <div
           key={p.id}
-          className="absolute pointer-events-none select-none"
+          className="absolute pointer-events-none select-none drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
           style={{
             left: p.x,
             top: p.y,
             fontSize: p.size,
             opacity: p.life,
-            transform: `translate(-50%, -50%) rotate(${p.vx * 0.5}deg)`,
-            transition: 'opacity 0.1s'
+            transform: `translate(-50%, -50%) rotate(${p.vx * 0.5}deg) scale(${p.life * 0.5 + 0.5})`,
+            transition: 'opacity 0.1s',
+            filter: `brightness(${1 + p.life * 0.5}) saturate(${1.2})`,
+            textShadow: '0 0 20px currentColor'
           }}
         >
           {p.emoji}
