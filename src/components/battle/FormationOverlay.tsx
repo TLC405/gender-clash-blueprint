@@ -2,42 +2,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield } from "lucide-react";
 
 type FormationOverlayProps = {
-  canvasRef: React.RefObject<HTMLCanvasElement>;
   menFormationActive: boolean;
   womenFormationActive: boolean;
-  centerX: number;
-  passWidth: number;
 };
 
 export const FormationOverlay = ({
-  canvasRef,
   menFormationActive,
   womenFormationActive,
-  centerX,
-  passWidth
 }: FormationOverlayProps) => {
-  if (!canvasRef.current) return null;
-
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {/* Hot Gates Pass Indicator - Epic Central Zone */}
+      {/* Hot Gates Pass Indicator - Epic Central Zone - using CSS positioning */}
       <motion.div
-        className="absolute top-0 bottom-0 border-l-4 border-r-4 border-[hsl(var(--gold-epic))] bg-[hsl(var(--gold-epic)_/_0.05)]"
-        style={{
-          left: `${centerX - passWidth / 2}px`,
-          width: `${passWidth}px`,
-        }}
+        className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l-4 border-r-4 border-[hsl(var(--gold-epic))] bg-[hsl(var(--gold-epic)_/_0.05)]"
+        style={{ width: '20%' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--gold-epic)_/_0.2)] via-transparent to-[hsl(var(--gold-epic)_/_0.2)] animate-pulse-glow" />
         <motion.div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gold-epic text-xl font-epic whitespace-nowrap px-6 py-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-[hsl(var(--gold-epic))] shadow-gold"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gold-epic text-sm font-epic whitespace-nowrap px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border-2 border-[hsl(var(--gold-epic))] shadow-gold"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          ⚔ HOT GATES PASS ⚔
+          ⚔ HOT GATES ⚔
         </motion.div>
         
         {/* Vertical scanning lines effect */}
