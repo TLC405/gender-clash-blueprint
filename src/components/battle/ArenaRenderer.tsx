@@ -10,18 +10,18 @@ export const createArenaRenderer = (): ArenaLayer => {
 
   return {
     renderBackground: (ctx, width, height) => {
-      // Stadium shell with gradient (Allegiant-inspired)
+      // Stadium shell with gradient (Allegiant-inspired) - using design system
       const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, '#0f0f0f'); // Deep black top
-      gradient.addColorStop(0.5, '#1a1a1a');
-      gradient.addColorStop(1, '#0a0a0a');
+      gradient.addColorStop(0, 'hsl(240 10% 3.9%)'); // background
+      gradient.addColorStop(0.5, 'hsl(240 6% 10%)'); // arena-dark
+      gradient.addColorStop(1, 'hsl(240 10% 3.9%)');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      // ETFE panel accents (orange veins)
-      ctx.strokeStyle = '#FF5A00';
+      // ETFE panel accents (accent color veins)
+      ctx.strokeStyle = 'hsl(24 100% 50%)'; // accent
       ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.1;
+      ctx.globalAlpha = 0.15;
       for (let i = 0; i < 5; i++) {
         const x = (width / 5) * i;
         ctx.beginPath();
@@ -33,16 +33,16 @@ export const createArenaRenderer = (): ArenaLayer => {
     },
 
     renderTurf: (ctx, width, height) => {
-      // Main turf base
+      // Main turf base - darker arena floor
       const turfGradient = ctx.createLinearGradient(0, 0, width, 0);
-      turfGradient.addColorStop(0, '#1a3a1a'); // Dark green edges
-      turfGradient.addColorStop(0.5, '#0d2d0d');
-      turfGradient.addColorStop(1, '#1a3a1a');
+      turfGradient.addColorStop(0, 'hsl(120 30% 8%)'); // Dark green edges
+      turfGradient.addColorStop(0.5, 'hsl(120 25% 5%)');
+      turfGradient.addColorStop(1, 'hsl(120 30% 8%)');
       ctx.fillStyle = turfGradient;
       ctx.fillRect(0, 0, width, height);
 
-      // Yard lines
-      ctx.strokeStyle = '#ffffff';
+      // Yard lines - using muted
+      ctx.strokeStyle = 'hsl(240 3.8% 46.1%)'; // muted
       ctx.lineWidth = 1;
       ctx.globalAlpha = 0.1;
       for (let x = 0; x < width; x += 50) {
@@ -60,26 +60,26 @@ export const createArenaRenderer = (): ArenaLayer => {
       ctx.globalAlpha = 1;
 
       // End zones (Bro Bunker & Empathy Enclave)
-      // MEN zone (left)
+      // MEN zone (left) - using men-primary
       const menZone = ctx.createLinearGradient(0, 0, width * 0.15, 0);
-      menZone.addColorStop(0, 'rgba(31, 111, 235, 0.2)');
-      menZone.addColorStop(1, 'rgba(31, 111, 235, 0)');
+      menZone.addColorStop(0, 'hsla(217 91% 60% / 0.25)'); // men-primary with alpha
+      menZone.addColorStop(1, 'hsla(217 91% 60% / 0)');
       ctx.fillStyle = menZone;
       ctx.fillRect(0, 0, width * 0.15, height);
 
-      // WOMEN zone (right)
+      // WOMEN zone (right) - using women-primary
       const womenZone = ctx.createLinearGradient(width, 0, width * 0.85, 0);
-      womenZone.addColorStop(0, 'rgba(233, 30, 99, 0.2)');
-      womenZone.addColorStop(1, 'rgba(233, 30, 99, 0)');
+      womenZone.addColorStop(0, 'hsla(340 82% 52% / 0.25)'); // women-primary with alpha
+      womenZone.addColorStop(1, 'hsla(340 82% 52% / 0)');
       ctx.fillStyle = womenZone;
       ctx.fillRect(width * 0.85, 0, width * 0.15, height);
 
-      // Center "Hot Gates" pass markers
+      // Center "Hot Gates" pass markers - using gold-epic
       const centerX = width / 2;
       const passWidth = 200;
-      ctx.strokeStyle = '#FFD700';
+      ctx.strokeStyle = 'hsl(48 96% 53%)'; // gold-epic
       ctx.lineWidth = 3;
-      ctx.globalAlpha = 0.3;
+      ctx.globalAlpha = 0.4;
       ctx.setLineDash([10, 10]);
       ctx.beginPath();
       ctx.moveTo(centerX - passWidth / 2, 0);
@@ -97,39 +97,49 @@ export const createArenaRenderer = (): ArenaLayer => {
       crowdWave += 0.02;
       
       // Simplified crowd sprites along top edge
-      ctx.globalAlpha = 0.6;
+      ctx.globalAlpha = 0.7;
       for (let i = 0; i < 50; i++) {
         const x = (width / 50) * i;
-        const waveOffset = Math.sin(crowdWave + i * 0.5) * 3;
+        const waveOffset = Math.sin(crowdWave + i * 0.5) * 4;
         const y = 20 + waveOffset;
         
-        // Alternating team colors
+        // Alternating team colors - using design system
         const isBlue = i % 2 === 0;
-        ctx.fillStyle = isBlue ? '#1F6FEB' : '#E91E63';
+        ctx.fillStyle = isBlue ? 'hsl(217 91% 60%)' : 'hsl(340 82% 52%)'; // men-primary : women-primary
         
-        // Simple crowd "head" circles
+        // Simple crowd "head" circles with glow
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = ctx.fillStyle;
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     },
 
     renderLighting: (ctx, width, height, phase) => {
-      // Dynamic lighting based on battle phase
+      // Dynamic lighting based on battle phase - using design system colors
       if (phase === 'melee') {
-        // Chaotic red overlay
+        // Chaotic destructive overlay
         const chaos = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width);
-        chaos.addColorStop(0, 'rgba(255, 0, 0, 0)');
-        chaos.addColorStop(1, 'rgba(255, 0, 0, 0.15)');
+        chaos.addColorStop(0, 'hsla(0 84.2% 60.2% / 0)'); // destructive
+        chaos.addColorStop(1, 'hsla(0 84.2% 60.2% / 0.2)');
         ctx.fillStyle = chaos;
         ctx.fillRect(0, 0, width, height);
       } else if (phase === 'stand') {
-        // Organized golden glow
+        // Organized golden epic glow
         const organized = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width);
-        organized.addColorStop(0, 'rgba(255, 215, 0, 0.1)');
-        organized.addColorStop(1, 'rgba(255, 215, 0, 0)');
+        organized.addColorStop(0, 'hsla(48 96% 53% / 0.15)'); // gold-epic
+        organized.addColorStop(1, 'hsla(48 96% 53% / 0)');
         ctx.fillStyle = organized;
+        ctx.fillRect(0, 0, width, height);
+      } else if (phase === 'sudden_death') {
+        // Sudden death pulsing overlay
+        const suddenDeath = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width);
+        suddenDeath.addColorStop(0, 'hsla(0 84.2% 60.2% / 0.1)');
+        suddenDeath.addColorStop(1, 'hsla(271 81% 56% / 0.15)'); // purple tint
+        ctx.fillStyle = suddenDeath;
         ctx.fillRect(0, 0, width, height);
       }
     }
