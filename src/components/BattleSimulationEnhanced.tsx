@@ -521,28 +521,48 @@ const BattleSimulationEnhanced = () => {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse-glow" />
         
         <div className="space-y-6 relative">
-          {/* Canvas with overlays */}
-          <div className="relative rounded-2xl overflow-hidden border-4 border-primary/50 bg-black shadow-neon-blue">
-            <canvas
-              ref={canvasRef}
-              className="w-full h-[600px]"
-              aria-label="TLC Battle Arena - Epic combat visualization"
-            />
+          {/* 3D Stadium View Container */}
+          <div className="relative" style={{ perspective: '1500px' }}>
+            {/* Stadium Seating Backdrop */}
+            <div className="absolute inset-0 -inset-x-32 -inset-y-20 bg-gradient-to-b from-[hsl(var(--arena-dark))] via-[hsl(var(--background))] to-[hsl(var(--arena-dark))] rounded-3xl opacity-60 blur-sm" 
+                 style={{ transform: 'translateZ(-100px) scale(1.2)' }} />
             
-            <FormationOverlay
-              menFormationActive={menFormationActive}
-              womenFormationActive={womenFormationActive}
-            />
+            {/* Canvas with 3D perspective transform */}
+            <div 
+              className="relative rounded-2xl overflow-visible border-4 border-primary/50 shadow-2xl"
+              style={{ 
+                transformStyle: 'preserve-3d',
+                transform: 'rotateX(25deg) translateY(-40px)',
+                transformOrigin: 'center center',
+              }}
+            >
+              {/* Arena floor container */}
+              <div className="relative bg-black rounded-2xl overflow-hidden" style={{ boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)' }}>
+                <canvas
+                  ref={canvasRef}
+                  className="w-full h-[600px]"
+                  aria-label="TLC Battle Arena - Epic combat visualization"
+                />
+                
+                <FormationOverlay
+                  menFormationActive={menFormationActive}
+                  womenFormationActive={womenFormationActive}
+                />
 
-            <div className="absolute inset-0 pointer-events-none">
-              <ParticleRenderer particles={particleSystem.particles} />
+                <div className="absolute inset-0 pointer-events-none">
+                  <ParticleRenderer particles={particleSystem.particles} />
+                </div>
+
+                {/* Epic corner accents */}
+                <div className="absolute top-0 left-0 w-20 h-20 border-t-4 border-l-4 border-[hsl(var(--men-primary))] opacity-50" />
+                <div className="absolute top-0 right-0 w-20 h-20 border-t-4 border-r-4 border-[hsl(var(--women-primary))] opacity-50" />
+                <div className="absolute bottom-0 left-0 w-20 h-20 border-b-4 border-l-4 border-[hsl(var(--men-primary))] opacity-50" />
+                <div className="absolute bottom-0 right-0 w-20 h-20 border-b-4 border-r-4 border-[hsl(var(--women-primary))] opacity-50" />
+              </div>
+              
+              {/* Stadium depth effect - far edge darkening */}
+              <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent pointer-events-none rounded-t-2xl" />
             </div>
-
-            {/* Epic corner accents */}
-            <div className="absolute top-0 left-0 w-20 h-20 border-t-4 border-l-4 border-[hsl(var(--men-primary))] opacity-50" />
-            <div className="absolute top-0 right-0 w-20 h-20 border-t-4 border-r-4 border-[hsl(var(--women-primary))] opacity-50" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 border-b-4 border-l-4 border-[hsl(var(--men-primary))] opacity-50" />
-            <div className="absolute bottom-0 right-0 w-20 h-20 border-b-4 border-r-4 border-[hsl(var(--women-primary))] opacity-50" />
           </div>
 
           {/* Epic Controls */}
