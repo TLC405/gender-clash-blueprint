@@ -25,8 +25,8 @@ function generateParticleSprite(color: string, glowColor: string): OffscreenCanv
   // Outer glow
   const outerGrad = ctx.createRadialGradient(center, center, 0, center, center, center);
   outerGrad.addColorStop(0, glowColor);
-  outerGrad.addColorStop(0.5, `${color}88`);
-  outerGrad.addColorStop(1, 'transparent');
+  outerGrad.addColorStop(0.5, color);
+  outerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = outerGrad;
   ctx.fillRect(0, 0, SPRITE_SIZE, SPRITE_SIZE);
   
