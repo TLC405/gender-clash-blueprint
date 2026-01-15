@@ -35,7 +35,7 @@ const BattleSimulationEnhanced = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [narratorEnabled, setNarratorEnabled] = useState(true);
-  const [armySize, setArmySize] = useState(10000);
+  const [armySize, setArmySize] = useState(500); // Reduced for stability
   const [battleSpeed, setBattleSpeed] = useState(1);
   const [phase, setPhase] = useState<BattlePhase>("stand");
   const [timeRemaining, setTimeRemaining] = useState(180);
@@ -489,9 +489,9 @@ const BattleSimulationEnhanced = () => {
                 <Slider
                   value={[armySize]}
                   onValueChange={(v) => setArmySize(v[0])}
-                  min={1000}
-                  max={20000}
-                  step={1000}
+                  min={50}
+                  max={2000}
+                  step={50}
                   disabled={isRunning}
                   className="cursor-pointer"
                 />

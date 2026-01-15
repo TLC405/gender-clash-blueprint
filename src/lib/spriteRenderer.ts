@@ -1,6 +1,7 @@
 /**
  * High-Performance Sprite Renderer
- * Pre-baked sprite atlas with batched drawing for 60 FPS at 20K+ units
+ * Pre-baked sprite atlas with batched drawing
+ * Optimized for stability with larger, more visible units
  */
 
 import { TEAM_MEN, TEAM_WOMEN, FLAG_ALIVE, FLAG_LOCKED, FLAG_LEADER, type BattleSoA } from './battleSoA';
@@ -119,13 +120,15 @@ export function renderUnits(
   
   ctx.save();
   
-  // Use lighter blend for additive glow effect
+  // Use lighter blend for additive glow effect (reduced intensity)
   if (lighterBlend) {
     ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.8; // Reduce additive intensity
   }
   
-  const unitSize = 6; // Rendered size on canvas
-  const leaderSize = 10;
+  // Larger unit sizes for better visibility with fewer units
+  const unitSize = 10; // Increased from 6
+  const leaderSize = 14; // Increased from 10
   
   if (discoMode) {
     // Disco mode - use hue-shifted atlas
@@ -138,8 +141,8 @@ export function renderUnits(
       const size = isLeader ? leaderSize : unitSize;
       
       // Health-based alpha
-      const alpha = Math.max(0.3, soa.health[i] / 100);
-      ctx.globalAlpha = alpha;
+      const alpha = Math.max(0.4, soa.health[i] / 100);
+      ctx.globalAlpha = alpha * 0.8;
       
       ctx.drawImage(
         discoAtlas,
@@ -151,7 +154,6 @@ export function renderUnits(
     }
   } else {
     // Normal mode - batch by team for minimal state changes
-    // First pass: Draw all normal units
     for (let i = 0; i < soa.unitCount; i++) {
       if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
       
@@ -162,8 +164,8 @@ export function renderUnits(
       const size = isLeader ? leaderSize : unitSize;
       
       // Health-based alpha
-      const alpha = Math.max(0.3, soa.health[i] / 100);
-      ctx.globalAlpha = alpha;
+      const alpha = Math.max(0.4, soa.health[i] / 100);
+      ctx.globalAlpha = alpha * 0.8;
       
       ctx.drawImage(
         spriteAtlas,

@@ -1,9 +1,10 @@
 /**
  * Object Pool Particle System
  * Ring buffer with SoA layout for zero garbage collection
+ * Optimized pool size to prevent crashes
  */
 
-const POOL_SIZE = 3000;
+const POOL_SIZE = 500; // Reduced from 3000 for stability
 
 // Particle types
 export const PARTICLE_HEART = 0;
@@ -97,7 +98,7 @@ export function spawnBurst(
   x: number,
   y: number,
   type: number,
-  count: number = 8,
+  count: number = 6, // Reduced default from 8
   speed: number = 100,
   life: number = 1.0,
   size: number = 24
@@ -123,52 +124,52 @@ export function spawnBurst(
  * Spawn heart burst (loveable KO effect for women)
  */
 export function spawnHeartBurst(pool: ParticlePool, x: number, y: number): void {
-  spawnBurst(pool, x, y, PARTICLE_HEART, 8, 80, 1.2, 20);
+  spawnBurst(pool, x, y, PARTICLE_HEART, 5, 80, 1.2, 20); // Reduced from 8
 }
 
 /**
  * Spawn beer splash (loveable KO effect for men)
  */
 export function spawnBeerSplash(pool: ParticlePool, x: number, y: number): void {
-  spawnBurst(pool, x, y, PARTICLE_BEER, 5, 60, 1.0, 22);
+  spawnBurst(pool, x, y, PARTICLE_BEER, 3, 60, 1.0, 22); // Reduced from 5
 }
 
 /**
  * Spawn flower bloom
  */
 export function spawnFlowerBloom(pool: ParticlePool, x: number, y: number): void {
-  spawnBurst(pool, x, y, PARTICLE_FLOWER, 10, 70, 1.5, 18);
+  spawnBurst(pool, x, y, PARTICLE_FLOWER, 6, 70, 1.5, 18); // Reduced from 10
 }
 
 /**
  * Spawn confetti (victory effect)
  */
 export function spawnConfetti(pool: ParticlePool, x: number, y: number): void {
-  spawnBurst(pool, x, y, PARTICLE_CONFETTI, 20, 200, 2.0, 28);
+  spawnBurst(pool, x, y, PARTICLE_CONFETTI, 10, 200, 2.0, 28); // Reduced from 20
 }
 
 /**
  * Spawn stars (powerup collection)
  */
 export function spawnStars(pool: ParticlePool, x: number, y: number): void {
-  spawnBurst(pool, x, y, PARTICLE_STAR, 8, 100, 1.0, 20);
+  spawnBurst(pool, x, y, PARTICLE_STAR, 5, 100, 1.0, 20); // Reduced from 8
 }
 
 /**
  * Spawn meteor impact
  */
 export function spawnMeteorImpact(pool: ParticlePool, x: number, y: number): void {
-  // Central explosion
-  spawnBurst(pool, x, y, PARTICLE_METEOR, 15, 250, 1.5, 32);
+  // Central explosion - reduced counts
+  spawnBurst(pool, x, y, PARTICLE_METEOR, 8, 250, 1.5, 32); // Reduced from 15
   // Secondary debris
-  spawnBurst(pool, x, y, PARTICLE_CONFETTI, 10, 150, 1.2, 20);
+  spawnBurst(pool, x, y, PARTICLE_CONFETTI, 5, 150, 1.2, 20); // Reduced from 10
 }
 
 /**
  * Spawn rage activation effect
  */
 export function spawnRageEffect(pool: ParticlePool, x: number, y: number): void {
-  spawnBurst(pool, x, y, PARTICLE_RAGE, 12, 120, 1.0, 24);
+  spawnBurst(pool, x, y, PARTICLE_RAGE, 8, 120, 1.0, 24); // Reduced from 12
 }
 
 /**
