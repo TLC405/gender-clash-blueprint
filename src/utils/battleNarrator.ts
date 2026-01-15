@@ -1,4 +1,6 @@
-// TLC Battle Narrator - Sassy AI voice system
+// TLC Battle Narrator - Premium AI voice system with fallback
+import { speakPremium, speakPremiumImmediate, stopPremiumNarration, isPremiumAvailable } from './premiumNarrator';
+
 export type NarratorContext = 
   | "menLead" 
   | "womenLead" 
@@ -15,79 +17,89 @@ export type NarratorContext =
 
 const quips: Record<NarratorContext, string[]> = {
   menLead: [
-    "MEN's bro-wall unbreakable! WOMEN, unleash the hugs!",
-    "Team MEN dominating! Time for some feelings, ladies?",
-    "Bros before... wait, this is getting competitive!",
-    "MEN up by 3—but WOMEN's got that emotional overtime!"
+    "Team Men surging ahead! The bro-wall is holding strong!",
+    "Men are dominating the field! Time for a tactical response, ladies!",
+    "The boys are on fire! Women need to regroup fast!",
+    "Men up by a significant margin! This is getting intense!"
   ],
   womenLead: [
-    "WOMEN's phalanx of feels crushes! MEN, time for therapy?",
-    "Girl power at maximum! MEN need a group hug stat!",
-    "WOMEN showing how it's done! MEN looking lost!",
-    "Squad goals achieved! MEN scrambling for answers!"
+    "Team Women taking control! Their coordination is unstoppable!",
+    "Girl power at maximum! Men scrambling for answers!",
+    "Women showing how it's done! Absolute dominance on the field!",
+    "Squad goals achieved! The ladies are crushing it!"
   ],
   tie: [
-    "Deadlock at the Hot Gates—kiss and make up?",
-    "Aww, stalemate smooches incoming!",
-    "Perfectly balanced, as all relationships should be!",
-    "Can't we all just get along? Apparently not!"
+    "We're all tied up at the Hot Gates! Deadlock!",
+    "Stalemate in the arena! Neither side giving ground!",
+    "Perfectly balanced, as all battles should be!",
+    "Neck and neck! This could go either way!"
   ],
   clash: [
-    "Chaos erupts! Shields up, hearts out!",
-    "It's absolute mayhem! TLC turned to TKO!",
-    "Drama cloud forming—everyone duck!",
-    "Here comes the feelings tsunami!"
+    "Chaos erupts in the center! It's absolute mayhem!",
+    "Massive clash in the middle! Bodies flying everywhere!",
+    "Drama cloud forming! Everyone brace for impact!",
+    "Here comes the epic collision!"
   ],
   phalanxForm: [
-    "Spartans would be proud! Formation locked!",
-    "This is Sparta... with feelings!",
-    "Shield wall activated! Emotional armor engaged!",
-    "Phalanx perfection! Now that's teamwork!"
+    "Formation locked! Spartans would be proud!",
+    "Shield wall activated! This is tactical genius!",
+    "Phalanx perfection! Now that's teamwork!",
+    "Formation complete! Impenetrable defense!"
   ],
   phalanxBreak: [
-    "Formation shattered! It's every soldier for themselves!",
-    "Chaos reigns! Organized chaos? Just chaos!",
-    "Shield wall crumbling like a bad relationship!",
-    "And the line breaks! Mayhem mode activated!"
+    "Formation shattered! Every soldier for themselves!",
+    "Chaos reigns! The shield wall is crumbling!",
+    "And the line breaks! Mayhem mode activated!",
+    "Formation compromised! Total bedlam!"
   ],
   powerupSpawn: [
-    "Oh snap! Cupid arrows on the field!",
-    "Power-up detected! Someone's getting lucky!",
-    "Special delivery from the love gods!",
-    "Ooh, shiny! This could change everything!"
+    "Power-up detected on the field!",
+    "Special delivery incoming! Someone's getting lucky!",
+    "Ooh, shiny! This could change everything!",
+    "Game changer appearing on the flanks!"
   ],
   victoryMen: [
-    "TEAM MEN WINS! Bro hugs all around!",
-    "Victory for the bros! Someone crack open the feels!",
-    "MEN triumph! Time for the victory chest bumps!",
-    "That's game! MEN showing that bro power!"
+    "Team Men wins! Absolute domination!",
+    "Victory for the boys! What a battle!",
+    "Men triumph! Champions of the arena!",
+    "That's game! Men showing their power!"
   ],
   victoryWomen: [
-    "TEAM WOMEN WINS! Group selfie incoming!",
-    "Ladies taking home the W! Squad goals forever!",
-    "WOMEN victorious! Flower power prevails!",
-    "Game over! WOMEN proving empathy conquers all!"
+    "Team Women wins! Stunning victory!",
+    "Ladies taking home the W! Incredible performance!",
+    "Women victorious! Empathy conquers all!",
+    "Game over! Women prove unstoppable!"
   ],
   standPhase: [
-    "Stand Phase: Time to organize and strategize!",
-    "Formation time! Let's see some Spartan discipline!",
+    "Stand Phase begins! Time to organize and strategize!",
+    "Formation time! Show me some Spartan discipline!",
     "Stand your ground! This is where tactics matter!"
   ],
   meleePhase: [
-    "Melee Phase! All-out chaos incoming!",
-    "Time to get chaotic! Flanks are open, power-ups dropping!",
+    "Melee Phase! All out chaos incoming!",
+    "Time to get wild! Flanks are open, power-ups dropping!",
     "Let the mayhem begin! No formation can save you now!"
   ],
   suddenDeath: [
-    "SUDDEN DEATH! First blood wins it all!",
+    "Sudden Death! First blood wins it all!",
     "This is it! Everything on the line!",
     "Nail-biter time! One mistake and it's over!"
   ]
 };
 
 let isSpeaking = false;
+let usePremium = true;
 
-export const speak = (context: NarratorContext, enabled: boolean = true) => {
+// Check for premium availability on load
+if (typeof window !== 'undefined') {
+  usePremium = isPremiumAvailable();
+  console.log(`[Narrator] Premium voice ${usePremium ? 'available' : 'unavailable, using fallback'}`);
+}
+
+/**
+ * Speak a narration quip with premium voice or fallback
+ */
+export const speak = (context: NarratorContext, enabled: boolean = true): string | undefined => {
   if (!enabled || isSpeaking) return;
   
   const contextQuips = quips[context];
@@ -95,9 +107,23 @@ export const speak = (context: NarratorContext, enabled: boolean = true) => {
   
   console.log(`[Narrator] ${quip}`);
   
-  if ('speechSynthesis' in window) {
+  if (usePremium) {
+    // Use premium ElevenLabs voice
+    isSpeaking = true;
+    
+    // Victory announcements get immediate priority
+    const isVictory = context === 'victoryMen' || context === 'victoryWomen';
+    const speakFn = isVictory ? speakPremiumImmediate : speakPremium;
+    
+    speakFn(quip).finally(() => {
+      // Reset speaking flag after a delay to prevent spam
+      setTimeout(() => {
+        isSpeaking = false;
+      }, 2000);
+    });
+  } else if ('speechSynthesis' in window) {
+    // Fallback to browser TTS
     try {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(quip);
@@ -127,9 +153,22 @@ export const speak = (context: NarratorContext, enabled: boolean = true) => {
   return quip;
 };
 
+/**
+ * Stop all speaking
+ */
 export const stopSpeaking = () => {
+  if (usePremium) {
+    stopPremiumNarration();
+  }
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
   isSpeaking = false;
+};
+
+/**
+ * Toggle premium voice on/off
+ */
+export const setPremiumVoice = (enabled: boolean) => {
+  usePremium = enabled && isPremiumAvailable();
 };
