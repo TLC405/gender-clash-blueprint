@@ -13,6 +13,24 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 /**
+ * Fallback to browser speech synthesis when ElevenLabs is unavailable
+ */
+function fallbackToSpeechSynthesis(text: string): HTMLAudioElement | null {
+  if (!('speechSynthesis' in window)) {
+    return null;
+  }
+  
+  // Use browser TTS and return a fake audio element for compatibility
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.1;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+  
+  // Return null since we're using speechSynthesis directly
+  return null;
+}
+
+/**
  * Generate speech using ElevenLabs TTS via edge function
  */
 async function generateSpeech(text: string): Promise<HTMLAudioElement | null> {
@@ -38,8 +56,9 @@ async function generateSpeech(text: string): Promise<HTMLAudioElement | null> {
     );
 
     if (!response.ok) {
-      console.error("[Premium Narrator] TTS request failed:", response.status);
-      return null;
+      // Gracefully fall back to browser TTS on API errors (401, 500, etc.)
+      console.warn("[Premium Narrator] TTS API unavailable, using browser fallback");
+      return fallbackToSpeechSynthesis(text);
     }
 
     const audioBlob = await response.blob();
@@ -51,8 +70,8 @@ async function generateSpeech(text: string): Promise<HTMLAudioElement | null> {
     
     return audio;
   } catch (error) {
-    console.error("[Premium Narrator] Error generating speech:", error);
-    return null;
+    console.warn("[Premium Narrator] Error, using browser fallback:", error);
+    return fallbackToSpeechSynthesis(text);
   }
 }
 
