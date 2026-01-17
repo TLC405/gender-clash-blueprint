@@ -1,255 +1,101 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Epic Battle Arena Design System - All colors MUST be HSL */
+/* Ultra Professional Light Theme - Clean & Minimal */
 
 @layer base {
   :root {
-    --background: 220 25% 8%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 98%;
+    --foreground: 220 15% 15%;
 
-    --card: 220 20% 12%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 15%;
 
-    --popover: 220 20% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 15%;
 
-    --primary: 207 90% 54%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 220 15% 20%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 338 78% 60%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 10% 94%;
+    --secondary-foreground: 220 15% 20%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 10% 94%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 199 89% 48%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 220 10% 90%;
+    --accent-foreground: 220 15% 20%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 207 90% 54%;
+    --border: 220 10% 88%;
+    --input: 220 10% 88%;
+    --ring: 220 15% 20%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Epic Battle Colors */
-    --men-primary: 207 90% 54%;
-    --men-accent: 199 89% 48%;
-    --men-glow: 207 90% 65%;
-    --women-primary: 338 78% 60%;
-    --women-accent: 351 100% 71%;
-    --women-glow: 338 78% 75%;
-    --arena-dark: 220 25% 8%;
-    --arena-light: 220 20% 15%;
-    --gold-epic: 45 100% 60%;
-    --victory-gold: 45 100% 70%;
-
-    /* Epic Gradients */
-    --gradient-men: linear-gradient(135deg, hsl(207 90% 54%), hsl(199 89% 48%));
-    --gradient-women: linear-gradient(135deg, hsl(338 78% 60%), hsl(351 100% 71%));
-    --gradient-arena: linear-gradient(180deg, hsl(220 25% 8%), hsl(220 20% 12%));
-    --gradient-victory: linear-gradient(135deg, hsl(45 100% 60%), hsl(30 100% 50%));
-    --gradient-glow-men: radial-gradient(circle, hsl(207 90% 54% / 0.3), transparent);
-    --gradient-glow-women: radial-gradient(circle, hsl(338 78% 60% / 0.3), transparent);
-
-    /* Epic Shadows */
-    --shadow-neon-blue: 0 0 30px hsl(207 90% 54% / 0.6), 0 0 60px hsl(207 90% 54% / 0.3);
-    --shadow-neon-pink: 0 0 30px hsl(338 78% 60% / 0.6), 0 0 60px hsl(338 78% 60% / 0.3);
-    --shadow-glow: 0 10px 40px -10px hsl(207 90% 54% / 0.4);
-    --shadow-epic: 0 20px 60px -10px hsl(0 0% 0% / 0.8);
-    --shadow-gold: 0 0 40px hsl(45 100% 60% / 0.5), 0 0 80px hsl(45 100% 60% / 0.2);
-
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-epic: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Team Colors - Muted Professional */
+    --men-primary: 210 70% 45%;
+    --men-light: 210 60% 55%;
+    --women-primary: 340 65% 50%;
+    --women-light: 340 55% 60%;
+    
+    /* Arena Colors */
+    --arena-bg: 120 30% 35%;
+    --arena-line: 0 0% 100%;
+    
+    /* Status Colors */
+    --success: 142 70% 45%;
+    --warning: 38 92% 50%;
   }
 
-  /* Epic Animations */
-  @keyframes glitch {
-    0%, 100% { transform: translate(0); filter: none; }
-    20% { transform: translate(-2px, 2px); filter: hue-rotate(90deg); }
-    40% { transform: translate(-2px, -2px); filter: hue-rotate(-90deg); }
-    60% { transform: translate(2px, 2px); filter: hue-rotate(90deg); }
-    80% { transform: translate(2px, -2px); filter: hue-rotate(-90deg); }
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% { 
-      box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
-      transform: scale(1);
-    }
-    50% { 
-      box-shadow: 0 0 40px hsl(var(--primary) / 0.6), 0 0 80px hsl(var(--primary) / 0.3);
-      transform: scale(1.02);
-    }
-  }
-
-  @keyframes neon-flicker {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-    75% { opacity: 0.9; }
-  }
-
-  @keyframes slide-in-epic {
-    from {
-      transform: translateY(-100%) scale(0.8);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes zoom-in-epic {
-    from {
-      transform: scale(0.5) rotate(-10deg);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1) rotate(0deg);
-      opacity: 1;
-    }
-  }
-
-  @keyframes battle-pulse {
-    0%, 100% { transform: scale(1); filter: brightness(1); }
-    50% { transform: scale(1.05); filter: brightness(1.2); }
-  }
-
-  @keyframes text-glow {
-    0%, 100% { 
-      text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
-    }
-    50% { 
-      text-shadow: 0 0 20px hsl(var(--primary) / 0.8), 0 0 40px hsl(var(--primary) / 0.4);
-    }
-  }
-
-  @keyframes victory-shine {
-    0% { 
-      background-position: -200% center;
-    }
-    100% { 
-      background-position: 200% center;
-    }
-  }
-
-  .animate-glitch {
-    animation: glitch 0.15s infinite;
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
-  .animate-neon-flicker {
-    animation: neon-flicker 0.5s ease-in-out infinite;
-  }
-
-  .animate-slide-in-epic {
-    animation: slide-in-epic 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .animate-zoom-in-epic {
-    animation: zoom-in-epic 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .animate-battle-pulse {
-    animation: battle-pulse 1s ease-in-out infinite;
-  }
-
-  .animate-text-glow {
-    animation: text-glow 2s ease-in-out infinite;
-  }
-
-  .animate-victory-shine {
-    animation: victory-shine 3s linear infinite;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 900;
-    letter-spacing: 0.05em;
-  }
-
-  .font-battle {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    letter-spacing: -0.02em;
   }
 
-  .font-epic {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+  /* Utility Classes */
+  .font-display {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
 
-  .text-neon-blue {
-    color: hsl(var(--men-glow));
-    text-shadow: 0 0 10px hsl(var(--men-primary) / 0.5), 0 0 20px hsl(var(--men-primary) / 0.3);
+  .text-men {
+    color: hsl(var(--men-primary));
   }
 
-  .text-neon-pink {
-    color: hsl(var(--women-glow));
-    text-shadow: 0 0 10px hsl(var(--women-primary) / 0.5), 0 0 20px hsl(var(--women-primary) / 0.3);
+  .text-women {
+    color: hsl(var(--women-primary));
   }
 
-  .text-gold-epic {
-    color: hsl(var(--gold-epic));
-    text-shadow: 0 0 15px hsl(var(--gold-epic) / 0.6), 0 0 30px hsl(var(--gold-epic) / 0.3);
+  .bg-men {
+    background-color: hsl(var(--men-primary));
   }
 
-  .bg-men-gradient {
-    background: var(--gradient-men);
+  .bg-women {
+    background-color: hsl(var(--women-primary));
   }
 
-  .bg-women-gradient {
-    background: var(--gradient-women);
-  }
-
-  .bg-arena-gradient {
-    background: var(--gradient-arena);
-  }
-
-  .shadow-neon-blue {
-    box-shadow: var(--shadow-neon-blue);
-  }
-
-  .shadow-neon-pink {
-    box-shadow: var(--shadow-neon-pink);
-  }
-
-  .shadow-gold {
-    box-shadow: var(--shadow-gold);
-  }
-
-  .border-neon-blue {
+  .border-men {
     border-color: hsl(var(--men-primary));
-    box-shadow: inset 0 0 20px hsl(var(--men-primary) / 0.2);
   }
 
-  .border-neon-pink {
+  .border-women {
     border-color: hsl(var(--women-primary));
-    box-shadow: inset 0 0 20px hsl(var(--women-primary) / 0.2);
   }
 }
