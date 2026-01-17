@@ -32,12 +32,19 @@ function speakWithBrowserTTS(text: string): Promise<void> {
   });
 }
 
+/**
+ * Generate speech using ElevenLabs TTS via backend function
+ */
+
+const ELEVENLABS_DISABLED_KEY = "tlc_elevenlabs_disabled";
+
 // Track if ElevenLabs API is available (disable after first failure)
 let elevenLabsAvailable = true;
 
-/**
- * Generate speech using ElevenLabs TTS via edge function
- */
+// Persist the disabled state so we don't spam a failing API on every reload
+if (typeof window !== "undefined") {
+  elevenLabsAvailable = localStorage.getItem(ELEVENLABS_DISABLED_KEY) !== "1";
+}
 async function generateSpeech(text: string): Promise<HTMLAudioElement | null> {
   // If ElevenLabs already failed, skip API call entirely
   if (!elevenLabsAvailable) {
@@ -69,6 +76,11 @@ async function generateSpeech(text: string): Promise<HTMLAudioElement | null> {
       // Disable ElevenLabs for this session after failure
       console.warn("[Premium Narrator] TTS API unavailable, switching to browser TTS");
       elevenLabsAvailable = false;
+      try {
+        localStorage.setItem(ELEVENLABS_DISABLED_KEY, "1");
+      } catch {
+        // ignore
+      }
       return null;
     }
 
@@ -83,6 +95,11 @@ async function generateSpeech(text: string): Promise<HTMLAudioElement | null> {
   } catch (error) {
     console.warn("[Premium Narrator] Error, switching to browser TTS");
     elevenLabsAvailable = false;
+    try {
+      localStorage.setItem(ELEVENLABS_DISABLED_KEY, "1");
+    } catch {
+      // ignore
+    }
     return null;
   }
 }
@@ -198,7 +215,7 @@ export async function preloadPhrases(phrases: string[]): Promise<void> {
  * Check if premium narrator is available
  */
 export function isPremiumAvailable(): boolean {
-  return !!(SUPABASE_URL && SUPABASE_KEY);
+  return !!(SUPABASE_URL && SUPABASE_KEY && elevenLabsAvailable);
 }
 
 /**
