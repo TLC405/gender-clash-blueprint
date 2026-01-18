@@ -1,8 +1,12 @@
+/**
+ * Ultra-Premium Battle Simulation
+ * Disney-quality visuals with professional arena rendering
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { NFLScoreboard } from "./battle/NFLScoreboard";
-import { VictoryScreen } from "./battle/VictoryScreen";
 import { speak, stopSpeaking, type NarratorContext } from "@/utils/battleNarrator";
+import { createArenaRenderer } from "./battle/ArenaRenderer";
 
 // High-performance modules
 import { createBattleSoA, initializeUnits, type BattleSoA, TEAM_MEN } from "@/lib/battleSoA";
@@ -54,10 +58,12 @@ const BattleSimulation = ({
   const soaRef = useRef<BattleSoA>(createBattleSoA());
   const gridRef = useRef<SpatialHashGrid | null>(null);
   const poolRef = useRef<ParticlePool>(createParticlePool());
+  const arenaRef = useRef(createArenaRenderer());
   const lastTimeRef = useRef<number>(0);
   const phaseTimeRef = useRef<number>(0);
   const killStatsRef = useRef({ menKills: 0, womenKills: 0 });
   const initializedRef = useRef(false);
+  const frameCountRef = useRef(0);
 
   const speakNarration = useCallback((context: NarratorContext) => {
     const quip = speak(context, narratorEnabled);
@@ -71,7 +77,6 @@ const BattleSimulation = ({
     const width = canvas.width;
     const height = canvas.height;
     
-    // Use the larger army size for initialization
     const maxArmySize = Math.max(menArmySize, womenArmySize);
     initializeUnits(soaRef.current, maxArmySize, width, height);
     
@@ -184,36 +189,33 @@ const BattleSimulation = ({
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    // Clear with arena green
-    ctx.fillStyle = "#4a7c59";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const width = canvas.width;
+    const height = canvas.height;
+    const time = frameCountRef.current / 60;
+    frameCountRef.current++;
 
-    // Draw simple field lines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-    ctx.lineWidth = 2;
-    
-    // Center line
-    ctx.beginPath();
-    ctx.moveTo(canvas.width / 2, 0);
-    ctx.lineTo(canvas.width / 2, canvas.height);
-    ctx.stroke();
-    
-    // Center circle
-    ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, 60, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    // Border
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
 
-    // Render units
-    renderUnits(ctx, soaRef.current, false, 0);
+    // Layer 1: Stadium background (shell, seating, lighting rigs)
+    arenaRef.current.renderBackground(ctx, width, height);
 
-    // Render particles
+    // Layer 2: Turf (grass, lines, end zones)
+    arenaRef.current.renderTurf(ctx, width, height);
+
+    // Layer 3: Crowd animation
+    arenaRef.current.renderCrowd(ctx, width, height, time);
+
+    // Layer 4: Units with Disney-quality rendering
+    renderUnits(ctx, soaRef.current, false, frameCountRef.current);
+
+    // Layer 5: Particles (elegant geometric effects)
     renderParticles(ctx, poolRef.current);
-  }, []);
+
+    // Layer 6: Dynamic lighting overlay
+    arenaRef.current.renderLighting(ctx, width, height, phase);
+
+  }, [phase]);
 
   const animate = useCallback(
     (currentTime: number) => {
@@ -266,7 +268,7 @@ const BattleSimulation = ({
     };
   }, [animate]);
 
-  // Reset function exposed via ref or callback
+  // Reset function
   useEffect(() => {
     if (!isRunning) {
       initializedRef.current = false;
@@ -276,7 +278,7 @@ const BattleSimulation = ({
   return (
     <canvas
       ref={canvasRef}
-      className="w-full h-full cursor-crosshair rounded-lg"
+      className="w-full h-full cursor-crosshair rounded-lg shadow-2xl"
       onClick={handleMeteorClick}
       aria-label="Battle Arena - Click to launch meteor strike"
     />
