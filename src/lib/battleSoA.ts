@@ -87,6 +87,7 @@ export function createBattleSoA(): BattleSoA {
 
 /**
  * Initialize units for battle
+ * Creates proper army formations centered vertically, facing each other
  */
 export function initializeUnits(
   soa: BattleSoA,
@@ -113,29 +114,45 @@ export function initializeUnits(
   soa.powerupType.fill(0);
   soa.powerupEndTime.fill(0);
   
-  // Initialize MEN (left side)
+  // Calculate grid dimensions for a roughly square formation
+  const unitsPerRow = Math.ceil(Math.sqrt(armySize * 0.6)); // Slightly wider than tall
+  const spacing = 8; // Pixels between units
+  
+  // Calculate formation dimensions
+  const formationWidth = unitsPerRow * spacing;
+  const formationHeight = Math.ceil(armySize / unitsPerRow) * spacing;
+  
+  // Center formations vertically
+  const centerY = canvasHeight / 2;
+  const startY = centerY - formationHeight / 2;
+  
+  // Men start at 15% from left, Women at 15% from right
+  const menStartX = canvasWidth * 0.12;
+  const womenStartX = canvasWidth * 0.88;
+  
+  // Initialize MEN (left side, facing right)
   for (let i = 0; i < armySize; i++) {
-    const row = Math.floor(i / 100);
-    const col = i % 100;
+    const row = Math.floor(i / unitsPerRow);
+    const col = i % unitsPerRow;
     
-    soa.posX[i] = 50 + col * 3;
-    soa.posY[i] = canvasHeight / 2 - 150 + row * 3;
+    soa.posX[i] = menStartX + col * spacing;
+    soa.posY[i] = startY + row * spacing;
     soa.health[i] = 100;
     soa.teamID[i] = TEAM_MEN;
     soa.stateFlags[i] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
     soa.formationRow[i] = row;
     soa.formationCol[i] = col;
-    soa.spriteIdx[i] = Math.floor(Math.random() * 36); // Random initial hue for disco
+    soa.spriteIdx[i] = Math.floor(Math.random() * 36);
   }
   
-  // Initialize WOMEN (right side)
+  // Initialize WOMEN (right side, facing left)
   for (let i = 0; i < armySize; i++) {
     const idx = armySize + i;
-    const row = Math.floor(i / 100);
-    const col = i % 100;
+    const row = Math.floor(i / unitsPerRow);
+    const col = i % unitsPerRow;
     
-    soa.posX[idx] = canvasWidth - 50 - col * 3;
-    soa.posY[idx] = canvasHeight / 2 - 150 + row * 3;
+    soa.posX[idx] = womenStartX - col * spacing;
+    soa.posY[idx] = startY + row * spacing;
     soa.health[idx] = 100;
     soa.teamID[idx] = TEAM_WOMEN;
     soa.stateFlags[idx] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
