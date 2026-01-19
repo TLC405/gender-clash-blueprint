@@ -87,20 +87,50 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
-        <h1 className="text-xl font-display">Men vs Women</h1>
+      {/* Battle Arena - Top 75% */}
+      <main className="h-[75vh] w-full relative">
+        <BattleSimulation
+          key={battleKey}
+          menArmySize={menArmySize}
+          womenArmySize={womenArmySize}
+          battleSpeed={Math.max(menSpeed, womenSpeed)}
+          menRageEnabled={menRageEnabled}
+          womenRageEnabled={womenRageEnabled}
+          isRunning={isRunning}
+          onStatsUpdate={setStats}
+          onPhaseChange={setPhase}
+          onTimeUpdate={setTimeRemaining}
+          onQuipChange={setCurrentQuip}
+          onVictory={handleVictory}
+          narratorEnabled={narratorEnabled}
+        />
         
-        <div className="flex items-center gap-2">
+        {/* Minimal Status Overlay */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-background/80 px-6 py-2 rounded-lg backdrop-blur-sm border border-border">
+          <span className="text-men font-bold text-lg">{stats.menAlive}</span>
+          <span className="text-muted-foreground text-sm">vs</span>
+          <span className="text-women font-bold text-lg">{stats.womenAlive}</span>
+          <span className="mx-2 text-muted-foreground">|</span>
+          <span className="text-foreground font-mono">{Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}</span>
+          <span className="mx-2 text-muted-foreground">|</span>
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">{phase}</span>
+        </div>
+      </main>
+
+      {/* Command Dock - Bottom 25% */}
+      <div className="h-[25vh] w-full bg-card border-t border-border flex flex-col">
+        {/* Control Row */}
+        <div className="flex items-center justify-center gap-3 py-2 border-b border-border">
           <Button
             onClick={handleStart}
             disabled={winner !== null}
+            size="sm"
             className="gap-2"
           >
             {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {isRunning ? "Pause" : "Start"}
           </Button>
-          <Button onClick={handleReset} variant="outline" className="gap-2">
+          <Button onClick={handleReset} variant="outline" size="sm" className="gap-2">
             <RotateCcw className="w-4 h-4" />
             Reset
           </Button>
@@ -108,88 +138,72 @@ const Index = () => {
             onClick={() => setNarratorEnabled(!narratorEnabled)}
             variant="outline"
             size="icon"
+            className="h-8 w-8"
           >
             {narratorEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </Button>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Women Panel - Left */}
-        <aside className="w-64 border-r border-border p-4 overflow-y-auto">
-          <TeamPanel
-            team="women"
-            armySize={womenArmySize}
-            onArmySizeChange={setWomenArmySize}
-            formation={womenFormation}
-            onFormationChange={setWomenFormation}
-            aggression={womenAggression}
-            onAggressionChange={setWomenAggression}
-            speed={womenSpeed}
-            onSpeedChange={setWomenSpeed}
-            rageEnabled={womenRageEnabled}
-            onRageToggle={() => setWomenRageEnabled(!womenRageEnabled)}
-            godModeEnabled={womenGodMode}
-            onGodModeToggle={() => setWomenGodMode(!womenGodMode)}
-            onSpawnReinforcements={handleSpawnWomenReinforcements}
-            disabled={isRunning}
-          />
-        </aside>
-
-        {/* Battle Arena - Center */}
-        <main className="flex-1 flex flex-col p-4 gap-4 min-w-0">
-          {/* Arena */}
-          <div className="flex-1 bg-card border border-border rounded-lg overflow-hidden">
-            <BattleSimulation
-              key={battleKey}
-              menArmySize={menArmySize}
-              womenArmySize={womenArmySize}
-              battleSpeed={Math.max(menSpeed, womenSpeed)}
-              menRageEnabled={menRageEnabled}
-              womenRageEnabled={womenRageEnabled}
-              isRunning={isRunning}
-              onStatsUpdate={setStats}
-              onPhaseChange={setPhase}
-              onTimeUpdate={setTimeRemaining}
-              onQuipChange={setCurrentQuip}
-              onVictory={handleVictory}
-              narratorEnabled={narratorEnabled}
+        {/* Team Panels + Scoreboard */}
+        <div className="flex-1 flex items-stretch overflow-hidden">
+          {/* Women Team */}
+          <div className="flex-1 p-3 overflow-y-auto border-r border-border">
+            <TeamPanel
+              team="women"
+              armySize={womenArmySize}
+              onArmySizeChange={setWomenArmySize}
+              formation={womenFormation}
+              onFormationChange={setWomenFormation}
+              aggression={womenAggression}
+              onAggressionChange={setWomenAggression}
+              speed={womenSpeed}
+              onSpeedChange={setWomenSpeed}
+              rageEnabled={womenRageEnabled}
+              onRageToggle={() => setWomenRageEnabled(!womenRageEnabled)}
+              godModeEnabled={womenGodMode}
+              onGodModeToggle={() => setWomenGodMode(!womenGodMode)}
+              onSpawnReinforcements={handleSpawnWomenReinforcements}
+              disabled={isRunning}
+              compact
             />
           </div>
 
-          {/* Scoreboard */}
-          <NFLScoreboard
-            menCount={stats.menAlive}
-            womenCount={stats.womenAlive}
-            menKills={stats.menKills}
-            womenKills={stats.womenKills}
-            phase={phase}
-            timeRemaining={timeRemaining}
-            currentQuip={currentQuip}
-          />
-        </main>
+          {/* Center Scoreboard */}
+          <div className="w-80 p-3 flex flex-col justify-center">
+            <NFLScoreboard
+              menCount={stats.menAlive}
+              womenCount={stats.womenAlive}
+              menKills={stats.menKills}
+              womenKills={stats.womenKills}
+              phase={phase}
+              timeRemaining={timeRemaining}
+              currentQuip={currentQuip}
+              compact
+            />
+          </div>
 
-        {/* Men Panel - Right */}
-        <aside className="w-64 border-l border-border p-4 overflow-y-auto">
-          <TeamPanel
-            team="men"
-            armySize={menArmySize}
-            onArmySizeChange={setMenArmySize}
-            formation={menFormation}
-            onFormationChange={setMenFormation}
-            aggression={menAggression}
-            onAggressionChange={setMenAggression}
-            speed={menSpeed}
-            onSpeedChange={setMenSpeed}
-            rageEnabled={menRageEnabled}
-            onRageToggle={() => setMenRageEnabled(!menRageEnabled)}
-            godModeEnabled={menGodMode}
-            onGodModeToggle={() => setMenGodMode(!menGodMode)}
-            onSpawnReinforcements={handleSpawnMenReinforcements}
-            disabled={isRunning}
-          />
-        </aside>
+          {/* Men Team */}
+          <div className="flex-1 p-3 overflow-y-auto border-l border-border">
+            <TeamPanel
+              team="men"
+              armySize={menArmySize}
+              onArmySizeChange={setMenArmySize}
+              formation={menFormation}
+              onFormationChange={setMenFormation}
+              aggression={menAggression}
+              onAggressionChange={setMenAggression}
+              speed={menSpeed}
+              onSpeedChange={setMenSpeed}
+              rageEnabled={menRageEnabled}
+              onRageToggle={() => setMenRageEnabled(!menRageEnabled)}
+              godModeEnabled={menGodMode}
+              onGodModeToggle={() => setMenGodMode(!menGodMode)}
+              onSpawnReinforcements={handleSpawnMenReinforcements}
+              disabled={isRunning}
+              compact
+            />
+          </div>
+        </div>
       </div>
 
       {/* Victory Screen */}

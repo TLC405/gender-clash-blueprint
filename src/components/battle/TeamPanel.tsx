@@ -23,6 +23,7 @@ type TeamPanelProps = {
   onGodModeToggle: () => void;
   onSpawnReinforcements: () => void;
   disabled: boolean;
+  compact?: boolean;
 };
 
 export const TeamPanel = ({
@@ -40,15 +41,69 @@ export const TeamPanel = ({
   godModeEnabled,
   onGodModeToggle,
   onSpawnReinforcements,
-  disabled
+  disabled,
+  compact = false
 }: TeamPanelProps) => {
   const isMen = team === "men";
   const teamColor = isMen ? "text-men" : "text-women";
   const bgColor = isMen ? "bg-men" : "bg-women";
-  const borderColor = isMen ? "border-men" : "border-women";
 
   const incrementArmy = () => onArmySizeChange(Math.min(armySize + 100, 5000));
   const decrementArmy = () => onArmySizeChange(Math.max(armySize - 100, 100));
+
+  if (compact) {
+    return (
+      <div className="h-full flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Users className={`w-4 h-4 ${teamColor}`} />
+          <span className={`text-sm font-semibold uppercase ${teamColor}`}>
+            {isMen ? "Men" : "Women"}
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {/* Army Size */}
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={decrementArmy} disabled={disabled || armySize <= 100} className="h-6 w-6">
+              <Minus className="w-3 h-3" />
+            </Button>
+            <span className={`font-display ${teamColor}`}>{armySize}</span>
+            <Button variant="ghost" size="icon" onClick={incrementArmy} disabled={disabled || armySize >= 5000} className="h-6 w-6">
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+          
+          {/* Formation */}
+          <Select value={formation} onValueChange={(v) => onFormationChange(v as Formation)} disabled={disabled}>
+            <SelectTrigger className="h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="scatter">Scatter</SelectItem>
+              <SelectItem value="phalanx">Phalanx</SelectItem>
+              <SelectItem value="wedge">Wedge</SelectItem>
+              <SelectItem value="shield_wall">Shield Wall</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {/* Speed */}
+          <div className="flex items-center gap-1">
+            <Zap className="w-3 h-3 text-muted-foreground" />
+            <Slider value={[speed]} onValueChange={(v) => onSpeedChange(v[0])} min={0.5} max={3} step={0.5} disabled={disabled} className="flex-1" />
+            <span className="text-muted-foreground w-6">{speed}x</span>
+          </div>
+          
+          {/* Rage + God */}
+          <div className="flex items-center gap-1">
+            <Flame className="w-3 h-3 text-destructive" />
+            <Switch checked={rageEnabled} onCheckedChange={onRageToggle} disabled={disabled} className="scale-75" />
+            <Shield className="w-3 h-3 text-warning ml-1" />
+            <Switch checked={godModeEnabled} onCheckedChange={onGodModeToggle} disabled={disabled} className="scale-75" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-card border border-border rounded-lg overflow-hidden">

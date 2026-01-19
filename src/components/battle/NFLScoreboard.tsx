@@ -10,6 +10,7 @@ type ScoreboardProps = {
   phase: BattlePhase;
   timeRemaining: number;
   currentQuip?: string;
+  compact?: boolean;
 };
 
 export const NFLScoreboard = ({
@@ -19,7 +20,8 @@ export const NFLScoreboard = ({
   womenKills,
   phase,
   timeRemaining,
-  currentQuip = "Battle in progress..."
+  currentQuip = "Battle in progress...",
+  compact = false
 }: ScoreboardProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -44,6 +46,31 @@ export const NFLScoreboard = ({
       case "victory": return "bg-success text-white";
     }
   };
+
+  if (compact) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-1 text-center">
+        <div className={`px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide ${getPhaseColor()}`}>
+          {getPhaseLabel()}
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-display text-men">{menCount}</div>
+            <div className="text-xs text-muted-foreground">{menKills} kills</div>
+          </div>
+          <div className="flex items-center gap-1 text-lg font-mono">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            {formatTime(timeRemaining)}
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-display text-women">{womenCount}</div>
+            <div className="text-xs text-muted-foreground">{womenKills} kills</div>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground truncate max-w-64">{currentQuip}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
