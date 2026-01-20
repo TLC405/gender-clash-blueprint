@@ -1,13 +1,12 @@
 /**
- * High-Performance Battle Physics Engine
- * Boids-based steering with O(N) spatial hashing
+ * Ultra Battle Physics Engine
+ * Boids-based steering with wide enemy search + fallback attraction
  */
 
 import {
   type BattleSoA,
   FLAG_ALIVE,
   FLAG_LOCKED,
-  FLAG_RAGE,
   TEAM_MEN,
   TEAM_WOMEN,
   killUnit,
@@ -17,49 +16,45 @@ import {
   type SpatialHashGrid,
   rebuildGrid,
   queryRadius,
+  findNearestEnemy,
 } from './spatialHash';
 import {
   type ParticlePool,
-  spawnBeerSplash,
-  spawnFlowerBloom,
+  spawnParticle,
+  PARTICLE_SPARK,
+  PARTICLE_DUST,
 } from './particlePool';
 
 export type BattlePhase = 'stand' | 'melee' | 'sudden_death' | 'victory';
 
 export interface PhysicsConfig {
   moveSpeed: number;
+  chargeSpeed: number;
   attackRange: number;
   baseDamage: number;
   separationRadius: number;
   separationStrength: number;
   cohesionRadius: number;
   cohesionStrength: number;
-  alignmentRadius: number;
   alignmentStrength: number;
   attractionStrength: number;
   maxSpeed: number;
-  formationDefenseBonus: number;
   rageSpeedMultiplier: number;
-  rageSeparationMultiplier: number;
-  rageAttractionMultiplier: number;
 }
 
 export const DEFAULT_CONFIG: PhysicsConfig = {
-  moveSpeed: 25,
-  attackRange: 8,
-  baseDamage: 35,
-  separationRadius: 12,
-  separationStrength: 3.0,
-  cohesionRadius: 40,
-  cohesionStrength: 0.15,
-  alignmentRadius: 30,
-  alignmentStrength: 0.1,
-  attractionStrength: 0.8,
-  maxSpeed: 60,
-  formationDefenseBonus: 1.5,
-  rageSpeedMultiplier: 1.5,
-  rageSeparationMultiplier: 0.5,
-  rageAttractionMultiplier: 2.0,
+  moveSpeed: 60,
+  chargeSpeed: 120,
+  attackRange: 12,
+  baseDamage: 25,
+  separationRadius: 14,
+  separationStrength: 2.5,
+  cohesionRadius: 50,
+  cohesionStrength: 0.2,
+  alignmentStrength: 0.15,
+  attractionStrength: 1.2,
+  maxSpeed: 100,
+  rageSpeedMultiplier: 1.6,
 };
 
 export interface BattleStats {
@@ -79,37 +74,25 @@ export interface PhysicsResult {
 }
 
 /**
- * Find nearest enemy using spatial hash
+ * Spawn impact sparks on hit
  */
-function findNearestEnemy(
-  soa: BattleSoA,
-  grid: SpatialHashGrid,
-  unitIndex: number,
-  searchRadius: number = 200
-): number {
-  const ux = soa.posX[unitIndex];
-  const uy = soa.posY[unitIndex];
-  const unitTeam = soa.teamID[unitIndex];
-  
-  let nearestIdx = -1;
-  let nearestDistSq = searchRadius * searchRadius;
-  
-  for (const otherIdx of queryRadius(grid, ux, uy)) {
-    if (otherIdx === unitIndex) continue;
-    if ((soa.stateFlags[otherIdx] & FLAG_ALIVE) === 0) continue;
-    if (soa.teamID[otherIdx] === unitTeam) continue;
-    
-    const dx = soa.posX[otherIdx] - ux;
-    const dy = soa.posY[otherIdx] - uy;
-    const distSq = dx * dx + dy * dy;
-    
-    if (distSq < nearestDistSq) {
-      nearestDistSq = distSq;
-      nearestIdx = otherIdx;
-    }
+function spawnImpactSparks(pool: ParticlePool, x: number, y: number): void {
+  for (let i = 0; i < 4; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 40 + Math.random() * 40;
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed - 20, PARTICLE_SPARK, 0.3, 2);
   }
-  
-  return nearestIdx;
+}
+
+/**
+ * Spawn dust on death
+ */
+function spawnDeathDust(pool: ParticlePool, x: number, y: number): void {
+  for (let i = 0; i < 5; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 20 + Math.random() * 30;
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed - 15, PARTICLE_DUST, 0.5, 4);
+  }
 }
 
 /**
@@ -119,8 +102,7 @@ function calculateSteering(
   soa: BattleSoA,
   grid: SpatialHashGrid,
   unitIndex: number,
-  config: PhysicsConfig,
-  rageActive: boolean
+  config: PhysicsConfig
 ): { fx: number; fy: number } {
   const ux = soa.posX[unitIndex];
   const uy = soa.posY[unitIndex];
@@ -129,16 +111,11 @@ function calculateSteering(
   let separationX = 0, separationY = 0;
   let cohesionX = 0, cohesionY = 0;
   let alignmentX = 0, alignmentY = 0;
-  let attractionX = 0, attractionY = 0;
   
   let sameTeamCount = 0;
-  let nearestEnemyDistSq = Infinity;
-  let nearestEnemyX = 0, nearestEnemyY = 0;
-  
   const sepRadiusSq = config.separationRadius * config.separationRadius;
   const cohRadiusSq = config.cohesionRadius * config.cohesionRadius;
   
-  // Query neighbors
   for (const otherIdx of queryRadius(grid, ux, uy)) {
     if (otherIdx === unitIndex) continue;
     if ((soa.stateFlags[otherIdx] & FLAG_ALIVE) === 0) continue;
@@ -147,73 +124,39 @@ function calculateSteering(
     const dy = soa.posY[otherIdx] - uy;
     const distSq = dx * dx + dy * dy;
     
-    const isSameTeam = soa.teamID[otherIdx] === unitTeam;
-    
-    // Separation (applies to all units)
+    // Separation (all units)
     if (distSq < sepRadiusSq && distSq > 0.01) {
       const dist = Math.sqrt(distSq);
-      const force = 1 / (dist + 0.1);
+      const force = (config.separationRadius - dist) / config.separationRadius;
       separationX -= (dx / dist) * force;
       separationY -= (dy / dist) * force;
     }
     
-    if (isSameTeam) {
-      // Cohesion and alignment only for same team
-      if (distSq < cohRadiusSq) {
-        cohesionX += dx;
-        cohesionY += dy;
-        alignmentX += soa.velX[otherIdx];
-        alignmentY += soa.velY[otherIdx];
-        sameTeamCount++;
-      }
-    } else {
-      // Track nearest enemy for attraction
-      if (distSq < nearestEnemyDistSq) {
-        nearestEnemyDistSq = distSq;
-        nearestEnemyX = dx;
-        nearestEnemyY = dy;
-      }
+    // Cohesion and alignment (teammates only)
+    if (soa.teamID[otherIdx] === unitTeam && distSq < cohRadiusSq) {
+      cohesionX += dx;
+      cohesionY += dy;
+      alignmentX += soa.velX[otherIdx];
+      alignmentY += soa.velY[otherIdx];
+      sameTeamCount++;
     }
   }
   
-  // Normalize cohesion and alignment
+  let fx = separationX * config.separationStrength;
+  let fy = separationY * config.separationStrength;
+  
   if (sameTeamCount > 0) {
-    cohesionX /= sameTeamCount;
-    cohesionY /= sameTeamCount;
-    alignmentX /= sameTeamCount;
-    alignmentY /= sameTeamCount;
+    fx += (cohesionX / sameTeamCount) * config.cohesionStrength;
+    fy += (cohesionY / sameTeamCount) * config.cohesionStrength;
+    fx += (alignmentX / sameTeamCount) * config.alignmentStrength;
+    fy += (alignmentY / sameTeamCount) * config.alignmentStrength;
   }
-  
-  // Attraction to nearest enemy
-  if (nearestEnemyDistSq < Infinity) {
-    const dist = Math.sqrt(nearestEnemyDistSq);
-    if (dist > 0.1) {
-      attractionX = nearestEnemyX / dist;
-      attractionY = nearestEnemyY / dist;
-    }
-  }
-  
-  // Apply weights with rage modifiers
-  const sepMult = rageActive ? config.rageSeparationMultiplier : 1.0;
-  const attMult = rageActive ? config.rageAttractionMultiplier : 1.0;
-  
-  let fx = 
-    separationX * config.separationStrength * sepMult +
-    cohesionX * config.cohesionStrength +
-    alignmentX * config.alignmentStrength +
-    attractionX * config.attractionStrength * attMult;
-  
-  let fy = 
-    separationY * config.separationStrength * sepMult +
-    cohesionY * config.cohesionStrength +
-    alignmentY * config.alignmentStrength +
-    attractionY * config.attractionStrength * attMult;
   
   return { fx, fy };
 }
 
 /**
- * Main physics update loop
+ * Main physics update loop - with proper enemy search and fallback attraction
  */
 export function updatePhysics(
   soa: BattleSoA,
@@ -233,9 +176,6 @@ export function updatePhysics(
   // Rebuild spatial hash
   rebuildGrid(grid, soa.posX, soa.posY, soa.stateFlags, soa.unitCount, FLAG_ALIVE);
   
-  const centerX = canvasWidth / 2;
-  const passWidth = 200;
-  
   let menAlive = 0;
   let womenAlive = 0;
   let menKills = 0;
@@ -243,10 +183,11 @@ export function updatePhysics(
   let menInFormation = 0;
   let womenInFormation = 0;
   
-  const maxSpeed = rageActive ? config.maxSpeed * config.rageSpeedMultiplier : config.maxSpeed;
+  const speedMult = rageActive ? config.rageSpeedMultiplier : 1.0;
+  const currentSpeed = phase === 'stand' ? config.moveSpeed * 0.1 : config.chargeSpeed * speedMult;
+  const maxSpeed = config.maxSpeed * speedMult;
   const attackRangeSq = config.attackRange * config.attackRange;
   
-  // Update all units
   for (let i = 0; i < soa.unitCount; i++) {
     if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
     
@@ -254,64 +195,97 @@ export function updatePhysics(
     if (team === TEAM_MEN) menAlive++;
     else womenAlive++;
     
-    // Check formation state
-    const inCenterPass = Math.abs(soa.posX[i] - centerX) < passWidth / 2;
-    const shouldLock = phase === 'stand' && inCenterPass;
-    setFormationLocked(soa, i, shouldLock);
+    const x = soa.posX[i];
+    const y = soa.posY[i];
     
-    if (shouldLock) {
+    // Stand phase - hold formation with minimal drift
+    if (phase === 'stand') {
+      soa.velX[i] *= 0.85;
+      soa.velY[i] *= 0.85;
+      setFormationLocked(soa, i, true);
       if (team === TEAM_MEN) menInFormation++;
       else womenInFormation++;
+      continue;
     }
     
-    const formationBonus = shouldLock ? config.formationDefenseBonus : 1.0;
+    // Break formation in melee
+    setFormationLocked(soa, i, false);
     
-    // Find nearest enemy
-    const targetIdx = findNearestEnemy(soa, grid, i);
+    // Find nearest enemy using wide search (up to 20 cells = 1000px)
+    const enemy = findNearestEnemy(
+      grid, x, y, team,
+      soa.posX, soa.posY, soa.teamID, soa.stateFlags,
+      FLAG_ALIVE, 20
+    );
     
-    if (targetIdx >= 0) {
-      const dx = soa.posX[targetIdx] - soa.posX[i];
-      const dy = soa.posY[targetIdx] - soa.posY[i];
-      const distSq = dx * dx + dy * dy;
+    let targetX: number;
+    let targetY: number;
+    
+    if (enemy.index >= 0) {
+      targetX = soa.posX[enemy.index];
+      targetY = soa.posY[enemy.index];
       
-      if (distSq < attackRangeSq) {
-        // Attack
-        const damage = config.baseDamage * dt / formationBonus;
-        soa.health[targetIdx] -= damage;
+      // Attack if in range
+      if (enemy.distSq < attackRangeSq) {
+        const damage = config.baseDamage * dt;
+        soa.health[enemy.index] -= damage;
         
-        if (soa.health[targetIdx] <= 0) {
-          killUnit(soa, targetIdx);
+        // Spawn hit sparks
+        spawnImpactSparks(pool, (x + targetX) / 2, (y + targetY) / 2);
+        
+        if (soa.health[enemy.index] <= 0) {
+          killUnit(soa, enemy.index);
+          kills.push({ x: targetX, y: targetY, killerTeam: team });
+          spawnDeathDust(pool, targetX, targetY);
           
-          kills.push({
-            x: soa.posX[targetIdx],
-            y: soa.posY[targetIdx],
-            killerTeam: team,
-          });
-          
-          // Spawn loveable KO effect
-          if (team === TEAM_MEN) {
-            spawnBeerSplash(pool, soa.posX[targetIdx], soa.posY[targetIdx]);
-            menKills++;
-          } else {
-            spawnFlowerBloom(pool, soa.posX[targetIdx], soa.posY[targetIdx]);
-            womenKills++;
-          }
+          if (team === TEAM_MEN) menKills++;
+          else womenKills++;
         }
         
-        // Stop moving when attacking
-        soa.velX[i] *= 0.5;
-        soa.velY[i] *= 0.5;
+        // Slow down while attacking
+        soa.velX[i] *= 0.7;
+        soa.velY[i] *= 0.7;
+        continue;
+      }
+    } else {
+      // FALLBACK: No enemy found - move toward enemy territory
+      if (team === TEAM_MEN) {
+        targetX = canvasWidth * 0.85; // Move right
+        targetY = canvasHeight / 2;
       } else {
-        // Move toward target with Boids steering
-        const { fx, fy } = calculateSteering(soa, grid, i, config, rageActive);
-        
-        const moveSpeedMult = shouldLock ? 0.7 : 1.0;
-        const speed = config.moveSpeed * moveSpeedMult * (rageActive ? config.rageSpeedMultiplier : 1.0);
-        
-        soa.velX[i] += fx * speed * dt;
-        soa.velY[i] += fy * speed * dt;
+        targetX = canvasWidth * 0.15; // Move left
+        targetY = canvasHeight / 2;
       }
     }
+    
+    // Calculate direction to target
+    const dx = targetX - x;
+    const dy = targetY - y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist > 5) {
+      // Attraction toward target
+      const attractX = (dx / dist) * config.attractionStrength;
+      const attractY = (dy / dist) * config.attractionStrength;
+      
+      // Boids steering
+      const steering = calculateSteering(soa, grid, i, config);
+      
+      // Combine forces
+      let forceX = attractX + steering.fx;
+      let forceY = attractY + steering.fy;
+      
+      // Normalize and apply
+      const forceMag = Math.sqrt(forceX * forceX + forceY * forceY);
+      if (forceMag > 0.001) {
+        soa.velX[i] += (forceX / forceMag) * currentSpeed * dt;
+        soa.velY[i] += (forceY / forceMag) * currentSpeed * dt;
+      }
+    }
+    
+    // Velocity damping
+    soa.velX[i] *= 0.94;
+    soa.velY[i] *= 0.94;
     
     // Clamp velocity
     const velMag = Math.sqrt(soa.velX[i] * soa.velX[i] + soa.velY[i] * soa.velY[i]);
@@ -321,17 +295,14 @@ export function updatePhysics(
       soa.velY[i] *= scale;
     }
     
-    // Velocity damping
-    soa.velX[i] *= 0.95;
-    soa.velY[i] *= 0.95;
-    
     // Update position
     soa.posX[i] += soa.velX[i] * dt;
     soa.posY[i] += soa.velY[i] * dt;
     
     // Boundary constraints
-    soa.posX[i] = Math.max(10, Math.min(canvasWidth - 10, soa.posX[i]));
-    soa.posY[i] = Math.max(10, Math.min(canvasHeight - 10, soa.posY[i]));
+    const margin = 40;
+    soa.posX[i] = Math.max(margin, Math.min(canvasWidth - margin, soa.posX[i]));
+    soa.posY[i] = Math.max(margin, Math.min(canvasHeight - margin, soa.posY[i]));
   }
   
   return {
@@ -350,7 +321,7 @@ export function updatePhysics(
 }
 
 /**
- * Apply meteor impact to units in radius
+ * Apply meteor impact force and damage
  */
 export function applyMeteorImpact(
   soa: BattleSoA,
@@ -362,19 +333,26 @@ export function applyMeteorImpact(
 ): void {
   const radiusSq = radius * radius;
   
-  for (const idx of queryRadius(grid, meteorX, meteorY)) {
-    if ((soa.stateFlags[idx] & FLAG_ALIVE) === 0) continue;
+  for (let i = 0; i < soa.unitCount; i++) {
+    if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
     
-    const dx = soa.posX[idx] - meteorX;
-    const dy = soa.posY[idx] - meteorY;
+    const dx = soa.posX[i] - meteorX;
+    const dy = soa.posY[i] - meteorY;
     const distSq = dx * dx + dy * dy;
     
     if (distSq < radiusSq && distSq > 0.01) {
       const dist = Math.sqrt(distSq);
       const force = strength * (1 - dist / radius);
       
-      soa.velX[idx] += (dx / dist) * force;
-      soa.velY[idx] += (dy / dist) * force;
+      soa.velX[i] += (dx / dist) * force;
+      soa.velY[i] += (dy / dist) * force;
+      
+      // Also deal damage
+      const damage = 30 * (1 - dist / radius);
+      soa.health[i] -= damage;
+      if (soa.health[i] <= 0) {
+        killUnit(soa, i);
+      }
     }
   }
 }

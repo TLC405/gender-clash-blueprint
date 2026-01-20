@@ -172,6 +172,73 @@ export function* queryRadius(
 }
 
 /**
+ * Query units in a wide radius (variable cell neighborhood)
+ * For finding enemies across the battlefield
+ */
+export function* queryWideRadius(
+  grid: SpatialHashGrid,
+  x: number,
+  y: number,
+  radiusCells: number = 5
+): Generator<number> {
+  const centerCellX = Math.floor(x / grid.cellSize);
+  const centerCellY = Math.floor(y / grid.cellSize);
+  
+  for (let dy = -radiusCells; dy <= radiusCells; dy++) {
+    for (let dx = -radiusCells; dx <= radiusCells; dx++) {
+      const cellX = centerCellX + dx;
+      const cellY = centerCellY + dy;
+      
+      if (cellX < 0 || cellX >= grid.gridWidth) continue;
+      if (cellY < 0 || cellY >= grid.gridHeight) continue;
+      
+      const cellIndex = cellY * grid.gridWidth + cellX;
+      
+      let current = grid.cellHead[cellIndex];
+      while (current !== -1) {
+        yield current;
+        current = grid.cellNext[current];
+      }
+    }
+  }
+}
+
+/**
+ * Find nearest enemy using wide search
+ */
+export function findNearestEnemy(
+  grid: SpatialHashGrid,
+  x: number,
+  y: number,
+  myTeam: number,
+  posX: Float32Array,
+  posY: Float32Array,
+  teamID: Uint8Array,
+  stateFlags: Uint8Array,
+  FLAG_ALIVE: number,
+  maxRadiusCells: number = 20
+): { index: number; distSq: number } {
+  let nearestIdx = -1;
+  let nearestDistSq = Infinity;
+  
+  for (const unitIdx of queryWideRadius(grid, x, y, maxRadiusCells)) {
+    if ((stateFlags[unitIdx] & FLAG_ALIVE) === 0) continue;
+    if (teamID[unitIdx] === myTeam) continue;
+    
+    const dx = posX[unitIdx] - x;
+    const dy = posY[unitIdx] - y;
+    const distSq = dx * dx + dy * dy;
+    
+    if (distSq < nearestDistSq) {
+      nearestDistSq = distSq;
+      nearestIdx = unitIdx;
+    }
+  }
+  
+  return { index: nearestIdx, distSq: nearestDistSq };
+}
+
+/**
  * Count units in radius for debugging/stats
  */
 export function countInRadius(
