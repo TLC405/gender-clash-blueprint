@@ -1,24 +1,25 @@
 /**
- * Premium Particle System
- * Clean, subtle effects - professional quality
+ * Ultra Premium Particle System
+ * Professional quality effects with radial gradients
  */
 
-const POOL_SIZE = 500;
+const POOL_SIZE = 1024;
 
 // Particle types
 export const PARTICLE_SPARK = 0;
 export const PARTICLE_DUST = 1;
 export const PARTICLE_CONFETTI = 2;
 export const PARTICLE_IMPACT = 3;
+export const PARTICLE_GLOW = 4;
 
 // Legacy exports for compatibility
 export const PARTICLE_HEART = PARTICLE_SPARK;
 export const PARTICLE_BEER = PARTICLE_SPARK;
 export const PARTICLE_FLOWER = PARTICLE_SPARK;
-export const PARTICLE_STAR = PARTICLE_SPARK;
+export const PARTICLE_STAR = PARTICLE_GLOW;
 export const PARTICLE_CLOUD = PARTICLE_DUST;
 export const PARTICLE_METEOR = PARTICLE_IMPACT;
-export const PARTICLE_RAGE = PARTICLE_SPARK;
+export const PARTICLE_RAGE = PARTICLE_GLOW;
 
 export interface ParticlePool {
   posX: Float32Array;
@@ -58,7 +59,8 @@ export function spawnParticle(
   vy: number,
   type: number,
   life: number = 0.5,
-  size: number = 2
+  size: number = 3,
+  colorIdx: number = 0
 ): void {
   pool.posX[pool.head] = x;
   pool.posY[pool.head] = y;
@@ -68,7 +70,7 @@ export function spawnParticle(
   pool.maxLife[pool.head] = life;
   pool.size[pool.head] = size;
   pool.type[pool.head] = type;
-  pool.colorIdx[pool.head] = Math.floor(Math.random() * 6);
+  pool.colorIdx[pool.head] = colorIdx || Math.floor(Math.random() * 6);
 
   pool.head = (pool.head + 1) % POOL_SIZE;
   pool.activeCount = Math.min(pool.activeCount + 1, POOL_SIZE);
