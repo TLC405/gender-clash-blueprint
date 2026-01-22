@@ -11,7 +11,7 @@ import { speak, stopSpeaking, type NarratorContext } from "@/utils/battleNarrato
 import { createBattleSoA, initializeUnits, type BattleSoA, TEAM_MEN, TEAM_WOMEN, FLAG_ALIVE, FLAG_LOCKED, FLAG_LEADER } from "@/lib/battleSoA";
 import { createSpatialHashGrid, resizeGrid, type SpatialHashGrid } from "@/lib/spatialHash";
 import { createParticlePool, updateParticles, renderParticles, spawnConfetti, spawnMeteorImpact, clearParticles, type ParticlePool } from "@/lib/particlePool";
-import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, type BattlePhase } from "@/lib/battlePhysics";
+import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, type BattlePhase } from "@/lib/battlePhysics";
 
 type BattleSimulationProps = {
   menArmySize: number;
@@ -134,6 +134,7 @@ const BattleSimulation = ({
 
     clearParticles(poolRef.current);
     killStatsRef.current = { menKills: 0, womenKills: 0 };
+    resetChargeState(); // Reset charge state for new battle
 
     onStatsUpdate({
       menAlive: menArmySize,
@@ -388,21 +389,17 @@ const BattleSimulation = ({
     setTimeRemaining(newTime);
     onTimeUpdate(Math.floor(newTime));
 
-    // Phase transitions
+    // Phase transitions - PERMANENT MELEE until victory
     if (phase === "stand" && phaseTimeRef.current > 3) {
       setPhase("melee");
       onPhaseChange("melee");
       phaseTimeRef.current = 0;
-      setTimeRemaining(60);
-      onTimeUpdate(60);
+      // No time limit for melee - fight until victory
       speakNarration("meleePhase");
-    } else if (phase === "melee" && phaseTimeRef.current > 60) {
-      setPhase("stand");
-      onPhaseChange("stand");
-      phaseTimeRef.current = 0;
-      setTimeRemaining(180);
-      onTimeUpdate(180);
-      speakNarration("standPhase");
+    }
+    // Optional: sudden death at low time (adds intensity, but melee continues)
+    if (phase === "melee" && newTime <= 30 && timeRemaining > 30) {
+      speakNarration("suddenDeath");
     }
 
     const rageActive = menRageEnabled || womenRageEnabled;

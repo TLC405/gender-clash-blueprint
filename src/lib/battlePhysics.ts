@@ -43,19 +43,25 @@ export interface PhysicsConfig {
 }
 
 export const DEFAULT_CONFIG: PhysicsConfig = {
-  moveSpeed: 60,
-  chargeSpeed: 120,
-  attackRange: 12,
-  baseDamage: 25,
-  separationRadius: 14,
-  separationStrength: 2.5,
-  cohesionRadius: 50,
-  cohesionStrength: 0.2,
-  alignmentStrength: 0.15,
-  attractionStrength: 1.2,
-  maxSpeed: 100,
-  rageSpeedMultiplier: 1.6,
+  moveSpeed: 80,              // Increased base movement
+  chargeSpeed: 180,           // Strong initial charge burst
+  attackRange: 10,            // Tighter melee range
+  baseDamage: 20,             // Slightly longer fights
+  separationRadius: 12,       // Tighter formations
+  separationStrength: 1.2,    // REDUCED - less scatter
+  cohesionRadius: 60,         // Larger squad cohesion
+  cohesionStrength: 0.08,     // Subtle cohesion
+  alignmentStrength: 0.08,    // Subtle alignment
+  attractionStrength: 3.5,    // INCREASED - strong enemy chase
+  maxSpeed: 150,              // Higher top speed
+  rageSpeedMultiplier: 1.4,   // Slightly reduced
 };
+
+// Charge state tracking - global flag for phase transition
+let chargeApplied = false;
+export function resetChargeState(): void {
+  chargeApplied = false;
+}
 
 export interface BattleStats {
   menAlive: number;
@@ -184,9 +190,22 @@ export function updatePhysics(
   let womenInFormation = 0;
   
   const speedMult = rageActive ? config.rageSpeedMultiplier : 1.0;
-  const currentSpeed = phase === 'stand' ? config.moveSpeed * 0.1 : config.chargeSpeed * speedMult;
   const maxSpeed = config.maxSpeed * speedMult;
   const attackRangeSq = config.attackRange * config.attackRange;
+  
+  // PHASE 1: Apply charge impulse ONCE when melee starts
+  if (phase === 'melee' && !chargeApplied) {
+    chargeApplied = true;
+    for (let i = 0; i < soa.unitCount; i++) {
+      if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
+      const team = soa.teamID[i];
+      // Men charge right, women charge left
+      const chargeDir = team === TEAM_MEN ? 1 : -1;
+      soa.velX[i] = chargeDir * config.chargeSpeed * (0.8 + Math.random() * 0.4);
+      soa.velY[i] = (Math.random() - 0.5) * config.chargeSpeed * 0.3;
+      setFormationLocked(soa, i, false);
+    }
+  }
   
   for (let i = 0; i < soa.unitCount; i++) {
     if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
@@ -198,32 +217,31 @@ export function updatePhysics(
     const x = soa.posX[i];
     const y = soa.posY[i];
     
-    // Stand phase - hold formation with minimal drift
+    // Stand phase - hold formation with heavy damping
     if (phase === 'stand') {
-      soa.velX[i] *= 0.85;
-      soa.velY[i] *= 0.85;
+      soa.velX[i] *= 0.8;
+      soa.velY[i] *= 0.8;
       setFormationLocked(soa, i, true);
       if (team === TEAM_MEN) menInFormation++;
       else womenInFormation++;
       continue;
     }
     
-    // Break formation in melee
-    setFormationLocked(soa, i, false);
-    
-    // Find nearest enemy using wide search (up to 20 cells = 1000px)
+    // Find nearest enemy using wide search (up to 25 cells = 1250px)
     const enemy = findNearestEnemy(
       grid, x, y, team,
       soa.posX, soa.posY, soa.teamID, soa.stateFlags,
-      FLAG_ALIVE, 20
+      FLAG_ALIVE, 25
     );
     
     let targetX: number;
     let targetY: number;
+    let hasTarget = false;
     
     if (enemy.index >= 0) {
       targetX = soa.posX[enemy.index];
       targetY = soa.posY[enemy.index];
+      hasTarget = true;
       
       // Attack if in range
       if (enemy.distSq < attackRangeSq) {
@@ -240,20 +258,40 @@ export function updatePhysics(
           
           if (team === TEAM_MEN) menKills++;
           else womenKills++;
+          
+          // KILL MOMENTUM: Push through the dead unit
+          const kdx = targetX - x;
+          const kdy = targetY - y;
+          const kdist = Math.sqrt(kdx * kdx + kdy * kdy);
+          if (kdist > 0.1) {
+            soa.velX[i] += (kdx / kdist) * 40;
+            soa.velY[i] += (kdy / kdist) * 40;
+          }
         }
         
-        // Slow down while attacking
-        soa.velX[i] *= 0.7;
-        soa.velY[i] *= 0.7;
-        continue;
+        // ATTACK LUNGE: Small boost toward target when attacking
+        const lungeStrength = 30;
+        const ldx = targetX - x;
+        const ldy = targetY - y;
+        const ldist = Math.sqrt(ldx * ldx + ldy * ldy);
+        if (ldist > 0.1) {
+          soa.velX[i] += (ldx / ldist) * lungeStrength * dt;
+          soa.velY[i] += (ldy / ldist) * lungeStrength * dt;
+        }
+        
+        // Light slowdown while attacking (not full stop)
+        soa.velX[i] *= 0.92;
+        soa.velY[i] *= 0.92;
       }
-    } else {
-      // FALLBACK: No enemy found - move toward enemy territory
+    }
+    
+    // FALLBACK: No enemy found - move toward enemy territory
+    if (!hasTarget) {
       if (team === TEAM_MEN) {
-        targetX = canvasWidth * 0.85; // Move right
+        targetX = canvasWidth * 0.85;
         targetY = canvasHeight / 2;
       } else {
-        targetX = canvasWidth * 0.15; // Move left
+        targetX = canvasWidth * 0.15;
         targetY = canvasHeight / 2;
       }
     }
@@ -263,29 +301,28 @@ export function updatePhysics(
     const dy = targetY - y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     
-    if (dist > 5) {
-      // Attraction toward target
-      const attractX = (dx / dist) * config.attractionStrength;
-      const attractY = (dy / dist) * config.attractionStrength;
+    if (dist > 3) {
+      // DISTANCE-BASED URGENCY: Stronger pull when far from enemies
+      const urgencyMult = hasTarget ? (dist > 200 ? 2.0 : dist > 100 ? 1.5 : 1.0) : 1.5;
       
-      // Boids steering
-      const steering = calculateSteering(soa, grid, i, config);
+      // DIRECT FORCE APPLICATION: No normalization cap - allows stronger pursuit
+      const attractForce = config.attractionStrength * urgencyMult;
+      const attractX = (dx / dist) * attractForce;
+      const attractY = (dy / dist) * attractForce;
       
-      // Combine forces
-      let forceX = attractX + steering.fx;
-      let forceY = attractY + steering.fy;
+      // Boids steering - only apply cohesion when far from enemies
+      const steering = hasTarget && dist < 80 
+        ? { fx: 0, fy: 0 }  // Disable cohesion in combat zone
+        : calculateSteering(soa, grid, i, config);
       
-      // Normalize and apply
-      const forceMag = Math.sqrt(forceX * forceX + forceY * forceY);
-      if (forceMag > 0.001) {
-        soa.velX[i] += (forceX / forceMag) * currentSpeed * dt;
-        soa.velY[i] += (forceY / forceMag) * currentSpeed * dt;
-      }
+      // Apply forces directly (no normalization)
+      soa.velX[i] += (attractX + steering.fx) * config.moveSpeed * dt;
+      soa.velY[i] += (attractY + steering.fy) * config.moveSpeed * dt;
     }
     
-    // Velocity damping
-    soa.velX[i] *= 0.94;
-    soa.velY[i] *= 0.94;
+    // REDUCED DAMPING during melee (0.98 vs 0.94) - maintain momentum
+    soa.velX[i] *= 0.98;
+    soa.velY[i] *= 0.98;
     
     // Clamp velocity
     const velMag = Math.sqrt(soa.velX[i] * soa.velX[i] + soa.velY[i] * soa.velY[i]);
@@ -299,10 +336,25 @@ export function updatePhysics(
     soa.posX[i] += soa.velX[i] * dt;
     soa.posY[i] += soa.velY[i] * dt;
     
-    // Boundary constraints
-    const margin = 40;
-    soa.posX[i] = Math.max(margin, Math.min(canvasWidth - margin, soa.posX[i]));
-    soa.posY[i] = Math.max(margin, Math.min(canvasHeight - margin, soa.posY[i]));
+    // SOFT BOUNDARY HANDLING: Bounce off walls with return force
+    const margin = 30;
+    const returnForce = 100;
+    
+    if (soa.posX[i] < margin) {
+      soa.posX[i] = margin;
+      soa.velX[i] = Math.abs(soa.velX[i]) * 0.5 + returnForce * dt;
+    } else if (soa.posX[i] > canvasWidth - margin) {
+      soa.posX[i] = canvasWidth - margin;
+      soa.velX[i] = -Math.abs(soa.velX[i]) * 0.5 - returnForce * dt;
+    }
+    
+    if (soa.posY[i] < margin) {
+      soa.posY[i] = margin;
+      soa.velY[i] = Math.abs(soa.velY[i]) * 0.5 + returnForce * dt;
+    } else if (soa.posY[i] > canvasHeight - margin) {
+      soa.posY[i] = canvasHeight - margin;
+      soa.velY[i] = -Math.abs(soa.velY[i]) * 0.5 - returnForce * dt;
+    }
   }
   
   return {
