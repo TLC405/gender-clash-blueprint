@@ -1,40 +1,30 @@
 /**
  * Premium Unit Sprite Renderer
- * Professional quality with ground shadows and clean readability
+ * Larger units, health-based sizing, directional facing, combat glow
  */
 
 import { TEAM_MEN, TEAM_WOMEN, FLAG_ALIVE, FLAG_LOCKED, FLAG_LEADER, type BattleSoA } from './battleSoA';
 
 // Professional color palette
 const COLORS = {
-  // Teams
   menPrimary: '#3B82F6',
   menSecondary: '#1D4ED8',
-  menGlow: '#60A5FA',
+  menGlow: '#93C5FD',
   womenPrimary: '#EC4899',
   womenSecondary: '#BE185D',
-  womenGlow: '#F472B6',
-  
-  // States
+  womenGlow: '#F9A8D4',
   locked: '#F59E0B',
   lockedDark: '#B45309',
   lockedGlow: '#FCD34D',
   leader: '#FFD700',
-  
-  // Effects
-  shadow: 'rgba(0, 0, 0, 0.5)',
+  shadow: 'rgba(0, 0, 0, 0.45)',
 };
 
-/**
- * Initialize sprites (no-op for gradient rendering)
- */
-export function initSprites(): void {
-  // No pre-rendering needed
-}
+export function initSprites(): void {}
 
 /**
- * Render all units with professional quality
- * Includes ground shadows, radial gradients, and clean outlines
+ * Render all units with premium quality
+ * Larger size, health-based scaling, directional facing, combat glow
  */
 export function renderUnits(
   ctx: CanvasRenderingContext2D,
@@ -43,32 +33,35 @@ export function renderUnits(
   _globalFrame: number = 0,
   _lighterBlend: boolean = false
 ): void {
-  const unitRadius = 4;
-  const leaderRadius = 6;
-  const shadowOffsetY = 2;
+  const BASE_RADIUS = 6;     // Increased from 4
+  const LEADER_RADIUS = 9;   // Increased from 6
+  const shadowOffsetY = 3;
 
   ctx.save();
 
-  // Pass 1: Ground shadows for depth
+  // Pass 1: Ground shadows (soft, larger)
   for (let i = 0; i < soa.unitCount; i++) {
     if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
 
     const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-    const radius = isLeader ? leaderRadius : unitRadius;
+    const healthRatio = soa.health[i] / 100;
+    const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
+    // Health-based sizing: shrink when hurt
+    const radius = baseR * (0.7 + healthRatio * 0.3);
 
     ctx.fillStyle = COLORS.shadow;
     ctx.beginPath();
     ctx.ellipse(
       soa.posX[i],
       soa.posY[i] + shadowOffsetY,
-      radius * 1.1,
-      radius * 0.4,
+      radius * 1.3,
+      radius * 0.45,
       0, 0, Math.PI * 2
     );
     ctx.fill();
   }
 
-  // Pass 2: Unit bodies with gradients
+  // Pass 2: Unit bodies with directional facing and gradients
   for (let i = 0; i < soa.unitCount; i++) {
     if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
 
@@ -76,12 +69,15 @@ export function renderUnits(
     const isLocked = (soa.stateFlags[i] & FLAG_LOCKED) !== 0;
     const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
     const healthRatio = soa.health[i] / 100;
-    const radius = isLeader ? leaderRadius : unitRadius;
+    const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
+    const radius = baseR * (0.7 + healthRatio * 0.3);
 
     const x = soa.posX[i];
     const y = soa.posY[i];
+    const vx = soa.velX[i];
+    const vy = soa.velY[i];
 
-    // Color based on state
+    // Color selection
     let primary: string;
     let secondary: string;
     let glow: string;
@@ -100,34 +96,65 @@ export function renderUnits(
       glow = COLORS.womenGlow;
     }
 
-    // Radial gradient for 3D sphere effect
+    // Directional facing: subtle elongation toward velocity
+    const speed = Math.sqrt(vx * vx + vy * vy);
+    const stretch = Math.min(speed / 150, 0.25); // Max 25% elongation
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    if (speed > 5) {
+      const angle = Math.atan2(vy, vx);
+      ctx.rotate(angle);
+      ctx.scale(1 + stretch, 1 - stretch * 0.3);
+    }
+
+    // 3D sphere gradient (highlight offset for depth)
     const bodyGrad = ctx.createRadialGradient(
-      x - radius * 0.3, y - radius * 0.3, 0,
-      x, y, radius
+      -radius * 0.25, -radius * 0.25, 0,
+      0, 0, radius
     );
     bodyGrad.addColorStop(0, glow);
-    bodyGrad.addColorStop(0.6, primary);
+    bodyGrad.addColorStop(0.5, primary);
     bodyGrad.addColorStop(1, secondary);
 
-    // Health affects opacity
-    ctx.globalAlpha = 0.5 + healthRatio * 0.5;
+    ctx.globalAlpha = 0.55 + healthRatio * 0.45;
     ctx.fillStyle = bodyGrad;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Subtle outline for readability
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.lineWidth = 0.5;
+    // Outline for readability
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.lineWidth = 0.6;
     ctx.stroke();
 
-    // Leader indicator ring
-    if (isLeader) {
-      ctx.strokeStyle = COLORS.leader;
-      ctx.lineWidth = 1.5;
+    // Combat glow: pulse when moving fast (in combat)
+    if (speed > 80 && !isLocked) {
+      ctx.globalAlpha = 0.15 + Math.sin(Date.now() * 0.01 + i) * 0.08;
+      ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(x, y, radius + 2.5, 0, Math.PI * 2);
+      ctx.arc(0, 0, radius * 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Leader crown ring (drawn without rotation)
+    if (isLeader) {
+      ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = COLORS.leader;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Inner gold glow
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = COLORS.leader;
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 3, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -136,7 +163,7 @@ export function renderUnits(
 }
 
 /**
- * Render units to offscreen canvas (for performance if needed)
+ * Render units to offscreen canvas
  */
 export function renderUnitsOffscreen(
   mainCtx: CanvasRenderingContext2D,
@@ -149,7 +176,6 @@ export function renderUnitsOffscreen(
   if (!ctx) return;
 
   ctx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-
   ctx.save();
   ctx.scale(0.5, 0.5);
   renderUnits(ctx as unknown as CanvasRenderingContext2D, soa, discoMode, globalFrame, false);
