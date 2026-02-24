@@ -1,6 +1,6 @@
 /**
- * Ultra-Premium Horde Battle Simulation
- * Premium arena, global pursuit, fury escalation, broadcast-quality rendering
+ * Ultra-Premium Horde Battle Simulation v3
+ * Broadcast-quality arena, screen shake, clash flash, stand-phase zoom, cinematic effects
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -58,6 +58,11 @@ const BattleSimulation = ({
   const totalKillsRef = useRef(0);
   const frameCountRef = useRef(0);
 
+  // Screen shake state
+  const shakeRef = useRef({ intensity: 0, offsetX: 0, offsetY: 0 });
+  // First clash flash
+  const clashFlashRef = useRef(0); // remaining flash alpha
+
   const speakNarration = useCallback((context: NarratorContext) => {
     const quip = speak(context, narratorEnabled);
     if (quip) onQuipChange(quip);
@@ -97,6 +102,8 @@ const BattleSimulation = ({
     killStatsRef.current = { menKills: 0, womenKills: 0 };
     totalKillsRef.current = 0;
     firstClashRef.current = false;
+    shakeRef.current = { intensity: 0, offsetX: 0, offsetY: 0 };
+    clashFlashRef.current = 0;
     resetChargeState();
     setInitialCounts(menArmySize, womenArmySize);
 
@@ -130,17 +137,20 @@ const BattleSimulation = ({
     const y = ((e.clientY - rect.top) / rect.height) * logicalSizeRef.current.height;
     applyMeteorImpact(soaRef.current, gridRef.current, x, y, 100, 500);
     spawnMeteorImpact(poolRef.current, x, y);
+    shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
     toast.info("Meteor Strike!", { duration: 1000 });
   }, [isRunning, phase]);
 
-  // Premium arena rendering
+  // ═══════════════════════════════════════════════
+  // PREMIUM ARENA RENDERER - Broadcast Stadium
+  // ═══════════════════════════════════════════════
   const renderArena = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    // Deep dark gradient
+    // Rich dark background
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#060810');
-    bgGrad.addColorStop(0.3, '#0c1018');
-    bgGrad.addColorStop(0.7, '#0c1018');
-    bgGrad.addColorStop(1, '#060810');
+    bgGrad.addColorStop(0, '#0a1510');
+    bgGrad.addColorStop(0.3, '#0e1e16');
+    bgGrad.addColorStop(0.7, '#0e1e16');
+    bgGrad.addColorStop(1, '#0a1510');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -150,25 +160,25 @@ const BattleSimulation = ({
     const fieldW = width - margin * 2;
     const fieldH = height - margin * 2;
 
-    // Field base with subtle grass-like gradient
+    // Turf - dark green gradient
     const fieldGrad = ctx.createLinearGradient(0, fieldY, 0, fieldY + fieldH);
-    fieldGrad.addColorStop(0, '#152030');
-    fieldGrad.addColorStop(0.5, '#1a2838');
-    fieldGrad.addColorStop(1, '#152030');
+    fieldGrad.addColorStop(0, '#1a3328');
+    fieldGrad.addColorStop(0.5, '#1e3d30');
+    fieldGrad.addColorStop(1, '#1a3328');
     ctx.fillStyle = fieldGrad;
     ctx.fillRect(fieldX, fieldY, fieldW, fieldH);
 
-    // Alternating turf stripes
+    // Alternating turf stripes (brighter, visible)
     const stripeCount = 16;
     const stripeW = fieldW / stripeCount;
     for (let i = 0; i < stripeCount; i += 2) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.012)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
       ctx.fillRect(fieldX + i * stripeW, fieldY, stripeW, fieldH);
     }
 
-    // Yard lines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 0.5;
+    // Yard lines (visible!)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 0.8;
     for (let i = 1; i < 10; i++) {
       const lx = fieldX + (fieldW * i) / 10;
       ctx.beginPath();
@@ -178,8 +188,8 @@ const BattleSimulation = ({
     }
 
     // Hash marks
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-    const hashLen = 4;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    const hashLen = 5;
     for (let i = 1; i < 10; i++) {
       const lx = fieldX + (fieldW * i) / 10;
       for (let j = 1; j < 8; j++) {
@@ -191,80 +201,148 @@ const BattleSimulation = ({
       }
     }
 
-    // Center line (thicker)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 1.5;
+    // Center line (bold)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(width / 2, fieldY);
     ctx.lineTo(width / 2, fieldY + fieldH);
     ctx.stroke();
 
     // Center circle
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.beginPath();
-    ctx.arc(width / 2, height / 2, Math.min(fieldW, fieldH) * 0.08, 0, Math.PI * 2);
+    ctx.arc(width / 2, height / 2, Math.min(fieldW, fieldH) * 0.09, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Center emblem area
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    // Center emblem
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.beginPath();
-    ctx.arc(width / 2, height / 2, Math.min(fieldW, fieldH) * 0.08, 0, Math.PI * 2);
+    ctx.arc(width / 2, height / 2, Math.min(fieldW, fieldH) * 0.09, 0, Math.PI * 2);
     ctx.fill();
 
     // Team end zones
     const endZoneW = fieldW * 0.08;
 
-    // Men end zone (left) - blue
-    const menZoneGrad = ctx.createLinearGradient(fieldX, 0, fieldX + endZoneW * 2, 0);
-    menZoneGrad.addColorStop(0, 'rgba(59, 130, 246, 0.15)');
-    menZoneGrad.addColorStop(0.5, 'rgba(59, 130, 246, 0.06)');
+    // Men end zone (left) - blue with label
+    const menZoneGrad = ctx.createLinearGradient(fieldX, 0, fieldX + endZoneW * 2.5, 0);
+    menZoneGrad.addColorStop(0, 'rgba(59, 130, 246, 0.22)');
+    menZoneGrad.addColorStop(0.5, 'rgba(59, 130, 246, 0.08)');
     menZoneGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = menZoneGrad;
-    ctx.fillRect(fieldX, fieldY, endZoneW * 2, fieldH);
+    ctx.fillRect(fieldX, fieldY, endZoneW * 2.5, fieldH);
 
-    // Women end zone (right) - pink
-    const womenZoneGrad = ctx.createLinearGradient(fieldX + fieldW, 0, fieldX + fieldW - endZoneW * 2, 0);
-    womenZoneGrad.addColorStop(0, 'rgba(236, 72, 153, 0.15)');
-    womenZoneGrad.addColorStop(0.5, 'rgba(236, 72, 153, 0.06)');
+    // "MEN" label
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#3B82F6';
+    ctx.font = `bold ${Math.min(fieldH * 0.12, 36)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.translate(fieldX + endZoneW * 0.8, height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('MEN', 0, 0);
+    ctx.restore();
+
+    // Women end zone (right) - pink with label
+    const womenZoneGrad = ctx.createLinearGradient(fieldX + fieldW, 0, fieldX + fieldW - endZoneW * 2.5, 0);
+    womenZoneGrad.addColorStop(0, 'rgba(236, 72, 153, 0.22)');
+    womenZoneGrad.addColorStop(0.5, 'rgba(236, 72, 153, 0.08)');
     womenZoneGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = womenZoneGrad;
-    ctx.fillRect(fieldX + fieldW - endZoneW * 2, fieldY, endZoneW * 2, fieldH);
+    ctx.fillRect(fieldX + fieldW - endZoneW * 2.5, fieldY, endZoneW * 2.5, fieldH);
+
+    // "WOMEN" label
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#EC4899';
+    ctx.font = `bold ${Math.min(fieldH * 0.12, 36)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.translate(fieldX + fieldW - endZoneW * 0.8, height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillText('WOMEN', 0, 0);
+    ctx.restore();
+
+    // Crowd silhouette strips (top and bottom)
+    const crowdH = margin * 0.8;
+    const crowdGradTop = ctx.createLinearGradient(0, 0, 0, crowdH);
+    crowdGradTop.addColorStop(0, 'rgba(20, 15, 25, 0.9)');
+    crowdGradTop.addColorStop(1, 'rgba(20, 15, 25, 0.3)');
+    ctx.fillStyle = crowdGradTop;
+    ctx.fillRect(0, 0, width, crowdH);
+
+    // Crowd dots (static silhouettes)
+    ctx.fillStyle = 'rgba(80, 70, 90, 0.3)';
+    const dotSpacing = 8;
+    for (let cx = dotSpacing; cx < width; cx += dotSpacing) {
+      const yOff = Math.sin(cx * 0.15) * 2;
+      ctx.beginPath();
+      ctx.arc(cx, crowdH * 0.5 + yOff, 2, 0, Math.PI * 2);
+      ctx.fill();
+      // Bottom crowd
+      ctx.beginPath();
+      ctx.arc(cx, height - crowdH * 0.5 - yOff, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const crowdGradBottom = ctx.createLinearGradient(0, height, 0, height - crowdH);
+    crowdGradBottom.addColorStop(0, 'rgba(20, 15, 25, 0.9)');
+    crowdGradBottom.addColorStop(1, 'rgba(20, 15, 25, 0.3)');
+    ctx.fillStyle = crowdGradBottom;
+    ctx.fillRect(0, height - crowdH, width, crowdH);
+
+    // Spotlight cones from corners
+    const spotR = Math.max(width, height) * 0.6;
+    ctx.globalAlpha = 1;
+    const spots = [
+      { x: 0, y: 0 },
+      { x: width, y: 0 },
+    ];
+    for (const s of spots) {
+      const spotGrad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, spotR);
+      spotGrad.addColorStop(0, 'rgba(255, 255, 240, 0.06)');
+      spotGrad.addColorStop(0.5, 'rgba(255, 255, 240, 0.02)');
+      spotGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = spotGrad;
+      ctx.fillRect(0, 0, width, height);
+    }
 
     // Field border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(fieldX, fieldY, fieldW, fieldH);
 
-    // Stadium vignette
+    // Lighter vignette (reduced intensity)
     const vignette = ctx.createRadialGradient(
-      width / 2, height / 2, Math.min(width, height) * 0.25,
+      width / 2, height / 2, Math.min(width, height) * 0.3,
       width / 2, height / 2, Math.max(width, height) * 0.75
     );
     vignette.addColorStop(0, 'transparent');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, width, height);
   }, []);
 
-  // Phase-based lighting + battle intensity overlay
+  // Phase-based lighting + battle intensity
   const renderLighting = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number, currentPhase: BattlePhase) => {
-    // Battle intensity: warmer as more units die
     const totalArmy = menArmySize + womenArmySize;
-    const totalAlive = soaRef.current ? 
+    const totalAlive = soaRef.current ?
       (() => { let c = 0; for (let i = 0; i < soaRef.current.unitCount; i++) if (soaRef.current.stateFlags[i] & FLAG_ALIVE) c++; return c; })()
       : totalArmy;
     const casualtyRatio = totalArmy > 0 ? 1 - (totalAlive / totalArmy) : 0;
-    
-    if (casualtyRatio > 0.1) {
-      const intensity = casualtyRatio * 0.08;
-      ctx.fillStyle = `rgba(255, 60, 20, ${intensity})`;
+
+    // Battle intensity overlay (stronger warmth)
+    if (casualtyRatio > 0.05) {
+      const intensity = casualtyRatio * 0.15;
+      ctx.fillStyle = `rgba(255, 50, 15, ${intensity})`;
       ctx.fillRect(0, 0, width, height);
     }
 
     if (currentPhase === 'melee' || currentPhase === 'sudden_death') {
-      const base = currentPhase === 'sudden_death' ? 0.06 : 0.03;
-      const pulse = Math.sin(Date.now() * 0.003) * 0.02;
+      const base = currentPhase === 'sudden_death' ? 0.08 : 0.04;
+      const pulse = Math.sin(Date.now() * 0.003) * 0.03;
       const glow = ctx.createRadialGradient(
         width / 2, height / 2, 0,
         width / 2, height / 2, Math.max(width, height) * 0.6
@@ -278,9 +356,15 @@ const BattleSimulation = ({
         width / 2, height / 2, 0,
         width / 2, height / 2, Math.max(width, height) * 0.5
       );
-      glow.addColorStop(0, 'rgba(255, 215, 0, 0.12)');
+      glow.addColorStop(0, 'rgba(255, 215, 0, 0.15)');
       glow.addColorStop(1, 'transparent');
       ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    // First clash flash overlay
+    if (clashFlashRef.current > 0) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${clashFlashRef.current})`;
       ctx.fillRect(0, 0, width, height);
     }
   }, [menArmySize, womenArmySize]);
@@ -315,15 +399,40 @@ const BattleSimulation = ({
     killStatsRef.current.menKills += result.stats.menKills;
     killStatsRef.current.womenKills += result.stats.womenKills;
 
-    // FIRST CLASH SHOCKWAVE: On first kill
+    // Screen shake on kills
     const newKills = result.stats.menKills + result.stats.womenKills;
+    if (newKills > 0) {
+      shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.5, 6);
+    }
+
+    // First clash shockwave + flash
     if (newKills > 0 && !firstClashRef.current) {
       firstClashRef.current = true;
       if (result.kills.length > 0) {
         spawnClashShockwave(poolRef.current, result.kills[0].x, result.kills[0].y);
       }
+      clashFlashRef.current = 0.3;
+      shakeRef.current.intensity = 8;
     }
     totalKillsRef.current += newKills;
+
+    // Decay screen shake
+    if (shakeRef.current.intensity > 0) {
+      shakeRef.current.offsetX = (Math.random() - 0.5) * shakeRef.current.intensity * 2;
+      shakeRef.current.offsetY = (Math.random() - 0.5) * shakeRef.current.intensity * 2;
+      shakeRef.current.intensity *= 0.88; // fast decay
+      if (shakeRef.current.intensity < 0.1) {
+        shakeRef.current.intensity = 0;
+        shakeRef.current.offsetX = 0;
+        shakeRef.current.offsetY = 0;
+      }
+    }
+
+    // Decay clash flash
+    if (clashFlashRef.current > 0) {
+      clashFlashRef.current -= deltaTime * 1.5;
+      if (clashFlashRef.current < 0) clashFlashRef.current = 0;
+    }
 
     onStatsUpdate({
       menAlive: result.stats.menAlive,
@@ -356,18 +465,38 @@ const BattleSimulation = ({
 
     ctx.save();
     ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, width, height);
 
-    // Layer 1: Premium arena
+    // Screen shake offset
+    const shakeX = shakeRef.current.offsetX;
+    const shakeY = shakeRef.current.offsetY;
+
+    // Stand-phase zoom (slow zoom 1.0 -> 1.02)
+    let zoomScale = 1.0;
+    if (phase === 'stand') {
+      const t = Math.min(phaseTimeRef.current / 3, 1);
+      zoomScale = 1.0 + t * 0.02;
+    }
+
+    ctx.clearRect(-10, -10, width + 20, height + 20);
+
+    // Apply shake + zoom
+    ctx.save();
+    ctx.translate(width / 2 + shakeX, height / 2 + shakeY);
+    ctx.scale(zoomScale, zoomScale);
+    ctx.translate(-width / 2, -height / 2);
+
+    // Layer 1: Arena
     renderArena(ctx, width, height);
 
-    // Layer 2: Units (via spriteRenderer)
-    renderUnits(ctx, soaRef.current);
+    // Layer 2: Units
+    renderUnits(ctx, soaRef.current, false, frameCountRef.current, false, phase);
 
     // Layer 3: Particles
     renderParticles(ctx, poolRef.current);
 
-    // Layer 4: Phase lighting + battle intensity
+    ctx.restore(); // end shake+zoom transform
+
+    // Layer 4: Lighting (not affected by shake for stability)
     renderLighting(ctx, width, height, phase);
 
     ctx.restore();
