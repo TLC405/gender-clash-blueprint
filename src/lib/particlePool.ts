@@ -1,11 +1,10 @@
 /**
- * Ultra Premium Particle System
- * Team-colored effects, bigger explosions, clash dust
+ * Ultra Premium Particle System v3
+ * Additive blending, bigger explosions, death flashes, enhanced confetti & shockwaves
  */
 
-const POOL_SIZE = 2048; // Increased for more intense effects
+const POOL_SIZE = 3072;
 
-// Particle types
 export const PARTICLE_SPARK = 0;
 export const PARTICLE_DUST = 1;
 export const PARTICLE_CONFETTI = 2;
@@ -13,7 +12,7 @@ export const PARTICLE_IMPACT = 3;
 export const PARTICLE_GLOW = 4;
 export const PARTICLE_SHOCKWAVE = 5;
 
-// Legacy exports for compatibility
+// Legacy exports
 export const PARTICLE_HEART = PARTICLE_SPARK;
 export const PARTICLE_BEER = PARTICLE_SPARK;
 export const PARTICLE_FLOWER = PARTICLE_SPARK;
@@ -32,6 +31,7 @@ export interface ParticlePool {
   size: Float32Array;
   type: Uint8Array;
   colorIdx: Uint8Array;
+  rotation: Float32Array;
   head: number;
   activeCount: number;
 }
@@ -47,6 +47,7 @@ export function createParticlePool(): ParticlePool {
     size: new Float32Array(POOL_SIZE),
     type: new Uint8Array(POOL_SIZE),
     colorIdx: new Uint8Array(POOL_SIZE),
+    rotation: new Float32Array(POOL_SIZE),
     head: 0,
     activeCount: 0,
   };
@@ -70,6 +71,7 @@ export function spawnParticle(
   pool.size[pool.head] = size;
   pool.type[pool.head] = type;
   pool.colorIdx[pool.head] = colorIdx || Math.floor(Math.random() * 6);
+  pool.rotation[pool.head] = Math.random() * Math.PI * 2;
   pool.head = (pool.head + 1) % POOL_SIZE;
   pool.activeCount = Math.min(pool.activeCount + 1, POOL_SIZE);
 }
@@ -92,22 +94,23 @@ export function spawnHeartBurst(pool: ParticlePool, x: number, y: number): void 
 }
 
 /**
- * Screen-wide confetti on victory
+ * Screen-wide confetti on victory - 80 particles with spin
  */
 export function spawnConfetti(pool: ParticlePool, x: number, y: number, width?: number): void {
   const spread = width || 200;
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 80; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 80 + Math.random() * 150;
+    const speed = 100 + Math.random() * 200;
     spawnParticle(
       pool,
       x + (Math.random() - 0.5) * spread,
-      y + (Math.random() - 0.5) * 80,
+      y + (Math.random() - 0.5) * 100,
       Math.cos(angle) * speed,
-      Math.sin(angle) * speed - 100,
+      Math.sin(angle) * speed - 120,
       PARTICLE_CONFETTI,
-      2.5,
-      3 + Math.random() * 3
+      3.0,
+      4 + Math.random() * 4,
+      Math.floor(Math.random() * 6)
     );
   }
 }
@@ -119,18 +122,18 @@ export function spawnStars(pool: ParticlePool, x: number, y: number): void {
 }
 
 export function spawnMeteorImpact(pool: ParticlePool, x: number, y: number): void {
-  // Radial burst
-  for (let i = 0; i < 16; i++) {
-    const angle = (Math.PI * 2 * i) / 16;
-    const speed = 120 + Math.random() * 60;
-    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, PARTICLE_IMPACT, 0.6, 4);
+  for (let i = 0; i < 20; i++) {
+    const angle = (Math.PI * 2 * i) / 20;
+    const speed = 140 + Math.random() * 80;
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, PARTICLE_IMPACT, 0.7, 5);
   }
-  // Inner dust cloud
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 10; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = 30 + Math.random() * 40;
-    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed - 20, PARTICLE_DUST, 1.0, 5);
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed - 20, PARTICLE_DUST, 1.0, 6);
   }
+  // Center flash
+  spawnParticle(pool, x, y, 0, 0, PARTICLE_GLOW, 0.2, 25, 0);
 }
 
 export function spawnRageEffect(pool: ParticlePool, x: number, y: number): void {
@@ -142,16 +145,47 @@ export function spawnRageEffect(pool: ParticlePool, x: number, y: number): void 
 }
 
 /**
- * Clash shockwave ring effect
+ * Enhanced clash shockwave - double ring + big flash
  */
 export function spawnClashShockwave(pool: ParticlePool, x: number, y: number): void {
-  for (let i = 0; i < 20; i++) {
-    const angle = (Math.PI * 2 * i) / 20;
-    const speed = 200 + Math.random() * 80;
-    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, PARTICLE_IMPACT, 0.4, 3, 1); // gold
+  // Outer ring
+  for (let i = 0; i < 24; i++) {
+    const angle = (Math.PI * 2 * i) / 24;
+    const speed = 300 + Math.random() * 100;
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, PARTICLE_IMPACT, 0.5, 4, 1);
   }
-  // Center flash
-  spawnParticle(pool, x, y, 0, 0, PARTICLE_GLOW, 0.3, 15, 0); // white
+  // Inner ring
+  for (let i = 0; i < 16; i++) {
+    const angle = (Math.PI * 2 * i) / 16;
+    const speed = 150 + Math.random() * 60;
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, PARTICLE_GLOW, 0.4, 6, 0);
+  }
+  // Big center flash
+  spawnParticle(pool, x, y, 0, 0, PARTICLE_GLOW, 0.25, 30, 0);
+}
+
+/**
+ * Death explosion - 12 particles + white flash
+ */
+export function spawnDeathExplosion(pool: ParticlePool, x: number, y: number, teamColorIdx: number): void {
+  for (let i = 0; i < 12; i++) {
+    const angle = (Math.PI * 2 * i) / 12 + (Math.random() - 0.5) * 0.3;
+    const speed = 60 + Math.random() * 80;
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, PARTICLE_SPARK, 0.5, 4, teamColorIdx);
+  }
+  // White death flash
+  spawnParticle(pool, x, y, 0, 0, PARTICLE_GLOW, 0.15, 20, 0);
+}
+
+/**
+ * Hit sparks - 8 team-colored sparks with additive feel
+ */
+export function spawnHitSparks(pool: ParticlePool, x: number, y: number, teamColorIdx: number): void {
+  for (let i = 0; i < 8; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 40 + Math.random() * 60;
+    spawnParticle(pool, x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, PARTICLE_SPARK, 0.3, 5, teamColorIdx);
+  }
 }
 
 export function updateParticles(pool: ParticlePool, deltaTime: number, gravity: number = 120): void {
@@ -163,6 +197,7 @@ export function updateParticles(pool: ParticlePool, deltaTime: number, gravity: 
     pool.velY[i] += gravity * deltaTime;
     pool.velX[i] *= 0.97;
     pool.velY[i] *= 0.97;
+    pool.rotation[i] += pool.velX[i] * deltaTime * 0.1; // Spin
     pool.life[i] -= decayRate * deltaTime;
     if (pool.life[i] <= 0) {
       pool.activeCount = Math.max(0, pool.activeCount - 1);
@@ -170,7 +205,6 @@ export function updateParticles(pool: ParticlePool, deltaTime: number, gravity: 
   }
 }
 
-// Professional color palette
 const COLORS = [
   '#FFFFFF',  // 0: White
   '#FFD700',  // 1: Gold
@@ -187,7 +221,7 @@ export function renderParticles(ctx: CanvasRenderingContext2D, pool: ParticlePoo
     if (pool.life[i] <= 0) continue;
 
     const lifeRatio = pool.life[i] / pool.maxLife[i];
-    const alpha = lifeRatio * 0.9;
+    const alpha = lifeRatio * 0.95;
     const size = pool.size[i] * (0.3 + lifeRatio * 0.7);
     const type = pool.type[i];
 
@@ -197,50 +231,60 @@ export function renderParticles(ctx: CanvasRenderingContext2D, pool: ParticlePoo
       ctx.fillStyle = COLORS[pool.colorIdx[i] % COLORS.length];
       ctx.save();
       ctx.translate(pool.posX[i], pool.posY[i]);
-      ctx.rotate(pool.velX[i] * 0.1);
-      ctx.fillRect(-size / 2, -size / 2, size, size * 0.6);
+      ctx.rotate(pool.rotation[i]);
+      ctx.fillRect(-size / 2, -size / 2, size, size * 0.55);
       ctx.restore();
     } else if (type === PARTICLE_IMPACT) {
+      // Additive blending for bright impact glow
+      const prevOp = ctx.globalCompositeOperation;
+      ctx.globalCompositeOperation = 'lighter';
       const impactGrad = ctx.createRadialGradient(
         pool.posX[i], pool.posY[i], 0,
-        pool.posX[i], pool.posY[i], size
+        pool.posX[i], pool.posY[i], size * 2
       );
       impactGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      impactGrad.addColorStop(0.4, 'rgba(255, 200, 100, 0.8)');
+      impactGrad.addColorStop(0.3, 'rgba(255, 200, 100, 0.9)');
       impactGrad.addColorStop(1, 'rgba(255, 80, 30, 0)');
       ctx.fillStyle = impactGrad;
       ctx.beginPath();
-      ctx.arc(pool.posX[i], pool.posY[i], size * 2, 0, Math.PI * 2);
+      ctx.arc(pool.posX[i], pool.posY[i], size * 2.5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalCompositeOperation = prevOp;
     } else if (type === PARTICLE_DUST) {
-      ctx.fillStyle = `rgba(160, 150, 140, ${alpha * 0.5})`;
+      ctx.fillStyle = `rgba(160, 150, 140, ${alpha * 0.45})`;
       ctx.beginPath();
       ctx.arc(pool.posX[i], pool.posY[i], size, 0, Math.PI * 2);
       ctx.fill();
     } else if (type === PARTICLE_GLOW) {
+      const prevOp = ctx.globalCompositeOperation;
+      ctx.globalCompositeOperation = 'lighter';
       const glowGrad = ctx.createRadialGradient(
         pool.posX[i], pool.posY[i], 0,
         pool.posX[i], pool.posY[i], size
       );
       glowGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-      glowGrad.addColorStop(0.5, `rgba(255, 220, 150, ${alpha * 0.5})`);
+      glowGrad.addColorStop(0.4, `rgba(255, 220, 150, ${alpha * 0.6})`);
       glowGrad.addColorStop(1, 'rgba(255, 200, 100, 0)');
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
       ctx.arc(pool.posX[i], pool.posY[i], size, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalCompositeOperation = prevOp;
     } else {
-      // Sparks - team-colored with glow
+      // Sparks with additive blending
+      const prevOp = ctx.globalCompositeOperation;
+      ctx.globalCompositeOperation = 'lighter';
       const color = COLORS[pool.colorIdx[i] % COLORS.length];
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(pool.posX[i], pool.posY[i], size, 0, Math.PI * 2);
       ctx.fill();
-      // Subtle glow around spark
-      ctx.globalAlpha = alpha * 0.3;
+      // Outer glow
+      ctx.globalAlpha = alpha * 0.35;
       ctx.beginPath();
-      ctx.arc(pool.posX[i], pool.posY[i], size * 2, 0, Math.PI * 2);
+      ctx.arc(pool.posX[i], pool.posY[i], size * 2.2, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalCompositeOperation = prevOp;
     }
   }
 
