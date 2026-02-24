@@ -1,103 +1,83 @@
 
 
-## Ultimate Horde Battle Engine Overhaul
+## Atomic Battle Scene & Visuals Overhaul
 
-### Problems Identified
+### Current Issues
 
-1. **Units can't find enemies across the full battlefield** - The spatial hash search caps at 25 cells (1250px). On wide screens the armies can be further apart. When `findNearestEnemy` returns -1, the fallback attraction is weak and units drift aimlessly.
+After reviewing all 6 core battle engine files, the system has good bones (SoA architecture, spatial hash, centroid tracking, fury escalation) but the **visual output** still feels flat and cheap because:
 
-2. **Units look cheap** - 4px radius dots with simple gradients. At 500v500, they look like colored noise, not warriors.
-
-3. **Arena looks flat** - Minimal field with faint lines. No atmosphere, no drama.
-
-4. **Combat lacks weight** - Hits produce tiny sparks. Deaths are invisible. No sense of clash or impact.
-
-5. **No global enemy tracking** - The system relies entirely on spatial hash proximity. Real horde games use a global "center of mass" so every unit always knows where the enemy army is.
+1. **Arena is too dark and empty** - Dark navy-blue field with barely visible lines. No sense of a stadium, crowd, or atmosphere. The vignette makes it even darker.
+2. **Units are too small and samey** - 6px dots with subtle gradients are hard to distinguish at scale. The "3D sphere" effect is barely noticeable. No animation or personality.
+3. **Particles are underwhelming** - Small sparks and dust that fade quickly. Deaths are barely noticeable in a 500v500 battle.
+4. **No screen-level drama** - No screen shake on big kills, no flash on first clash, no dynamic camera energy.
+5. **Formation phase is boring** - Units just sit there with damped velocity. No visual anticipation.
 
 ---
 
-### The Fix (4 files, 1 comprehensive overhaul)
+### The Overhaul (4 files)
 
-#### 1. battlePhysics.ts - Relentless Global Pursuit
+#### 1. Arena Renderer (`BattleSimulationEnhanced.tsx` - `renderArena`)
 
-- **Add global enemy center-of-mass calculation** - Every frame, compute the average position of all alive enemies. This becomes the fallback target for ANY unit that can't find a nearby enemy. No unit ever "loses" the enemy.
-- **Remove spatial hash dependency for targeting** - Use spatial hash for collision/separation only. For target acquisition, first try spatial hash (fast, nearby). If nothing found, use the global enemy centroid (guaranteed target).
-- **Increase charge impulse** to 250 (from 180) with slight random spread for natural look.
-- **Add "battle rage" escalation** - As units die, surviving units get progressively faster and more aggressive (fury mechanic). This prevents late-game floating.
-- **Tighten attack range** to 8px and increase damage to 30 for faster, more decisive kills.
-- **Add knockback on hit** - Attacker pushes target slightly, creating visible combat motion.
+**Make the field feel like a real stadium broadcast:**
 
-#### 2. spriteRenderer.ts - Premium Unit Visuals
+- Brighter, richer turf color (dark green, not navy) with more visible alternating stripes
+- Bolder yard lines and center line that are actually readable (opacity 0.08 -> 0.25)
+- Visible team end zone labels ("MEN" / "WOMEN") with team colors
+- Subtle crowd silhouette strip along top and bottom edges (static, no animation)
+- Spotlight cones from corners pointing at center field
+- Reduce vignette intensity so the action is visible
 
-- **Increase base unit size** from 4px to 6px radius (leaders 9px). Units will be visible and feel like warriors, not dust.
-- **Add health-based size** - Hurt units shrink slightly (5px at 50% HP), dead units are gone instantly.
-- **Add directional facing** - Units face the direction they're moving (subtle elongation toward velocity).
-- **Improve shadow quality** - Larger, softer shadows that ground units on the field.
-- **Add combat glow** - Units actively attacking get a subtle bright ring pulse.
-- **Add team trail effect** - A faint motion trail behind fast-moving units (1-2 frames of afterimage using global alpha).
+#### 2. Unit Renderer (`spriteRenderer.ts`)
 
-#### 3. BattleSimulationEnhanced.tsx - Premium Arena & Rendering
+**Make units feel like warriors, not dust:**
 
-- **Upgrade arena rendering:**
-  - Richer dark gradient background with depth
-  - Professional field markings (yard lines, hash marks, center logo area)
-  - Team end zones with colored gradients
-  - Subtle animated scan line for broadcast feel
-  - Stadium-style vignette darkening at edges
-- **Add battle intensity overlay** - Screen gets warmer/redder as more units die (subtle, cinematic).
-- **Add clash shockwave** - When the two armies first collide (first kill), spawn a brief expanding ring at the impact point.
-- **Improve phase lighting** - Melee gets warm ambient glow, sudden death gets pulsing red edge.
+- Increase base radius to 7px (leaders 11px) for better visibility
+- Add a bright white specular highlight dot on each unit (top-left, 1px) for that premium 3D pop
+- Add a faint team-colored outer ring on every unit (not just leaders) for instant team identification at a glance
+- Pulsing "heartbeat" scale animation during stand phase (units breathe while waiting)
+- In combat: units that are actively hitting get a brief bright flash (white overlay for 1 frame)
+- Health bar: tiny 2px-tall colored bar below each unit showing remaining health (only when < 80%)
+- Leader units get a small "star" above them instead of just a ring
+- Movement trail: draw 2 afterimage ghosts behind fast-moving units at 20% and 10% opacity
 
-#### 4. particlePool.ts - Impactful Effects
+#### 3. Particle System (`particlePool.ts`)
 
-- **Bigger death explosions** - 8 particles per death (from 5), larger size, team-colored.
-- **Hit sparks with team colors** - Blue sparks for men hitting, pink sparks for women hitting.
-- **Screen-wide confetti on victory** - Spawn across the full arena width, not just center.
-- **Add "clash dust"** - When groups of 5+ units are fighting in close proximity, spawn ambient dust clouds in the area.
+**Make hits and deaths impossible to miss:**
 
----
+- Hit sparks: increase count from 5 to 8 per hit, larger size (3.5 -> 5), and use additive blending (`globalCompositeOperation = 'lighter'`) for glow
+- Death explosions: increase to 12 particles with a bright white center flash (PARTICLE_GLOW, size 20, life 0.15s)
+- Add screen-edge kill indicators: when a unit dies, spawn a brief colored dash at the nearest screen edge
+- Confetti on victory: increase to 80 particles, add spin animation via rotation speed
+- Shockwave ring on first clash: make it bigger (speed 300) and add a second inner ring
 
-### Technical Details
+#### 4. Battle Simulation Loop (`BattleSimulationEnhanced.tsx`)
 
-**Global Enemy Centroid (new in battlePhysics.ts):**
-```text
-Pre-pass each frame:
-  menCenterX/Y = average position of all alive men
-  womenCenterX/Y = average position of all alive women
+**Add cinematic punch:**
 
-For each unit:
-  1. Try findNearestEnemy (spatial hash, 15 cells)
-  2. If found -> pursue that specific enemy
-  3. If NOT found -> steer toward enemy team centroid (guaranteed)
-  
-Result: Every unit ALWAYS has a target. Zero floating.
-```
-
-**Fury Escalation:**
-```text
-casualtyRatio = 1 - (aliveCount / startCount)
-furyMultiplier = 1.0 + casualtyRatio * 0.8
-
-Applied to: moveSpeed, attackDamage, maxSpeed
-Result: Last survivors fight harder, battles always converge
-```
-
-**Unit Size Upgrade:**
-```text
-Before: 4px dots -> look like pixels
-After: 6px spheres with 3D gradient, shadow, and glow
-Leaders: 9px with gold crown ring
-Result: Each unit is individually readable
-```
+- **Screen shake**: On kills, apply a small random offset to the canvas transform (2-4px, decaying over 100ms). Track shake intensity and decay it each frame.
+- **First clash flash**: When `firstClashRef` triggers, render a full-screen white overlay at 30% opacity that fades over 200ms.
+- **Stand phase anticipation**: During the 3-second stand phase, slowly zoom the camera (scale 1.0 -> 1.02) and add a subtle pulsing vignette, then snap back to 1.0 on melee start.
+- **Battle intensity overlay**: Increase the warmth effect (current max 0.08 is invisible). Push to 0.15 at max casualties.
+- **Victory slow-motion**: When victory is declared, render 3 more frames at 0.25x speed before stopping, for a dramatic finish.
 
 ---
+
+### Technical Summary
+
+| File | Changes |
+|------|---------|
+| `src/lib/spriteRenderer.ts` | Larger units (7px/11px), specular highlights, team rings, health bars, movement trails, stand-phase breathing |
+| `src/lib/particlePool.ts` | More/bigger hit sparks with additive blending, brighter death flashes, enhanced confetti, bigger shockwave |
+| `src/components/BattleSimulationEnhanced.tsx` | Brighter arena with visible markings, crowd silhouettes, spotlights, screen shake, first-clash flash, stand-phase zoom, stronger intensity overlay |
+| `src/components/battle/ArenaRenderer.tsx` | Not used (rendering is inline in BattleSimulationEnhanced), but will be cleaned up if referenced |
 
 ### Expected Result
 
-- Armies ALWAYS find each other and clash violently in the center
-- Combat is continuous and escalating (no floating, no drifting)
-- Units look like warriors with weight, shadow, and team identity
-- The arena looks like a premium broadcast stadium
-- Deaths are dramatic and visible
-- Victory feels earned and cinematic
+- The arena looks like an ESPN broadcast of a stadium battle
+- Every unit is individually visible and team-identifiable at a glance
+- Hits feel impactful with bright sparks and screen shake
+- Deaths are dramatic with flashes and particle bursts
+- The stand phase builds anticipation with breathing units and a slow zoom
+- Victory is cinematic with slow-motion and screen-wide confetti
+- The overall feel shifts from "debug prototype" to "premium game"
 
