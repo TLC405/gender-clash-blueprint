@@ -48,8 +48,9 @@ export const TeamPanel = ({
   const teamColor = isMen ? "text-men" : "text-women";
   const bgColor = isMen ? "bg-men" : "bg-women";
 
-  const incrementArmy = () => onArmySizeChange(Math.min(armySize + 100, 5000));
-  const decrementArmy = () => onArmySizeChange(Math.max(armySize - 100, 100));
+  const step = armySize >= 2000 ? 500 : armySize >= 500 ? 100 : 50;
+  const incrementArmy = () => onArmySizeChange(Math.min(armySize + step, 10000));
+  const decrementArmy = () => onArmySizeChange(Math.max(armySize - step, 50));
 
   if (compact) {
     return (
@@ -64,11 +65,11 @@ export const TeamPanel = ({
         <div className="grid grid-cols-2 gap-2 text-xs">
           {/* Army Size */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={decrementArmy} disabled={disabled || armySize <= 100} className="h-6 w-6">
+            <Button variant="ghost" size="icon" onClick={decrementArmy} disabled={disabled || armySize <= 50} className="h-6 w-6">
               <Minus className="w-3 h-3" />
             </Button>
-            <span className={`font-display ${teamColor}`}>{armySize}</span>
-            <Button variant="ghost" size="icon" onClick={incrementArmy} disabled={disabled || armySize >= 5000} className="h-6 w-6">
+            <span className={`font-display ${teamColor}`}>{armySize.toLocaleString()}</span>
+            <Button variant="ghost" size="icon" onClick={incrementArmy} disabled={disabled || armySize >= 10000} className="h-6 w-6">
               <Plus className="w-3 h-3" />
             </Button>
           </div>
@@ -129,7 +130,7 @@ export const TeamPanel = ({
               variant="outline"
               size="icon"
               onClick={decrementArmy}
-              disabled={disabled || armySize <= 100}
+              disabled={disabled || armySize <= 50}
               className="h-8 w-8"
             >
               <Minus className="w-4 h-4" />
@@ -141,7 +142,7 @@ export const TeamPanel = ({
               variant="outline"
               size="icon"
               onClick={incrementArmy}
-              disabled={disabled || armySize >= 5000}
+              disabled={disabled || armySize >= 10000}
               className="h-8 w-8"
             >
               <Plus className="w-4 h-4" />
@@ -248,7 +249,7 @@ export const TeamPanel = ({
           disabled={disabled}
         >
           <Target className="w-4 h-4" />
-          +100 Reinforcements
+          +{step} Reinforcements
         </Button>
       </div>
     </div>

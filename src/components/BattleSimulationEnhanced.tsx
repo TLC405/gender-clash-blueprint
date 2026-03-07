@@ -89,8 +89,7 @@ const BattleSimulation = ({
 
   const initializeBattle = useCallback(() => {
     const { width, height } = initCanvas();
-    const maxArmySize = Math.max(menArmySize, womenArmySize);
-    initializeUnits(soaRef.current, maxArmySize, width, height);
+    initializeUnits(soaRef.current, menArmySize, womenArmySize, width, height);
 
     if (!gridRef.current) {
       gridRef.current = createSpatialHashGrid(width, height, 50);

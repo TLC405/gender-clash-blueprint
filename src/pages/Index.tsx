@@ -78,11 +78,24 @@ const Index = () => {
   };
 
   const handleSpawnMenReinforcements = () => {
-    setMenArmySize(prev => Math.min(prev + 100, 5000));
+    setMenArmySize(prev => {
+      const step = prev >= 2000 ? 500 : prev >= 500 ? 100 : 50;
+      return Math.min(prev + step, 10000);
+    });
   };
 
   const handleSpawnWomenReinforcements = () => {
-    setWomenArmySize(prev => Math.min(prev + 100, 5000));
+    setWomenArmySize(prev => {
+      const step = prev >= 2000 ? 500 : prev >= 500 ? 100 : 50;
+      return Math.min(prev + step, 10000);
+    });
+  };
+
+  const applyPreset = (menSize: number, womenSize: number) => {
+    if (isRunning) return;
+    setMenArmySize(menSize);
+    setWomenArmySize(womenSize);
+    setBattleKey(prev => prev + 1);
   };
 
   return (
@@ -119,6 +132,30 @@ const Index = () => {
 
       {/* Command Dock - Bottom 25% */}
       <div className="h-[25vh] w-full bg-card border-t border-border flex flex-col">
+        {/* Preset Scenarios */}
+        <div className="flex items-center justify-center gap-2 px-3 py-1.5 border-b border-border flex-wrap">
+          <span className="text-xs text-muted-foreground uppercase tracking-wider mr-1">Presets:</span>
+          {[
+            { label: "Fair Fight", men: 500, women: 500 },
+            { label: "10:1 Odds", men: 1000, women: 100 },
+            { label: "Horde", men: 5000, women: 500 },
+            { label: "Mega Horde", men: 10000, women: 1000 },
+            { label: "David vs Goliath", men: 50, women: 5000 },
+            { label: "Equal Giants", men: 5000, women: 5000 },
+          ].map(p => (
+            <Button
+              key={p.label}
+              variant="outline"
+              size="sm"
+              className="h-6 text-xs px-2"
+              onClick={() => applyPreset(p.men, p.women)}
+              disabled={isRunning}
+            >
+              {p.label} <span className="ml-1 text-muted-foreground">({p.men.toLocaleString()}v{p.women.toLocaleString()})</span>
+            </Button>
+          ))}
+        </div>
+
         {/* Control Row */}
         <div className="flex items-center justify-center gap-3 py-2 border-b border-border">
           <Button

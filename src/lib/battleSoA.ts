@@ -86,20 +86,36 @@ export function createBattleSoA(): BattleSoA {
 }
 
 /**
- * Initialize units for battle
+ * Get dynamic spacing for a given army size so formations fit on screen
+ */
+function getSpacing(armySize: number): number {
+  if (armySize <= 200) return 12;
+  if (armySize <= 500) return 10;
+  if (armySize <= 1000) return 8;
+  if (armySize <= 2500) return 6;
+  if (armySize <= 5000) return 5;
+  return 4; // up to 10,000
+}
+
+/**
+ * Initialize units for battle with asymmetric army support
  * Creates proper army formations centered vertically, facing each other
  */
 export function initializeUnits(
   soa: BattleSoA,
-  armySize: number,
+  menArmySize: number,
+  womenArmySize: number,
   canvasWidth: number,
   canvasHeight: number
 ): void {
-  const totalUnits = armySize * 2;
-  soa.unitCount = totalUnits;
-  soa.menCount = armySize;
-  soa.womenCount = armySize;
-  
+  const totalUnits = Math.min(menArmySize + womenArmySize, MAX_UNITS);
+  const actualMen = Math.min(menArmySize, MAX_UNITS - 1);
+  const actualWomen = Math.min(womenArmySize, MAX_UNITS - actualMen);
+
+  soa.unitCount = actualMen + actualWomen;
+  soa.menCount = actualMen;
+  soa.womenCount = actualWomen;
+
   // Reset all arrays
   soa.posX.fill(0);
   soa.posY.fill(0);
@@ -113,30 +129,29 @@ export function initializeUnits(
   soa.spriteIdx.fill(0);
   soa.powerupType.fill(0);
   soa.powerupEndTime.fill(0);
-  
-  // Calculate grid dimensions for a roughly square formation
-  const unitsPerRow = Math.ceil(Math.sqrt(armySize * 0.6)); // Slightly wider than tall
-  const spacing = 8; // Pixels between units
-  
-  // Calculate formation dimensions
-  const formationWidth = unitsPerRow * spacing;
-  const formationHeight = Math.ceil(armySize / unitsPerRow) * spacing;
-  
-  // Center formations vertically
-  const centerY = canvasHeight / 2;
-  const startY = centerY - formationHeight / 2;
-  
-  // Men start at 15% from left, Women at 15% from right
+
+  const menSpacing = getSpacing(actualMen);
+  const womenSpacing = getSpacing(actualWomen);
+
+  // Men formation
+  const menUnitsPerRow = Math.ceil(Math.sqrt(actualMen * 0.6));
+  const menFormationHeight = Math.ceil(actualMen / menUnitsPerRow) * menSpacing;
   const menStartX = canvasWidth * 0.12;
+  const menStartY = canvasHeight / 2 - menFormationHeight / 2;
+
+  // Women formation
+  const womenUnitsPerRow = Math.ceil(Math.sqrt(actualWomen * 0.6));
+  const womenFormationHeight = Math.ceil(actualWomen / womenUnitsPerRow) * womenSpacing;
   const womenStartX = canvasWidth * 0.88;
-  
+  const womenStartY = canvasHeight / 2 - womenFormationHeight / 2;
+
   // Initialize MEN (left side, facing right)
-  for (let i = 0; i < armySize; i++) {
-    const row = Math.floor(i / unitsPerRow);
-    const col = i % unitsPerRow;
-    
-    soa.posX[i] = menStartX + col * spacing;
-    soa.posY[i] = startY + row * spacing;
+  for (let i = 0; i < actualMen; i++) {
+    const row = Math.floor(i / menUnitsPerRow);
+    const col = i % menUnitsPerRow;
+
+    soa.posX[i] = menStartX + col * menSpacing;
+    soa.posY[i] = menStartY + row * menSpacing;
     soa.health[i] = 100;
     soa.teamID[i] = TEAM_MEN;
     soa.stateFlags[i] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
@@ -144,15 +159,15 @@ export function initializeUnits(
     soa.formationCol[i] = col;
     soa.spriteIdx[i] = Math.floor(Math.random() * 36);
   }
-  
+
   // Initialize WOMEN (right side, facing left)
-  for (let i = 0; i < armySize; i++) {
-    const idx = armySize + i;
-    const row = Math.floor(i / unitsPerRow);
-    const col = i % unitsPerRow;
-    
-    soa.posX[idx] = womenStartX - col * spacing;
-    soa.posY[idx] = startY + row * spacing;
+  for (let i = 0; i < actualWomen; i++) {
+    const idx = actualMen + i;
+    const row = Math.floor(i / womenUnitsPerRow);
+    const col = i % womenUnitsPerRow;
+
+    soa.posX[idx] = womenStartX - col * womenSpacing;
+    soa.posY[idx] = womenStartY + row * womenSpacing;
     soa.health[idx] = 100;
     soa.teamID[idx] = TEAM_WOMEN;
     soa.stateFlags[idx] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
@@ -160,6 +175,9 @@ export function initializeUnits(
     soa.formationCol[idx] = col;
     soa.spriteIdx[idx] = Math.floor(Math.random() * 36);
   }
+
+  // suppress unused warning
+  void totalUnits;
 }
 
 /**
