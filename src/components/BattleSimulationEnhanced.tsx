@@ -12,6 +12,8 @@ import { createSpatialHashGrid, resizeGrid, type SpatialHashGrid } from "@/lib/s
 import { createParticlePool, updateParticles, renderParticles, spawnConfetti, spawnMeteorImpact, spawnClashShockwave, clearParticles, type ParticlePool } from "@/lib/particlePool";
 import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysics";
 import { renderUnits } from "@/lib/spriteRenderer";
+import { createPixiUnitLayer, renderPixiUnits, resizePixiLayer, destroyPixiLayer, type PixiUnitLayer } from "@/lib/pixiUnitRenderer";
+import { playKills, playBell } from "@/lib/battleAudio";
 
 type BattleSimulationProps = {
   menArmySize: number;
@@ -41,9 +43,21 @@ const BattleSimulation = ({
 }: BattleSimulationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>(0);
-  const [phase, setPhase] = useState<BattlePhase>("stand");
-  const [timeRemaining, setTimeRemaining] = useState(180);
+  const unitCanvasRef = useRef<HTMLCanvasElement>(null);
+  const fxCanvasRef = useRef<HTMLCanvasElement>(null);
+  const phaseRef = useRef<BattlePhase>("stand");
+  const timeRef = useRef(180);
+  const aliveRef = useRef(0);
+  const lastStatsRef = useRef<{ menAlive: number; womenAlive: number } | null>(null);
+  const lastUiPushRef = useRef(0);
+  const arenaCacheRef = useRef<HTMLCanvasElement | null>(null);
+  const pixiRef = useRef<PixiUnitLayer | null>(null);
+  const camRef = useRef({ x: 0, y: 0, zoom: 1 });
+  const clashPointRef = useRef({ x: 0, y: 0 });
+  const stepFnRef = useRef<(dt: number) => void>(() => {});
+  const renderFnRef = useRef<() => void>(() => {});
+  const propsRef = useRef({ battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory });
+  propsRef.current = { battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory };
 
   const soaRef = useRef<BattleSoA>(createBattleSoA());
   const gridRef = useRef<SpatialHashGrid | null>(null);
@@ -55,13 +69,9 @@ const BattleSimulation = ({
   const dprRef = useRef<number>(1);
   const logicalSizeRef = useRef({ width: 800, height: 600 });
   const firstClashRef = useRef(false);
-  const totalKillsRef = useRef(0);
-  const frameCountRef = useRef(0);
 
-  // Screen shake state
   const shakeRef = useRef({ intensity: 0, offsetX: 0, offsetY: 0 });
-  // First clash flash
-  const clashFlashRef = useRef(0); // remaining flash alpha
+  const clashFlashRef = useRef(0);
 
   const speakNarration = useCallback((context: NarratorContext) => {
     const quip = speak(context, narratorEnabled);
@@ -70,21 +80,19 @@ const BattleSimulation = ({
 
   const initCanvas = useCallback(() => {
     const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return { width: 800, height: 600 };
-
-    const dpr = window.devicePixelRatio || 1;
+    if (!container) return { width: 800, height: 600 };
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     dprRef.current = dpr;
     const rect = container.getBoundingClientRect();
-    const logicalWidth = rect.width;
-    const logicalHeight = rect.height;
-
-    canvas.style.width = `${logicalWidth}px`;
-    canvas.style.height = `${logicalHeight}px`;
-    canvas.width = Math.floor(logicalWidth * dpr);
-    canvas.height = Math.floor(logicalHeight * dpr);
-    logicalSizeRef.current = { width: logicalWidth, height: logicalHeight };
-    return { width: logicalWidth, height: logicalHeight };
+    const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
+    for (const c of [canvasRef.current, fxCanvasRef.current]) {
+      if (!c) continue;
+      c.style.width = `${w}px`; c.style.height = `${h}px`;
+      c.width = Math.floor(w * dpr); c.height = Math.floor(h * dpr);
+    }
+    if (pixiRef.current) resizePixiLayer(pixiRef.current, w, h);
+    logicalSizeRef.current = { width: w, height: h };
+    return { width: w, height: h };
   }, []);
 
   const initializeBattle = useCallback(() => {
@@ -100,17 +108,21 @@ const BattleSimulation = ({
 
     clearParticles(poolRef.current);
     killStatsRef.current = { menKills: 0, womenKills: 0 };
-    totalKillsRef.current = 0;
     firstClashRef.current = false;
     shakeRef.current = { intensity: 0, offsetX: 0, offsetY: 0 };
     clashFlashRef.current = 0;
+    arenaCacheRef.current = null; // clear scuff marks
+    camRef.current = { x: 0, y: 0, zoom: 1 };
+    clashPointRef.current = { x: width / 2, y: height / 2 };
     resetChargeState();
     setInitialCounts(menArmySize, womenArmySize);
+    aliveRef.current = menArmySize + womenArmySize;
+    lastStatsRef.current = null;
 
     onStatsUpdate({ menAlive: menArmySize, womenAlive: womenArmySize, menKills: 0, womenKills: 0 });
-    setPhase("stand");
+    phaseRef.current = "stand";
     onPhaseChange("stand");
-    setTimeRemaining(180);
+    timeRef.current = 180;
     onTimeUpdate(180);
     phaseTimeRef.current = 0;
     speakNarration("standPhase");
@@ -124,22 +136,25 @@ const BattleSimulation = ({
     };
     const observer = new ResizeObserver(handleResize);
     if (containerRef.current) observer.observe(containerRef.current);
-    window.addEventListener('resize', handleResize);
-    return () => { observer.disconnect(); window.removeEventListener('resize', handleResize); };
+    return () => observer.disconnect();
   }, [initCanvas]);
 
   const handleMeteorClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isRunning || phase === "victory") return;
-    const canvas = canvasRef.current;
-    if (!canvas || !gridRef.current) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * logicalSizeRef.current.width;
-    const y = ((e.clientY - rect.top) / rect.height) * logicalSizeRef.current.height;
+    if (!isRunning || phaseRef.current === "victory") return;
+    if (!gridRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const { width, height } = logicalSizeRef.current;
+    const cam = camRef.current;
+    // invert camera transform
+    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+    const x = (sx - width / 2 - cam.x * cam.zoom) / cam.zoom + width / 2;
+    const y = (sy - height / 2 - cam.y * cam.zoom) / cam.zoom + height / 2;
     applyMeteorImpact(soaRef.current, gridRef.current, x, y, 100, 500);
     spawnMeteorImpact(poolRef.current, x, y);
+    playKills(5);
     shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
     toast.info("Meteor Strike!", { duration: 1000 });
-  }, [isRunning, phase]);
+  }, [isRunning]);
 
   // ═══════════════════════════════════════════════
   // PREMIUM ARENA RENDERER - Broadcast Stadium
@@ -328,194 +343,227 @@ const BattleSimulation = ({
   // Phase-based lighting + battle intensity
   const renderLighting = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number, currentPhase: BattlePhase) => {
     const totalArmy = menArmySize + womenArmySize;
-    const totalAlive = soaRef.current ?
-      (() => { let c = 0; for (let i = 0; i < soaRef.current.unitCount; i++) if (soaRef.current.stateFlags[i] & FLAG_ALIVE) c++; return c; })()
-      : totalArmy;
+    const totalAlive = aliveRef.current;
     const casualtyRatio = totalArmy > 0 ? 1 - (totalAlive / totalArmy) : 0;
 
-    // Battle intensity overlay (stronger warmth)
     if (casualtyRatio > 0.05) {
-      const intensity = casualtyRatio * 0.15;
-      ctx.fillStyle = `rgba(255, 50, 15, ${intensity})`;
+      ctx.fillStyle = `rgba(255, 50, 15, ${casualtyRatio * 0.12})`;
       ctx.fillRect(0, 0, width, height);
     }
-
-    if (currentPhase === 'melee' || currentPhase === 'sudden_death') {
-      const base = currentPhase === 'sudden_death' ? 0.08 : 0.04;
-      const pulse = Math.sin(Date.now() * 0.003) * 0.03;
-      const glow = ctx.createRadialGradient(
-        width / 2, height / 2, 0,
-        width / 2, height / 2, Math.max(width, height) * 0.6
-      );
-      glow.addColorStop(0, `rgba(255, 80, 30, ${base + pulse})`);
-      glow.addColorStop(1, 'transparent');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, width, height);
-    } else if (currentPhase === 'victory') {
-      const glow = ctx.createRadialGradient(
-        width / 2, height / 2, 0,
-        width / 2, height / 2, Math.max(width, height) * 0.5
-      );
-      glow.addColorStop(0, 'rgba(255, 215, 0, 0.15)');
-      glow.addColorStop(1, 'transparent');
-      ctx.fillStyle = glow;
+    if (currentPhase === 'victory') {
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.08)';
       ctx.fillRect(0, 0, width, height);
     }
-
-    // First clash flash overlay
     if (clashFlashRef.current > 0) {
       ctx.fillStyle = `rgba(255, 255, 255, ${clashFlashRef.current})`;
       ctx.fillRect(0, 0, width, height);
     }
   }, [menArmySize, womenArmySize]);
 
-  const updateBattle = useCallback((deltaTime: number) => {
+  // Persistent scuff marks where fights happened (drawn into cached arena)
+  const addScuff = useCallback((x: number, y: number) => {
+    const c = arenaCacheRef.current;
+    if (!c) return;
+    const g = c.getContext('2d')!;
+    g.save();
+    g.scale(dprRef.current, dprRef.current);
+    g.fillStyle = 'rgba(60, 40, 20, 0.10)';
+    g.beginPath();
+    g.ellipse(x, y, 4 + Math.random() * 5, 2 + Math.random() * 3, Math.random() * Math.PI, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+  }, []);
+
+  const ensureArenaCache = useCallback(() => {
+    const { width, height } = logicalSizeRef.current;
+    const dpr = dprRef.current;
+    let c = arenaCacheRef.current;
+    if (c && c.width === Math.floor(width * dpr) && c.height === Math.floor(height * dpr)) return c;
+    c = document.createElement('canvas');
+    c.width = Math.floor(width * dpr);
+    c.height = Math.floor(height * dpr);
+    const g = c.getContext('2d')!;
+    g.scale(dpr, dpr);
+    renderArena(g, width, height);
+    arenaCacheRef.current = c;
+    return c;
+  }, [renderArena]);
+
+  const FIXED_DT = 1 / 60;
+  const STAND_SECONDS = 1.5;
+
+  // One physics step — reads/writes refs only (no React re-render per frame)
+  const stepBattle = useCallback((dt: number) => {
     const { width, height } = logicalSizeRef.current;
     if (!gridRef.current) return;
+    const p = propsRef.current;
+    const phase = phaseRef.current;
 
-    phaseTimeRef.current += deltaTime;
-    const newTime = Math.max(0, timeRemaining - deltaTime);
-    setTimeRemaining(newTime);
-    onTimeUpdate(Math.floor(newTime));
+    phaseTimeRef.current += dt;
+    const prevTime = timeRef.current;
+    timeRef.current = Math.max(0, prevTime - dt);
 
-    // Phase transitions
-    if (phase === "stand" && phaseTimeRef.current > 3) {
-      setPhase("melee");
-      onPhaseChange("melee");
+    if (phase === "stand" && phaseTimeRef.current > STAND_SECONDS) {
+      phaseRef.current = "melee";
+      p.onPhaseChange("melee");
       phaseTimeRef.current = 0;
+      playBell();
       speakNarration("meleePhase");
     }
-    if (phase === "melee" && newTime <= 30 && timeRemaining > 30) {
-      speakNarration("suddenDeath");
-    }
+    if (timeRef.current <= 30 && prevTime > 30) speakNarration("suddenDeath");
 
-    const rageActive = menRageEnabled || womenRageEnabled;
     const result = updatePhysics(
       soaRef.current, gridRef.current, poolRef.current,
-      DEFAULT_CONFIG, phase, deltaTime,
-      width, height, battleSpeed, rageActive
+      DEFAULT_CONFIG, phaseRef.current, dt,
+      width, height, p.battleSpeed, p.menRageEnabled || p.womenRageEnabled
     );
 
     killStatsRef.current.menKills += result.stats.menKills;
     killStatsRef.current.womenKills += result.stats.womenKills;
+    aliveRef.current = result.stats.menAlive + result.stats.womenAlive;
+    lastStatsRef.current = result.stats;
 
-    // Screen shake on kills
     const newKills = result.stats.menKills + result.stats.womenKills;
     if (newKills > 0) {
-      shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.5, 6);
+      shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.2, 5);
+      playKills(newKills);
+      for (const k of result.kills) {
+        addScuff(k.x, k.y);
+        clashPointRef.current.x += (k.x - clashPointRef.current.x) * 0.05;
+        clashPointRef.current.y += (k.y - clashPointRef.current.y) * 0.05;
+      }
     }
-
-    // First clash shockwave + flash
     if (newKills > 0 && !firstClashRef.current) {
       firstClashRef.current = true;
-      if (result.kills.length > 0) {
-        spawnClashShockwave(poolRef.current, result.kills[0].x, result.kills[0].y);
-      }
-      clashFlashRef.current = 0.3;
-      shakeRef.current.intensity = 8;
+      if (result.kills.length > 0) spawnClashShockwave(poolRef.current, result.kills[0].x, result.kills[0].y);
+      clashFlashRef.current = 0.25;
+      shakeRef.current.intensity = 7;
     }
-    totalKillsRef.current += newKills;
+    if (clashFlashRef.current > 0) clashFlashRef.current = Math.max(0, clashFlashRef.current - dt * 1.5);
 
-    // Decay screen shake
-    if (shakeRef.current.intensity > 0) {
-      shakeRef.current.offsetX = (Math.random() - 0.5) * shakeRef.current.intensity * 2;
-      shakeRef.current.offsetY = (Math.random() - 0.5) * shakeRef.current.intensity * 2;
-      shakeRef.current.intensity *= 0.88; // fast decay
-      if (shakeRef.current.intensity < 0.1) {
-        shakeRef.current.intensity = 0;
-        shakeRef.current.offsetX = 0;
-        shakeRef.current.offsetY = 0;
-      }
-    }
+    updateParticles(poolRef.current, dt);
 
-    // Decay clash flash
-    if (clashFlashRef.current > 0) {
-      clashFlashRef.current -= deltaTime * 1.5;
-      if (clashFlashRef.current < 0) clashFlashRef.current = 0;
-    }
-
-    onStatsUpdate({
-      menAlive: result.stats.menAlive,
-      womenAlive: result.stats.womenAlive,
-      menKills: killStatsRef.current.menKills,
-      womenKills: killStatsRef.current.womenKills,
-    });
-
-    updateParticles(poolRef.current, deltaTime);
-
-    // Victory check
     if (result.stats.menAlive === 0 || result.stats.womenAlive === 0) {
-      setPhase("victory");
-      onPhaseChange("victory");
+      phaseRef.current = "victory";
+      p.onPhaseChange("victory");
       const winner = result.stats.menAlive > 0 ? "men" : "women";
       speakNarration(winner === "men" ? "victoryMen" : "victoryWomen");
       spawnConfetti(poolRef.current, width / 2, height / 2, width);
-      onVictory(winner);
+      pushUi(true);
+      p.onVictory(winner);
     }
-  }, [battleSpeed, phase, timeRemaining, menRageEnabled, womenRageEnabled, speakNarration, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory]);
+  }, [speakNarration, addScuff]);
+
+  // Throttled UI sync (~4x per second)
+  const pushUi = useCallback((force = false) => {
+    const now = performance.now();
+    if (!force && now - lastUiPushRef.current < 250) return;
+    lastUiPushRef.current = now;
+    const s = lastStatsRef.current;
+    const p = propsRef.current;
+    p.onTimeUpdate(Math.floor(timeRef.current));
+    if (s) p.onStatsUpdate({
+      menAlive: s.menAlive, womenAlive: s.womenAlive,
+      menKills: killStatsRef.current.menKills, womenKills: killStatsRef.current.womenKills,
+    });
+  }, []);
 
   const renderBattle = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-
+    const fx = fxCanvasRef.current?.getContext("2d");
+    if (!canvas || !ctx || !fx) return;
     const dpr = dprRef.current;
     const { width, height } = logicalSizeRef.current;
-    frameCountRef.current++;
+    const phase = phaseRef.current;
 
-    ctx.save();
-    ctx.scale(dpr, dpr);
+    // Shake
+    const sh = shakeRef.current;
+    if (sh.intensity > 0.1) {
+      sh.offsetX = (Math.random() - 0.5) * sh.intensity * 2;
+      sh.offsetY = (Math.random() - 0.5) * sh.intensity * 2;
+      sh.intensity *= 0.88;
+    } else { sh.intensity = 0; sh.offsetX = 0; sh.offsetY = 0; }
 
-    // Screen shake offset
-    const shakeX = shakeRef.current.offsetX;
-    const shakeY = shakeRef.current.offsetY;
+    // Camera: gentle follow of clash point during melee
+    const cam = camRef.current;
+    const fighting = phase === 'melee' || phase === 'sudden_death';
+    const targetZoom = phase === 'stand' ? 1 + Math.min(phaseTimeRef.current / STAND_SECONDS, 1) * 0.03 : fighting && firstClashRef.current ? 1.08 : 1;
+    const targetX = fighting && firstClashRef.current ? (width / 2 - clashPointRef.current.x) * 0.25 : 0;
+    const targetY = fighting && firstClashRef.current ? (height / 2 - clashPointRef.current.y) * 0.25 : 0;
+    cam.zoom += (targetZoom - cam.zoom) * 0.04;
+    cam.x += (targetX - cam.x) * 0.04;
+    cam.y += (targetY - cam.y) * 0.04;
+    const camX = cam.x * cam.zoom + sh.offsetX;
+    const camY = cam.y * cam.zoom + sh.offsetY;
 
-    // Stand-phase zoom (slow zoom 1.0 -> 1.02)
-    let zoomScale = 1.0;
-    if (phase === 'stand') {
-      const t = Math.min(phaseTimeRef.current / 3, 1);
-      zoomScale = 1.0 + t * 0.02;
+    const applyCam = (g: CanvasRenderingContext2D) => {
+      g.translate(width / 2 + camX, height / 2 + camY);
+      g.scale(cam.zoom, cam.zoom);
+      g.translate(-width / 2, -height / 2);
+    };
+
+    // Layer 1: arena (cached bitmap)
+    const arena = ensureArenaCache();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#0b1f12';
+    ctx.fillRect(0, 0, width, height);
+    ctx.save(); applyCam(ctx); ctx.drawImage(arena, 0, 0, width, height); ctx.restore();
+
+    // Layer 2: units on GPU (fallback to 2D if Pixi unavailable)
+    if (pixiRef.current) {
+      renderPixiUnits(pixiRef.current, soaRef.current, phase, { x: camX, y: camY, zoom: cam.zoom, w: width, h: height });
+    } else {
+      ctx.save(); applyCam(ctx); renderUnits(ctx, soaRef.current, false, 0, false, phase); ctx.restore();
     }
 
-    ctx.clearRect(-10, -10, width + 20, height + 20);
+    // Layer 3: particles + lighting
+    fx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fx.clearRect(0, 0, width, height);
+    fx.save(); applyCam(fx); renderParticles(fx, poolRef.current); fx.restore();
+    renderLighting(fx, width, height, phase);
+  }, [ensureArenaCache, renderLighting]);
 
-    // Apply shake + zoom
-    ctx.save();
-    ctx.translate(width / 2 + shakeX, height / 2 + shakeY);
-    ctx.scale(zoomScale, zoomScale);
-    ctx.translate(-width / 2, -height / 2);
-
-    // Layer 1: Arena
-    renderArena(ctx, width, height);
-
-    // Layer 2: Units
-    renderUnits(ctx, soaRef.current, false, frameCountRef.current, false, phase);
-
-    // Layer 3: Particles
-    renderParticles(ctx, poolRef.current);
-
-    ctx.restore(); // end shake+zoom transform
-
-    // Layer 4: Lighting (not affected by shake for stability)
-    renderLighting(ctx, width, height, phase);
-
-    ctx.restore();
-  }, [phase, renderArena, renderLighting]);
-
-  const animate = useCallback(
-    (currentTime: number) => {
-      if (!lastTimeRef.current) lastTimeRef.current = currentTime;
-      const deltaTime = Math.min((currentTime - lastTimeRef.current) / 1000, 0.05);
-      lastTimeRef.current = currentTime;
-
-      if (isRunning && phase !== "victory") {
-        updateBattle(deltaTime);
+  // Single long-lived loop with fixed-step physics
+  useEffect(() => {
+    let acc = 0;
+    let raf = 0;
+    const loop = (t: number) => {
+      if (!lastTimeRef.current) lastTimeRef.current = t;
+      const frame = Math.min((t - lastTimeRef.current) / 1000, 0.1);
+      lastTimeRef.current = t;
+      if (propsRef.current.isRunning && phaseRef.current !== "victory") {
+        acc += frame;
+        let steps = 0;
+        while (acc >= FIXED_DT && steps < 5) { stepFnRef.current(FIXED_DT); acc -= FIXED_DT; steps++; }
+        if (steps === 5) acc = 0;
+        pushUi();
+      } else {
+        acc = 0;
+        updateParticles(poolRef.current, frame);
       }
-      renderBattle();
-      animationRef.current = requestAnimationFrame(animate);
-    },
-    [isRunning, phase, updateBattle, renderBattle]
-  );
+      renderFnRef.current();
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => { cancelAnimationFrame(raf); stopSpeaking(); };
+  }, [pushUi]);
+
+  stepFnRef.current = stepBattle;
+  renderFnRef.current = renderBattle;
+
+  // Pixi GPU layer
+  useEffect(() => {
+    const c = unitCanvasRef.current;
+    if (!c) return;
+    let layer: PixiUnitLayer | null = null;
+    let cancelled = false;
+    const { width, height } = logicalSizeRef.current;
+    createPixiUnitLayer(c, width, height)
+      .then(l => { if (cancelled) destroyPixiLayer(l); else { layer = l; pixiRef.current = l; } })
+      .catch(err => console.warn('PixiJS unavailable, using 2D fallback', err));
+    return () => { cancelled = true; pixiRef.current = null; if (layer) destroyPixiLayer(layer); };
+  }, []);
 
   useEffect(() => { initCanvas(); }, [initCanvas]);
 
@@ -528,21 +576,17 @@ const BattleSimulation = ({
   }, [isRunning, initializeBattle]);
 
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(animate);
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); stopSpeaking(); };
-  }, [animate]);
-
-  useEffect(() => {
     if (!isRunning) initializedRef.current = false;
   }, [isRunning]);
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+      <canvas ref={canvasRef} className="absolute inset-0 block" />
+      <canvas ref={unitCanvasRef} className="absolute inset-0 block pointer-events-none" />
       <canvas
-        ref={canvasRef}
-        className="w-full h-full cursor-crosshair"
+        ref={fxCanvasRef}
+        className="absolute inset-0 block cursor-crosshair"
         onClick={handleMeteorClick}
-        style={{ display: 'block' }}
         aria-label="Battle Arena - Click to launch meteor strike"
       />
     </div>

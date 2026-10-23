@@ -43,17 +43,17 @@ export interface PhysicsConfig {
 }
 
 export const DEFAULT_CONFIG: PhysicsConfig = {
-  moveSpeed: 80,
-  chargeSpeed: 250,           // Stronger charge burst
-  attackRange: 8,              // Tighter melee
-  baseDamage: 30,              // Faster, decisive kills
+  moveSpeed: 140,
+  chargeSpeed: 450,           // Fast charge burst
+  attackRange: 9,
+  baseDamage: 34,
   separationRadius: 10,
   separationStrength: 1.0,
   cohesionRadius: 60,
   cohesionStrength: 0.06,
   alignmentStrength: 0.06,
-  attractionStrength: 4.0,     // Very strong pursuit
-  maxSpeed: 180,               // Higher top speed
+  attractionStrength: 5.0,     // Strong pursuit
+  maxSpeed: 340,               // Roughly double top speed
   rageSpeedMultiplier: 1.4,
 };
 

@@ -89,7 +89,7 @@ export const TeamPanel = ({
           {/* Speed */}
           <div className="flex items-center gap-1">
             <Zap className="w-3 h-3 text-muted-foreground" />
-            <Slider value={[speed]} onValueChange={(v) => onSpeedChange(v[0])} min={0.5} max={3} step={0.5} disabled={disabled} className="flex-1" />
+            <Slider value={[speed]} onValueChange={(v) => onSpeedChange(v[0])} min={0.5} max={4} step={0.5} disabled={disabled} className="flex-1" />
             <span className="text-muted-foreground w-6">{speed}x</span>
           </div>
           
