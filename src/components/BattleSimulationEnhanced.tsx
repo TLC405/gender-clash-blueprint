@@ -12,6 +12,8 @@ import { createSpatialHashGrid, resizeGrid, type SpatialHashGrid } from "@/lib/s
 import { createParticlePool, updateParticles, renderParticles, spawnConfetti, spawnMeteorImpact, spawnClashShockwave, clearParticles, type ParticlePool } from "@/lib/particlePool";
 import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysics";
 import { renderUnits } from "@/lib/spriteRenderer";
+import { createPixiUnitLayer, renderPixiUnits, resizePixiLayer, destroyPixiLayer, type PixiUnitLayer } from "@/lib/pixiUnitRenderer";
+import { playKills, playBell } from "@/lib/battleAudio";
 
 type BattleSimulationProps = {
   menArmySize: number;
@@ -41,9 +43,21 @@ const BattleSimulation = ({
 }: BattleSimulationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>(0);
-  const [phase, setPhase] = useState<BattlePhase>("stand");
-  const [timeRemaining, setTimeRemaining] = useState(180);
+  const unitCanvasRef = useRef<HTMLCanvasElement>(null);
+  const fxCanvasRef = useRef<HTMLCanvasElement>(null);
+  const phaseRef = useRef<BattlePhase>("stand");
+  const timeRef = useRef(180);
+  const aliveRef = useRef(0);
+  const lastStatsRef = useRef<{ menAlive: number; womenAlive: number } | null>(null);
+  const lastUiPushRef = useRef(0);
+  const arenaCacheRef = useRef<HTMLCanvasElement | null>(null);
+  const pixiRef = useRef<PixiUnitLayer | null>(null);
+  const camRef = useRef({ x: 0, y: 0, zoom: 1 });
+  const clashPointRef = useRef({ x: 0, y: 0 });
+  const stepFnRef = useRef<(dt: number) => void>(() => {});
+  const renderFnRef = useRef<() => void>(() => {});
+  const propsRef = useRef({ battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory });
+  propsRef.current = { battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory };
 
   const soaRef = useRef<BattleSoA>(createBattleSoA());
   const gridRef = useRef<SpatialHashGrid | null>(null);
@@ -55,13 +69,9 @@ const BattleSimulation = ({
   const dprRef = useRef<number>(1);
   const logicalSizeRef = useRef({ width: 800, height: 600 });
   const firstClashRef = useRef(false);
-  const totalKillsRef = useRef(0);
-  const frameCountRef = useRef(0);
 
-  // Screen shake state
   const shakeRef = useRef({ intensity: 0, offsetX: 0, offsetY: 0 });
-  // First clash flash
-  const clashFlashRef = useRef(0); // remaining flash alpha
+  const clashFlashRef = useRef(0);
 
   const speakNarration = useCallback((context: NarratorContext) => {
     const quip = speak(context, narratorEnabled);
@@ -70,21 +80,19 @@ const BattleSimulation = ({
 
   const initCanvas = useCallback(() => {
     const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return { width: 800, height: 600 };
-
-    const dpr = window.devicePixelRatio || 1;
+    if (!container) return { width: 800, height: 600 };
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     dprRef.current = dpr;
     const rect = container.getBoundingClientRect();
-    const logicalWidth = rect.width;
-    const logicalHeight = rect.height;
-
-    canvas.style.width = `${logicalWidth}px`;
-    canvas.style.height = `${logicalHeight}px`;
-    canvas.width = Math.floor(logicalWidth * dpr);
-    canvas.height = Math.floor(logicalHeight * dpr);
-    logicalSizeRef.current = { width: logicalWidth, height: logicalHeight };
-    return { width: logicalWidth, height: logicalHeight };
+    const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
+    for (const c of [canvasRef.current, fxCanvasRef.current]) {
+      if (!c) continue;
+      c.style.width = `${w}px`; c.style.height = `${h}px`;
+      c.width = Math.floor(w * dpr); c.height = Math.floor(h * dpr);
+    }
+    if (pixiRef.current) resizePixiLayer(pixiRef.current, w, h);
+    logicalSizeRef.current = { width: w, height: h };
+    return { width: w, height: h };
   }, []);
 
   const initializeBattle = useCallback(() => {
@@ -100,17 +108,21 @@ const BattleSimulation = ({
 
     clearParticles(poolRef.current);
     killStatsRef.current = { menKills: 0, womenKills: 0 };
-    totalKillsRef.current = 0;
     firstClashRef.current = false;
     shakeRef.current = { intensity: 0, offsetX: 0, offsetY: 0 };
     clashFlashRef.current = 0;
+    arenaCacheRef.current = null; // clear scuff marks
+    camRef.current = { x: 0, y: 0, zoom: 1 };
+    clashPointRef.current = { x: width / 2, y: height / 2 };
     resetChargeState();
     setInitialCounts(menArmySize, womenArmySize);
+    aliveRef.current = menArmySize + womenArmySize;
+    lastStatsRef.current = null;
 
     onStatsUpdate({ menAlive: menArmySize, womenAlive: womenArmySize, menKills: 0, womenKills: 0 });
-    setPhase("stand");
+    phaseRef.current = "stand";
     onPhaseChange("stand");
-    setTimeRemaining(180);
+    timeRef.current = 180;
     onTimeUpdate(180);
     phaseTimeRef.current = 0;
     speakNarration("standPhase");
@@ -124,22 +136,25 @@ const BattleSimulation = ({
     };
     const observer = new ResizeObserver(handleResize);
     if (containerRef.current) observer.observe(containerRef.current);
-    window.addEventListener('resize', handleResize);
-    return () => { observer.disconnect(); window.removeEventListener('resize', handleResize); };
+    return () => observer.disconnect();
   }, [initCanvas]);
 
   const handleMeteorClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isRunning || phase === "victory") return;
-    const canvas = canvasRef.current;
-    if (!canvas || !gridRef.current) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * logicalSizeRef.current.width;
-    const y = ((e.clientY - rect.top) / rect.height) * logicalSizeRef.current.height;
+    if (!isRunning || phaseRef.current === "victory") return;
+    if (!gridRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const { width, height } = logicalSizeRef.current;
+    const cam = camRef.current;
+    // invert camera transform
+    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+    const x = (sx - width / 2 - cam.x * cam.zoom) / cam.zoom + width / 2;
+    const y = (sy - height / 2 - cam.y * cam.zoom) / cam.zoom + height / 2;
     applyMeteorImpact(soaRef.current, gridRef.current, x, y, 100, 500);
     spawnMeteorImpact(poolRef.current, x, y);
+    playKills(5);
     shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
     toast.info("Meteor Strike!", { duration: 1000 });
-  }, [isRunning, phase]);
+  }, [isRunning]);
 
   // ═══════════════════════════════════════════════
   // PREMIUM ARENA RENDERER - Broadcast Stadium
