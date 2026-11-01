@@ -235,7 +235,7 @@ export function updatePhysics(
   canvasWidth: number,
   canvasHeight: number,
   battleSpeed: number = 1,
-  rageActive: boolean = false
+  rageActive: boolean | { men: boolean; women: boolean } = false
 ): PhysicsResult {
   const dt = deltaTime * battleSpeed;
   const kills: Array<{ x: number; y: number; killerTeam: number }> = [];
@@ -257,7 +257,8 @@ export function updatePhysics(
   const menFury = getFuryMultiplier(menAlive, initialMenCount);
   const womenFury = getFuryMultiplier(womenAlive, initialWomenCount);
 
-  const speedMult = rageActive ? config.rageSpeedMultiplier : 1.0;
+  const menRage = typeof rageActive === 'boolean' ? rageActive : rageActive.men;
+  const womenRage = typeof rageActive === 'boolean' ? rageActive : rageActive.women;
   const attackRangeSq = config.attackRange * config.attackRange;
 
   // CHARGE IMPULSE: One-time burst toward enemy territory on melee start
@@ -281,7 +282,9 @@ export function updatePhysics(
     const x = soa.posX[i];
     const y = soa.posY[i];
     const fury = team === TEAM_MEN ? menFury : womenFury;
-    const unitMaxSpeed = config.maxSpeed * speedMult * fury;
+    const boosted = team === TEAM_MEN ? menRage : womenRage;
+    const speedMult = boosted ? config.rageSpeedMultiplier : 1;
+    const unitMaxSpeed = config.maxSpeed * speedMult * fury * (phase === 'sudden_death' ? 1.15 : 1);
 
     // Stand phase: hold formation
     if (phase === 'stand') {
@@ -311,7 +314,7 @@ export function updatePhysics(
 
       // ATTACK: In range
       if (enemy.distSq < attackRangeSq) {
-        const damage = config.baseDamage * fury * dt;
+        const damage = config.baseDamage * fury * dt * (boosted ? 1.25 : 1) * (phase === 'sudden_death' ? 1.5 : 1);
         soa.health[enemy.index] -= damage;
 
         // Team-colored hit sparks
@@ -430,8 +433,8 @@ export function updatePhysics(
 
   return {
     stats: {
-      menAlive,
-      womenAlive,
+      menAlive: soa.menCount,
+      womenAlive: soa.womenCount,
       menKills,
       womenKills,
       menInFormation,
