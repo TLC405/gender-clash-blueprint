@@ -33,13 +33,15 @@ type BattleSimulationProps = {
   onQuipChange: (quip: string) => void;
   onVictory: (winner: "men" | "women") => void;
   narratorEnabled: boolean;
+  meteorTrigger?: number;
+  reducedMotion?: boolean;
 };
 
 const BattleSimulation = ({
   menArmySize, womenArmySize, battleSpeed,
   menRageEnabled, womenRageEnabled, isRunning,
   onStatsUpdate, onPhaseChange, onTimeUpdate, onQuipChange, onVictory,
-  narratorEnabled
+  narratorEnabled, meteorTrigger = 0, reducedMotion = false
 }: BattleSimulationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -69,6 +71,10 @@ const BattleSimulation = ({
   const dprRef = useRef<number>(1);
   const logicalSizeRef = useRef({ width: 800, height: 600 });
   const firstClashRef = useRef(false);
+  const meteorHandledRef = useRef(0);
+  const reducedMotionRef = useRef(reducedMotion);
+  reducedMotionRef.current = reducedMotion;
+  const lastMilestoneRef = useRef(0);
 
   const shakeRef = useRef({ intensity: 0, offsetX: 0, offsetY: 0 });
   const clashFlashRef = useRef(0);
@@ -97,8 +103,7 @@ const BattleSimulation = ({
 
   const initializeBattle = useCallback(() => {
     const { width, height } = initCanvas();
-    const maxArmySize = Math.max(menArmySize, womenArmySize);
-    initializeUnits(soaRef.current, maxArmySize, width, height);
+    initializeUnits(soaRef.current, menArmySize, width, height, womenArmySize);
 
     if (!gridRef.current) {
       gridRef.current = createSpatialHashGrid(width, height, 50);
@@ -109,6 +114,7 @@ const BattleSimulation = ({
     clearParticles(poolRef.current);
     killStatsRef.current = { menKills: 0, womenKills: 0 };
     firstClashRef.current = false;
+    lastMilestoneRef.current = 0;
     shakeRef.current = { intensity: 0, offsetX: 0, offsetY: 0 };
     clashFlashRef.current = 0;
     arenaCacheRef.current = null; // clear scuff marks
@@ -152,9 +158,26 @@ const BattleSimulation = ({
     applyMeteorImpact(soaRef.current, gridRef.current, x, y, 100, 500);
     spawnMeteorImpact(poolRef.current, x, y);
     playKills(5);
-    shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
+    if (!reducedMotionRef.current) shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
     toast.info("Meteor Strike!", { duration: 1000 });
   }, [isRunning]);
+
+  // Accessible command button: trigger a cinematic strike at the current clash.
+  useEffect(() => {
+    if (!meteorTrigger || meteorTrigger === meteorHandledRef.current) return;
+    meteorHandledRef.current = meteorTrigger;
+    if (!isRunning || !gridRef.current || phaseRef.current === "victory") return;
+    const { width, height } = logicalSizeRef.current;
+    const x = Math.max(30, Math.min(width - 30, clashPointRef.current.x || width / 2));
+    const y = Math.max(30, Math.min(height - 30, clashPointRef.current.y || height / 2));
+    applyMeteorImpact(soaRef.current, gridRef.current, x, y, 100, 500);
+    spawnMeteorImpact(poolRef.current, x, y);
+    if (!reducedMotionRef.current) {
+      shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 9, 12);
+      clashFlashRef.current = 0.14;
+    }
+    playKills(5);
+  }, [meteorTrigger, isRunning]);
 
   // ═══════════════════════════════════════════════
   // PREMIUM ARENA RENDERER - Broadcast Stadium
@@ -410,12 +433,16 @@ const BattleSimulation = ({
       playBell();
       speakNarration("meleePhase");
     }
-    if (timeRef.current <= 30 && prevTime > 30) speakNarration("suddenDeath");
+    if (timeRef.current <= 30 && prevTime > 30) {
+      phaseRef.current = "sudden_death";
+      p.onPhaseChange("sudden_death");
+      speakNarration("suddenDeath");
+    }
 
     const result = updatePhysics(
       soaRef.current, gridRef.current, poolRef.current,
       DEFAULT_CONFIG, phaseRef.current, dt,
-      width, height, p.battleSpeed, p.menRageEnabled || p.womenRageEnabled
+      width, height, p.battleSpeed, { men: p.menRageEnabled, women: p.womenRageEnabled }
     );
 
     killStatsRef.current.menKills += result.stats.menKills;
@@ -425,7 +452,7 @@ const BattleSimulation = ({
 
     const newKills = result.stats.menKills + result.stats.womenKills;
     if (newKills > 0) {
-      shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.2, 5);
+      if (!reducedMotionRef.current) shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.2, 5);
       playKills(newKills);
       for (const k of result.kills) {
         addScuff(k.x, k.y);
@@ -436,14 +463,22 @@ const BattleSimulation = ({
     if (newKills > 0 && !firstClashRef.current) {
       firstClashRef.current = true;
       if (result.kills.length > 0) spawnClashShockwave(poolRef.current, result.kills[0].x, result.kills[0].y);
-      clashFlashRef.current = 0.25;
-      shakeRef.current.intensity = 7;
+      clashFlashRef.current = reducedMotionRef.current ? 0 : 0.25;
+      shakeRef.current.intensity = reducedMotionRef.current ? 0 : 7;
+    }
+    const totalKills = killStatsRef.current.menKills + killStatsRef.current.womenKills;
+    const milestone = Math.floor(totalKills / 75);
+    if (milestone > lastMilestoneRef.current && firstClashRef.current) {
+      lastMilestoneRef.current = milestone;
+      spawnClashShockwave(poolRef.current, clashPointRef.current.x, clashPointRef.current.y);
+      if (!reducedMotionRef.current) clashFlashRef.current = 0.09;
     }
     if (clashFlashRef.current > 0) clashFlashRef.current = Math.max(0, clashFlashRef.current - dt * 1.5);
 
     updateParticles(poolRef.current, dt);
 
-    if (result.stats.menAlive === 0 || result.stats.womenAlive === 0) {
+    if (result.stats.menAlive === 0 || result.stats.womenAlive === 0 ||
+        (timeRef.current <= 0 && result.stats.menAlive !== result.stats.womenAlive)) {
       phaseRef.current = "victory";
       p.onPhaseChange("victory");
       const winner = result.stats.menAlive > 0 ? "men" : "women";
@@ -479,7 +514,7 @@ const BattleSimulation = ({
 
     // Shake
     const sh = shakeRef.current;
-    if (sh.intensity > 0.1) {
+    if (!reducedMotionRef.current && sh.intensity > 0.1) {
       sh.offsetX = (Math.random() - 0.5) * sh.intensity * 2;
       sh.offsetY = (Math.random() - 0.5) * sh.intensity * 2;
       sh.intensity *= 0.88;
@@ -488,9 +523,9 @@ const BattleSimulation = ({
     // Camera: gentle follow of clash point during melee
     const cam = camRef.current;
     const fighting = phase === 'melee' || phase === 'sudden_death';
-    const targetZoom = phase === 'stand' ? 1 + Math.min(phaseTimeRef.current / STAND_SECONDS, 1) * 0.03 : fighting && firstClashRef.current ? 1.08 : 1;
-    const targetX = fighting && firstClashRef.current ? (width / 2 - clashPointRef.current.x) * 0.25 : 0;
-    const targetY = fighting && firstClashRef.current ? (height / 2 - clashPointRef.current.y) * 0.25 : 0;
+    const targetZoom = reducedMotionRef.current ? 1 : phase === 'stand' ? 1 + Math.min(phaseTimeRef.current / STAND_SECONDS, 1) * 0.03 : fighting && firstClashRef.current ? 1.08 : 1;
+    const targetX = !reducedMotionRef.current && fighting && firstClashRef.current ? (width / 2 - clashPointRef.current.x) * 0.25 : 0;
+    const targetY = !reducedMotionRef.current && fighting && firstClashRef.current ? (height / 2 - clashPointRef.current.y) * 0.25 : 0;
     cam.zoom += (targetZoom - cam.zoom) * 0.04;
     cam.x += (targetX - cam.x) * 0.04;
     cam.y += (targetY - cam.y) * 0.04;
@@ -575,9 +610,6 @@ const BattleSimulation = ({
     if (isRunning && !initializedRef.current) initializeBattle();
   }, [isRunning, initializeBattle]);
 
-  useEffect(() => {
-    if (!isRunning) initializedRef.current = false;
-  }, [isRunning]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
