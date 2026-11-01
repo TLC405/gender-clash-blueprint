@@ -197,12 +197,16 @@ const Index = () => {
   const handleTime = useCallback((t: number) => { timeRef.current = t; setTimeRemaining(t); }, []);
   const handleQuip = useCallback((text: string) => { if (text) setQuip(text); }, []);
 
-  const dropMeteor = () => {
-    if (!isLive || meteorCharges <= 0) return;
-    setMeteorCharges(n => n - 1);
-    setMeteorTrigger(n => n + 1);
+  const useMeteorCharge = useCallback(() => {
+    setMeteorCharges(n => Math.max(0, n - 1));
     setHype(h => Math.min(100, h + 14));
     recordMoment("METEOR IN THE GROUP CHAT", "Somebody pressed the dramatic button. Everybody act surprised.", "☄️");
+  }, [recordMoment]);
+
+  const dropMeteor = () => {
+    if (!isLive || meteorCharges <= 0) return;
+    useMeteorCharge();
+    setMeteorTrigger(n => n + 1);
   };
 
   const react = (emoji: string) => {
@@ -335,7 +339,7 @@ const Index = () => {
               menArmySize={menArmySize} womenArmySize={womenArmySize}
               battleSpeed={battleSpeed} menRageEnabled={menRage} womenRageEnabled={womenRage}
               isRunning={isRunning} narratorEnabled={narratorEnabled}
-              meteorTrigger={meteorTrigger} reducedMotion={reducedMotion}
+              meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion}
               onStatsUpdate={handleStats} onPhaseChange={handlePhase}
               onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
             />
