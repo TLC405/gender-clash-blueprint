@@ -86,80 +86,59 @@ export function createBattleSoA(): BattleSoA {
 }
 
 /**
- * Initialize units for battle
- * Creates proper army formations centered vertically, facing each other
+ * Initialize independently sized armies. A separate column count keeps
+ * asymmetric matchups honest and positions both sides inside the arena.
  */
 export function initializeUnits(
   soa: BattleSoA,
-  armySize: number,
+  menArmySize: number,
   canvasWidth: number,
-  canvasHeight: number
+  canvasHeight: number,
+  womenArmySize: number = menArmySize
 ): void {
-  const totalUnits = armySize * 2;
-  soa.unitCount = totalUnits;
-  soa.menCount = armySize;
-  soa.womenCount = armySize;
-  
-  // Reset all arrays
-  soa.posX.fill(0);
-  soa.posY.fill(0);
-  soa.velX.fill(0);
-  soa.velY.fill(0);
-  soa.targetX.fill(0);
-  soa.targetY.fill(0);
-  soa.health.fill(0);
-  soa.teamID.fill(0);
-  soa.stateFlags.fill(0);
-  soa.spriteIdx.fill(0);
-  soa.powerupType.fill(0);
-  soa.powerupEndTime.fill(0);
-  
-  // Calculate grid dimensions for a roughly square formation
-  const unitsPerRow = Math.ceil(Math.sqrt(armySize * 0.6)); // Slightly wider than tall
-  const spacing = 8; // Pixels between units
-  
-  // Calculate formation dimensions
-  const formationWidth = unitsPerRow * spacing;
-  const formationHeight = Math.ceil(armySize / unitsPerRow) * spacing;
-  
-  // Center formations vertically
-  const centerY = canvasHeight / 2;
-  const startY = centerY - formationHeight / 2;
-  
-  // Men start at 15% from left, Women at 15% from right
-  const menStartX = canvasWidth * 0.12;
-  const womenStartX = canvasWidth * 0.88;
-  
-  // Initialize MEN (left side, facing right)
-  for (let i = 0; i < armySize; i++) {
-    const row = Math.floor(i / unitsPerRow);
-    const col = i % unitsPerRow;
-    
-    soa.posX[i] = menStartX + col * spacing;
-    soa.posY[i] = startY + row * spacing;
-    soa.health[i] = 100;
-    soa.teamID[i] = TEAM_MEN;
-    soa.stateFlags[i] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
-    soa.formationRow[i] = row;
-    soa.formationCol[i] = col;
-    soa.spriteIdx[i] = Math.floor(Math.random() * 36);
-  }
-  
-  // Initialize WOMEN (right side, facing left)
-  for (let i = 0; i < armySize; i++) {
-    const idx = armySize + i;
-    const row = Math.floor(i / unitsPerRow);
-    const col = i % unitsPerRow;
-    
-    soa.posX[idx] = womenStartX - col * spacing;
-    soa.posY[idx] = startY + row * spacing;
-    soa.health[idx] = 100;
-    soa.teamID[idx] = TEAM_WOMEN;
-    soa.stateFlags[idx] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
-    soa.formationRow[idx] = row;
-    soa.formationCol[idx] = col;
-    soa.spriteIdx[idx] = Math.floor(Math.random() * 36);
-  }
+  const men = Math.max(1, Math.min(MAX_UNITS / 2, Math.floor(menArmySize)));
+  const women = Math.max(1, Math.min(MAX_UNITS - men, Math.floor(womenArmySize)));
+  soa.unitCount = men + women;
+  soa.menCount = men;
+  soa.womenCount = women;
+
+  soa.posX.fill(0); soa.posY.fill(0);
+  soa.velX.fill(0); soa.velY.fill(0);
+  soa.targetX.fill(0); soa.targetY.fill(0);
+  soa.health.fill(0); soa.teamID.fill(0);
+  soa.stateFlags.fill(0); soa.spriteIdx.fill(0);
+  soa.formationRow.fill(0); soa.formationCol.fill(0);
+  soa.powerupType.fill(0); soa.powerupEndTime.fill(0);
+
+  const placeArmy = (count: number, offset: number, team: number) => {
+    const columns = Math.max(1, Math.ceil(Math.sqrt(count * 0.85)));
+    const rows = Math.ceil(count / columns);
+    const spacing = Math.min(8, Math.max(2.4, (canvasHeight * 0.80) / Math.max(rows, 1)));
+    const originY = canvasHeight / 2 - ((rows - 1) * spacing) / 2;
+    const originX = team === TEAM_MEN
+      ? Math.max(24, canvasWidth * 0.11)
+      : Math.min(canvasWidth - 24, canvasWidth * 0.89);
+    const direction = team === TEAM_MEN ? 1 : -1;
+    const maxWidth = Math.max(24, canvasWidth * 0.32);
+    const columnSpacing = Math.min(spacing, maxWidth / Math.max(columns - 1, 1));
+
+    for (let i = 0; i < count; i++) {
+      const index = offset + i;
+      const row = Math.floor(i / columns);
+      const col = i % columns;
+      soa.posX[index] = originX + direction * col * columnSpacing;
+      soa.posY[index] = originY + row * spacing;
+      soa.health[index] = 100;
+      soa.teamID[index] = team;
+      soa.stateFlags[index] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
+      soa.formationRow[index] = row;
+      soa.formationCol[index] = col;
+      soa.spriteIdx[index] = Math.floor(Math.random() * 36);
+    }
+  };
+
+  placeArmy(men, 0, TEAM_MEN);
+  placeArmy(women, men, TEAM_WOMEN);
 }
 
 /**

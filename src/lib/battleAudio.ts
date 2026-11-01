@@ -11,9 +11,9 @@ let lastPlay = 0;
 
 function load() {
   if (clashes.length) return;
-  clashes = ['000', '001', '002'].map(n => new Howl({ src: [`/sfx/impactMetal_light_${n}.ogg`], volume: 0.25 }));
-  punches = ['000', '001'].map(n => new Howl({ src: [`/sfx/impactPunch_medium_${n}.ogg`], volume: 0.35 }));
-  bell = new Howl({ src: ['/sfx/impactBell_heavy_000.ogg'], volume: 0.5 });
+  clashes = ['000', '001', '002'].map(n => new Howl({ src: [`${import.meta.env.BASE_URL}sfx/impactMetal_light_${n}.ogg`], volume: 0.25 }));
+  punches = ['000', '001'].map(n => new Howl({ src: [`${import.meta.env.BASE_URL}sfx/impactPunch_medium_${n}.ogg`], volume: 0.35 }));
+  bell = new Howl({ src: [`${import.meta.env.BASE_URL}sfx/impactBell_heavy_000.ogg`], volume: 0.5 });
 }
 
 export function setSoundEnabled(on: boolean) { Howler.mute(!on); }

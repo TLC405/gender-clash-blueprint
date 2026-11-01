@@ -1,0 +1,13 @@
+.git
+.github
+.lovable
+node_modules
+dist
+dist-ssr
+*.log
+*.local
+.env.local
+.env.production.local
+.env.development.local
+.vscode
+README.md

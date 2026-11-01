@@ -4,10 +4,11 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered:', reg))
-      .catch(err => console.log('SW registration failed:', err));
+// Register only for published builds. BASE_URL supports both root hosting and GitHub Pages subpaths.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL })
+      .catch((error) => console.warn("Service worker registration unavailable:", error));
   });
 }

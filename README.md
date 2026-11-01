@@ -1,73 +1,56 @@
-# Welcome to your Lovable project
+# TLC BATTLE — Men vs Women Arena
 
-## Project info
+An original, cinematic TLC-branded browser battle game. Four playable arena presets, interactive power-ups, match highlights, sound, fullscreen/spectator views, and shareable recaps. The core arena is a local simulation, **not** real-time multiplayer.
 
-**URL**: https://lovable.dev/projects/962227d7-5f89-47a6-a1bd-b8c496dd3df3
+**Source code:** This GitHub repository. **Hosting:** Independent of Lovable.
 
-## How can I edit this code?
+## Run locally
 
-There are several ways of editing your application.
+Requirements: Node.js 22 and npm.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/962227d7-5f89-47a6-a1bd-b8c496dd3df3) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone https://github.com/TLC405/gender-clash-blueprint.git
+cd gender-clash-blueprint
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open the local URL printed by Vite. Check production output with `npm run build` and `npm run preview`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Publish free with GitHub Pages
 
-**Use GitHub Codespaces**
+1. Merge the reviewed Atomic Edition pull request into `main` after its CI checks pass.
+2. In **GitHub → Repository Settings → Pages**, select **Source: GitHub Actions**. This one-time action must be completed by a repository administrator.
+3. The workflow `.github/workflows/deploy-pages.yml` automatically builds and publishes each push to `main`.
+4. Once the workflow succeeds, visit **https://tlc405.github.io/gender-clash-blueprint/**. The URL is a target, not a claim that Pages is already enabled.
+5. Optional custom domain: configure it under GitHub Pages settings and set the repository Actions variable `TLC_BASE_PATH` to `/` if your domain serves the app at its root. Re-run the Pages workflow after changing the variable.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The workflow builds with `DEPLOY_BASE_PATH=/gender-clash-blueprint/` by default. React Router, game audio, service worker, and web manifest use that base path. It also creates `404.html` so direct links to app routes work on GitHub Pages.
 
-## What technologies are used for this project?
+## Host on your own server with Docker
 
-This project is built with:
+Build and run the static site in Nginx:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+docker build -t tlc-battle .
+docker run -d --name tlc-battle --restart unless-stopped -p 8080:80 tlc-battle
+```
 
-## How can I deploy this project?
+Open `http://localhost:8080`. For a public VPS, place a TLS reverse proxy such as Caddy in front of port 8080, point your domain's DNS at the VPS, and configure HTTPS. The included `nginx.conf` handles SPA routes and static assets. Root hosting is the default for Docker.
 
-Simply open [Lovable](https://lovable.dev/projects/962227d7-5f89-47a6-a1bd-b8c496dd3df3) and click on Share -> Publish.
+## Backend and configuration
 
-## Can I connect a custom domain to my Lovable project?
+The playable arena runs in the browser. Supabase integration is retained for existing features; the ElevenLabs voice function requires its existing Supabase backend and configuration. This Docker image hosts **the frontend**, not Supabase or ElevenLabs.
 
-Yes, you can!
+Vite reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` at build time. These are browser-visible public configuration values, not server secrets. **Never commit service-role keys, private API keys, or other credentials.** Keep any actual backend secrets in the backend provider's secret manager. For GitHub Pages, the build uses the existing project public configuration; migrate that configuration to GitHub Actions variables if you later remove the tracked `.env`.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Quality checks
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```bash
+npx tsc --noEmit -p tsconfig.app.json
+npm run build
+```
+
+The current package-lock predates the Pixi/Howler additions; install uses npm install until the lockfile is regenerated and committed.
+
+GitHub Actions runs the typecheck and production build for proposed changes. Pages publishing only runs from `main` or a manually dispatched workflow.
