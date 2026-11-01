@@ -11,7 +11,7 @@ Requirements: Node.js 22 and npm.
 ```bash
 git clone https://github.com/TLC405/gender-clash-blueprint.git
 cd gender-clash-blueprint
-npm ci
+npm install
 npm run dev
 ```
 
@@ -50,5 +50,7 @@ Vite reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` at build time
 npx tsc --noEmit -p tsconfig.app.json
 npm run build
 ```
+
+The current package-lock predates the Pixi/Howler additions; install uses npm install until the lockfile is regenerated and committed.
 
 GitHub Actions runs the typecheck and production build for proposed changes. Pages publishing only runs from `main` or a manually dispatched workflow.
