@@ -574,7 +574,7 @@ const BattleSimulation = ({
       if (propsRef.current.isRunning && phaseRef.current !== "victory") {
         acc += frame;
         let steps = 0;
-        while (acc >= FIXED_DT && steps < 5 && phaseRef.current !== 'victory') { stepFnRef.current(FIXED_DT); acc -= FIXED_DT; steps++; }
+        while (acc >= FIXED_DT && steps < 5 && (phaseRef.current as BattlePhase) !== 'victory') { stepFnRef.current(FIXED_DT); acc -= FIXED_DT; steps++; }
         if (steps === 5) acc = 0;
         pushUi();
       } else {
