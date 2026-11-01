@@ -34,6 +34,8 @@ type BattleSimulationProps = {
   onVictory: (winner: "men" | "women") => void;
   narratorEnabled: boolean;
   meteorTrigger?: number;
+  meteorCharges?: number;
+  onMeteorUsed?: () => void;
   reducedMotion?: boolean;
 };
 
@@ -41,7 +43,7 @@ const BattleSimulation = ({
   menArmySize, womenArmySize, battleSpeed,
   menRageEnabled, womenRageEnabled, isRunning,
   onStatsUpdate, onPhaseChange, onTimeUpdate, onQuipChange, onVictory,
-  narratorEnabled, meteorTrigger = 0, reducedMotion = false
+  narratorEnabled, meteorTrigger = 0, meteorCharges = 0, onMeteorUsed, reducedMotion = false
 }: BattleSimulationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -148,6 +150,7 @@ const BattleSimulation = ({
   const handleMeteorClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isRunning || phaseRef.current === "victory") return;
     if (!gridRef.current) return;
+    if (meteorCharges <= 0) { toast.info("No meteor drops left this round."); return; }
     const rect = e.currentTarget.getBoundingClientRect();
     const { width, height } = logicalSizeRef.current;
     const cam = camRef.current;
@@ -159,8 +162,9 @@ const BattleSimulation = ({
     spawnMeteorImpact(poolRef.current, x, y);
     playKills(5);
     if (!reducedMotionRef.current) shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
+    onMeteorUsed?.();
     toast.info("Meteor Strike!", { duration: 1000 });
-  }, [isRunning]);
+  }, [isRunning, meteorCharges, onMeteorUsed]);
 
   // Accessible command button: trigger a cinematic strike at the current clash.
   useEffect(() => {
