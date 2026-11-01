@@ -1,90 +1,40 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Shield, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import i18n from "@/data/i18n.en.json";
+import { ArrowLeft, ArrowUpRight, Play, Sparkles, Swords, Zap } from "lucide-react";
+import "./Index.css";
 
-const Horde = () => {
-  return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <header className="flex items-center justify-between mb-8">
-          <Link to="/">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              aria-label="Back to home"
-              className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-              Back
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="w-8 h-8 text-accent" aria-hidden="true" />
-            {i18n.horde}
-          </h1>
-          <div className="w-20" aria-hidden="true"></div>
-        </header>
+const modes = [
+  { id: "classic", icon: "⚔️", name: "THE CLASSIC", eyebrow: "01 / THE ORIGINAL", size: "500 VS 500", copy: "A timeless battle of egos. No excuses. No mercy. Just the original showdown.", theme: "blue" },
+  { id: "chaos", icon: "💥", name: "TOTAL CHAOS", eyebrow: "02 / MAXIMUM MAYHEM", size: "1,200 VS 1,200", copy: "The arena is packed. The stakes are imaginary. The spectacle is very, very real.", theme: "pink" },
+  { id: "upset", icon: "👀", name: "THE UPSET", eyebrow: "03 / ODDS DEFIED", size: "350 VS 800", copy: "The most disrespectful matchup on the schedule. Can the underdogs survive?", theme: "gold" },
+  { id: "last-stand", icon: "🔥", name: "LAST STAND", eyebrow: "04 / FAST & FURIOUS", size: "120 VS 120", copy: "A smaller cast. A bigger spotlight. Blink and you'll miss the plot twist.", theme: "purple" },
+];
 
-        <section className="text-center mb-12">
-          <h2 className="text-2xl font-bold mb-3">Endless Wave Defense</h2>
-          <p className="text-muted-foreground text-lg">
-            Choose your team and survive endless waves of AI opponents
-          </p>
-        </section>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="p-8 border-primary/30 hover:border-primary transition-all duration-200 cursor-pointer group">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform" aria-hidden="true">
-                <Shield className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-2xl font-bold text-primary">Team Men</h3>
-              <p className="text-muted-foreground">
-                Defend your territory against relentless waves
-              </p>
-              <Button 
-                className="w-full bg-primary hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label="Start Horde Mode as Team Men"
-              >
-                Start Horde Mode
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="p-8 border-secondary/30 hover:border-secondary transition-all duration-200 cursor-pointer group">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-secondary/20 flex items-center justify-center group-hover:scale-110 transition-transform" aria-hidden="true">
-                <Zap className="w-8 h-8 text-secondary" />
-              </div>
-              <h3 className="text-2xl font-bold text-secondary">Team Women</h3>
-              <p className="text-muted-foreground">
-                Defend your territory against relentless waves
-              </p>
-              <Button 
-                className="w-full bg-secondary hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label="Start Horde Mode as Team Women"
-              >
-                Start Horde Mode
-              </Button>
-            </div>
-          </Card>
-        </div>
-
-        <Card className="mt-8 p-6 bg-muted/20">
-          <h3 className="font-bold mb-4">Horde Mode Rules</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Waves increase in difficulty and enemy count</li>
-            <li>• Earn bonus XP for survival streaks</li>
-            <li>• Special power-ups drop every 5 waves</li>
-            <li>• Compete for highest wave reached on leaderboards</li>
-            <li>• Bots fill remaining team slots automatically</li>
-          </ul>
-        </Card>
+const Horde = () => (
+  <div className="tlc-app">
+    <header className="tlc-topbar">
+      <Link to="/" className="tlc-brand" style={{ textDecoration: "none", color: "inherit" }}>
+        <div className="tlc-brand-symbol"><span>T</span><span>✦</span></div>
+        <div><div className="tlc-brand-title">TLC <strong>BATTLE</strong></div><div className="tlc-brand-subtitle">THE BATTLE CLUB <span>•</span> EST. 2026</div></div>
+      </Link>
+      <Link to="/" className="tlc-utility" style={{ textDecoration: "none" }}><ArrowLeft size={16} /> BACK TO ARENA</Link>
+    </header>
+    <main className="tlc-main tlc-mode-page">
+      <div className="tlc-eyebrow"><Sparkles size={14} /> PICK YOUR PROBLEM</div>
+      <h1>CHOOSE YOUR <span>CHAOS.</span></h1>
+      <p className="tlc-mode-description">Four ways to settle the world's most unnecessary debate. Every mode launches a real, playable battle simulation.</p>
+      <div className="tlc-mode-grid">
+        {modes.map(mode => <Link key={mode.id} to={"/?preset=" + mode.id} className={"tlc-mode-card " + mode.theme}>
+          <div className="tlc-mode-card-top"><span>{mode.eyebrow}</span><ArrowUpRight size={19} /></div>
+          <div className="tlc-mode-card-emoji">{mode.icon}</div>
+          <h2>{mode.name}</h2>
+          <div className="tlc-mode-card-size"><Swords size={15} /> {mode.size}</div>
+          <p>{mode.copy}</p>
+          <div className="tlc-mode-card-launch"><Play size={15} fill="currentColor" /> ENTER THIS ARENA <ArrowUpRight size={15} /></div>
+        </Link>)}
       </div>
-    </div>
-  );
-};
+      <div className="tlc-mode-note"><Zap size={18} /><div><strong>ALL MODES ARE PLAYABLE RIGHT NOW.</strong><span>Choose a preset, then press Start Battle. Power-ups, reactions and shareable posters are available in every mode.</span></div></div>
+    </main>
+  </div>
+);
 
 export default Horde;
