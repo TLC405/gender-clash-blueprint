@@ -50,7 +50,7 @@ const BattleSimulation = ({
   const unitCanvasRef = useRef<HTMLCanvasElement>(null);
   const fxCanvasRef = useRef<HTMLCanvasElement>(null);
   const phaseRef = useRef<BattlePhase>("stand");
-  const timeRef = useRef(180);
+  const timeRef = useRef(240);
   const aliveRef = useRef(0);
   const lastStatsRef = useRef<{ menAlive: number; womenAlive: number } | null>(null);
   const lastUiPushRef = useRef(0);
@@ -130,8 +130,8 @@ const BattleSimulation = ({
     onStatsUpdate({ menAlive: menArmySize, womenAlive: womenArmySize, menKills: 0, womenKills: 0 });
     phaseRef.current = "stand";
     onPhaseChange("stand");
-    timeRef.current = 180;
-    onTimeUpdate(180);
+    timeRef.current = 240;
+    onTimeUpdate(240);
     phaseTimeRef.current = 0;
     speakNarration("standPhase");
     initializedRef.current = true;
@@ -417,7 +417,7 @@ const BattleSimulation = ({
   }, [renderArena]);
 
   const FIXED_DT = 1 / 60;
-  const STAND_SECONDS = 1.5;
+  const STAND_SECONDS = 3.25;
 
   // One physics step — reads/writes refs only (no React re-render per frame)
   const stepBattle = useCallback((dt: number) => {
