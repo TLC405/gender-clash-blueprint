@@ -12,6 +12,7 @@ import { setSoundEnabled } from "@/lib/battleAudio";
 import type { BattlePhase } from "@/lib/battlePhysics";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
 import "./Index.css";
+import "./BroadcastOverhaul.css";
 
 type Team = "men" | "women";
 type Stats = { menAlive: number; womenAlive: number; menKills: number; womenKills: number };
