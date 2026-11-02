@@ -1,0 +1,255 @@
+/* TLC Battlecast / one-screen cockpit — no document scroll on any breakpoint. */
+.tlc-one-screen {
+  --cockpit-blue:#64b8ff; --cockpit-pink:#ff79b9; --cockpit-red:#ee5562;
+  position:fixed; inset:0; z-index:1; width:100%; height:100vh; height:100dvh;
+  display:grid; grid-template-rows:56px minmax(0,1fr);
+  overflow:hidden; overscroll-behavior:none;
+  background:#090e16; color:#f6f7f9;
+}
+.tlc-one-screen button { touch-action:manipulation; }
+.tlc-one-screen .tlc-cockpit-header {
+  height:56px; min-height:0; display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(10px,2vw,26px); gap:12px;
+  border-bottom:1px solid #303c4e; background:#0d131d; position:relative;z-index:8;
+}
+.tlc-cockpit-brand,.tlc-cockpit-header-center,.tlc-cockpit-header-actions {display:flex;align-items:center;gap:12px;min-width:0;}
+.tlc-cockpit-monogram {padding:7px 9px;background:#ed4c5b;color:white;font:900 23px/1 'Barlow Condensed',Impact,sans-serif;letter-spacing:.3px;transform:skew(-7deg);}
+.tlc-cockpit-brandcopy {display:flex;flex-direction:column;gap:0;min-width:0;}
+.tlc-cockpit-brandcopy strong {font:900 24px/1 'Barlow Condensed',Impact,sans-serif;letter-spacing:.5px;white-space:nowrap;}
+.tlc-cockpit-brandcopy strong span {color:#f76b75;}
+.tlc-cockpit-brandcopy small {font-size:8px;letter-spacing:1.1px;font-weight:900;color:#8b9cad;white-space:nowrap;}
+.tlc-onair {display:flex;align-items:center;gap:7px;color:#b7c2d0;border:1px solid #344053;background:#192130;font-size:10px;font-weight:900;letter-spacing:1px;padding:8px 10px;white-space:nowrap;}
+.tlc-onair i {width:7px;height:7px;background:#8292a4;border-radius:50%;}
+.tlc-onair.live {color:white;border-color:#e94e5f88;background:#40232c;}
+.tlc-onair.live i {background:#ff5a67;box-shadow:0 0 12px #f24e5b;}
+.tlc-broadcast-disclaimer {color:#8594a7;letter-spacing:1px;font-size:9px;font-weight:900;white-space:nowrap;}
+.tlc-cockpit-header-actions {gap:6px;}
+.tlc-cockpit-header-actions button {width:36px;height:36px;display:grid;place-items:center;background:#182231;border:1px solid #3b4657;color:#c2d2e2;border-radius:3px;padding:0;}
+.tlc-cockpit-header-actions button.active,.tlc-cockpit-header-actions button:hover {background:#2a3649;color:#fff;border-color:#7694bb;}
+.tlc-cockpit-shell {display:flex;flex-direction:column;position:relative;flex:1;min-height:0;min-width:0;overflow:hidden;}
+.tlc-cockpit-shell:fullscreen {background:#090e16;height:100%;width:100%;display:flex;flex-direction:column;}
+.tlc-cockpit-main {flex:1;min-height:0;min-width:0;padding:10px;display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,320px);gap:10px;}
+.tlc-cockpit-main.spectator {grid-template-columns:minmax(0,1fr);}
+.tlc-cockpit-arena {display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid #374255;background:#101721;overflow:hidden;}
+.tlc-cockpit-score {flex:0 0 90px;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 132px minmax(0,1fr);background:#141c28;border-bottom:1px solid #425066;}
+.tlc-score-unit {min-width:0;display:flex;align-items:center;gap:12px;padding:10px 18px;}
+.tlc-score-unit.men {background:linear-gradient(90deg,#17324d,#111a28);}
+.tlc-score-unit.women {background:linear-gradient(270deg,#38253b,#111a28);justify-content:flex-end;}
+.tlc-score-team-icon {display:grid;place-items:center;width:45px;height:45px;border:1px solid #52728d;background:#25415b;color:#b4ddff;font-size:27px;flex-shrink:0;}
+.tlc-score-unit.women .tlc-score-team-icon {border-color:#a55883;background:#5c294a;color:#ffd2e7;}
+.tlc-score-detail {min-width:0;display:flex;flex-direction:column;gap:2px;}
+.tlc-score-detail>span {color:#a6bbd1;font-size:9px;letter-spacing:1px;font-weight:900;white-space:nowrap;}
+.tlc-score-detail>strong {font:900 clamp(21px,2.6vw,33px)/1 'Barlow Condensed',Impact,sans-serif;white-space:nowrap;}
+.tlc-score-detail>small {color:#9db1c9;font-size:9px;white-space:nowrap;}
+.tlc-score-unit.women .tlc-score-detail {text-align:right;}
+.tlc-score-unit>b {font:900 clamp(36px,4.3vw,62px)/1 'Barlow Condensed',Impact,sans-serif;font-variant-numeric:tabular-nums;color:#7dc4ff;margin-left:auto;white-space:nowrap;}
+.tlc-score-unit.women>b {margin-left:0;margin-right:auto;color:#ff95c9;}
+.tlc-cockpit-clock {display:flex;flex-direction:column;align-items:center;justify-content:center;background:#e7eef7;color:#142032;gap:1px;}
+.tlc-cockpit-clock>span {font-size:9px;letter-spacing:1.4px;font-weight:900;color:#cf4453;}
+.tlc-cockpit-clock>strong {font:900 42px/1 'Barlow Condensed',Impact,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.tlc-cockpit-clock>small {font-size:8px;letter-spacing:.4px;font-weight:900;color:#536578;text-align:center;max-width:95%;}
+.tlc-cockpit-field {flex:1;min-height:0;min-width:0;position:relative;overflow:hidden;background:#0c1917;}
+.tlc-cockpit-field>div:first-child {height:100%;width:100%;}
+.tlc-cockpit-field-top {position:absolute;left:9px;right:9px;top:8px;display:flex;justify-content:space-between;gap:5px;pointer-events:none;color:#dce5ec;font-size:9px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 4px #000;z-index:2;}
+.tlc-cockpit-field-top span:first-child {background:#111b27db;border:1px solid #5d6e80;padding:6px 9px;display:flex;align-items:center;gap:6px;}
+.tlc-cockpit-field-top span:first-child svg {color:#ee6775;}
+.tlc-cockpit-field-top span:last-child {padding:6px 9px;background:#101722c7;}
+.tlc-cockpit-lower-third {position:absolute;bottom:10px;left:10px;right:10px;display:flex;align-items:stretch;gap:7px;pointer-events:none;z-index:3;}
+.tlc-cockpit-ticker {min-width:0;flex:1;min-height:37px;background:#0c1525eb;display:flex;align-items:center;border:1px solid #71839999;box-shadow:0 4px 20px #0008;}
+.tlc-cockpit-ticker span {background:#ed5261;align-self:stretch;display:flex;align-items:center;padding:0 12px;font-size:9px;font-weight:900;letter-spacing:.8px;white-space:nowrap;}
+.tlc-cockpit-ticker strong {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 12px;color:#e9f0f8;font-size:11px;font-weight:700;}
+.tlc-cockpit-hype {display:flex;align-items:center;gap:6px;padding:0 10px;background:#111a28ed;border:1px solid #61728cbb;color:#ffc7a3;font-size:10px;font-weight:900;white-space:nowrap;}
+.tlc-cockpit-idle {position:absolute;inset:0;display:grid;place-items:center;z-index:4;background:#060b15a5;backdrop-filter:blur(1.5px);}
+.tlc-cockpit-idle-inner {display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;max-width:min(390px,87%);padding:23px 20px;background:#101924f5;border:1px solid #7c8aa2;box-shadow:0 18px 50px #0008;}
+.tlc-cockpit-idle-inner>span {font-size:10px;color:#ed7c82;letter-spacing:2px;font-weight:900;}
+.tlc-cockpit-idle-inner h1 {font:900 clamp(31px,4vw,54px)/.9 'Barlow Condensed',Impact,sans-serif;}
+.tlc-cockpit-idle-inner p {font-size:12px;color:#9eaec0;line-height:1.4;}
+.tlc-cockpit-idle-inner button {display:flex;align-items:center;justify-content:center;gap:9px;margin-top:5px;background:#ee5561;border:0;color:white;padding:13px 22px;font-size:12px;font-weight:900;letter-spacing:1px;}
+.tlc-cockpit-spotlight {position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:4;pointer-events:none;max-width:min(520px,83%);min-width:min(260px,75%);display:flex;align-items:center;gap:10px;padding:13px;background:#132130ee;border:1px solid #b18a61;box-shadow:0 8px 35px #0008;animation:tlc-spotlight-in .18s ease-out;}
+.tlc-cockpit-spotlight.men {border-color:#6bb8f4;}
+.tlc-cockpit-spotlight.women {border-color:#fb91c3;}
+.tlc-cockpit-spotlight>span {font-size:27px;}
+.tlc-cockpit-spotlight>div {min-width:0;display:flex;flex-direction:column;gap:2px;}
+.tlc-cockpit-spotlight strong {color:white;font-size:14px;letter-spacing:.5px;}
+.tlc-cockpit-spotlight small {color:#b9c7d5;font-size:10px;line-height:1.45;}
+@keyframes tlc-spotlight-in {from{opacity:0;transform:translateX(-50%) translateY(9px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.tlc-cockpit-momentum {height:27px;flex:0 0 27px;padding:5px 11px;background:#0c1420;display:grid;grid-template-columns:100px minmax(0,1fr) 105px;align-items:center;gap:12px;border-top:1px solid #344053;}
+.tlc-cockpit-momentum>span {font-size:9px;font-weight:900;letter-spacing:.6px;color:#98b2c9;white-space:nowrap;}
+.tlc-cockpit-momentum>span:last-child {text-align:right;color:#f3a5d0;}
+.tlc-cockpit-momentum>span b {color:white;}
+.tlc-cockpit-momentum-track {height:7px;position:relative;background:#fe6ab6;overflow:hidden;}
+.tlc-cockpit-momentum-track>div {height:100%;background:#55b2fa;transition:width .45s;}
+.tlc-cockpit-momentum-track:after {content:'';height:100%;width:2px;position:absolute;left:50%;top:0;background:#0d1420;}
+.tlc-cockpit-right {min-height:0;min-width:0;overflow:hidden;}
+.tlc-cockpit-right>.broadcast-center {height:100%;min-height:0;overflow:hidden;}
+.tlc-cockpit-right .broadcast-section {min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-color:#3f5064 #101722;}
+.tlc-cockpit-right .broadcast-center-footer {flex:0 0 auto;}
+.tlc-cockpit-dock {display:flex;align-items:center;justify-content:space-between;gap:14px;flex:0 0 77px;min-height:0;padding:9px 14px calc(9px + env(safe-area-inset-bottom,0px));border-top:1px solid #46536a;background:#111927;z-index:9;}
+.tlc-cockpit-primary,.tlc-cockpit-shortcuts {display:flex;align-items:center;gap:7px;min-width:0;}
+.tlc-cockpit-primary>button,.tlc-cockpit-shortcuts>button {height:44px;border:1px solid #3b485c;color:#e3eaf2;font-weight:900;font-size:11px;background:#1b2738;white-space:nowrap;padding:0 13px;display:flex;align-items:center;justify-content:center;gap:7px;}
+.tlc-cockpit-primary>button:hover,.tlc-cockpit-shortcuts>button:hover {background:#2a374b;border-color:#677d9a;}
+.tlc-cockpit-primary>.tlc-cockpit-play {background:#ee5462;color:white;border-color:#f17d87;padding:0 19px;min-width:107px;letter-spacing:.4px;}
+.tlc-cockpit-primary>.tlc-cockpit-play.pause {background:#3f2b35;color:#ffadb5;border-color:#9b4b57;}
+.tlc-cockpit-primary>.tlc-cockpit-play:disabled {opacity:.4;}
+.tlc-cockpit-primary>.tlc-cockpit-reset {padding:0 12px;}
+.tlc-cockpit-speed {height:44px;display:flex;align-items:center;padding:4px;gap:4px;border:1px solid #354354;background:#0e1623;}
+.tlc-cockpit-speed>span {font-size:9px;letter-spacing:.8px;font-weight:900;color:#8b9bb0;margin:0 6px;}
+.tlc-cockpit-speed button {border:0;background:transparent;color:#a4b5c7;font-size:11px;font-weight:900;padding:9px 9px;height:100%;min-width:36px;}
+.tlc-cockpit-speed button.selected {color:white;background:#e75463;}
+.tlc-cockpit-shortcuts>button {position:relative;min-width:71px;flex-direction:column;gap:3px;padding:4px 8px;height:52px;font-size:8px;letter-spacing:.8px;}
+.tlc-cockpit-shortcuts>button.active {border-color:#e86875;background:#3b2634;color:#fff;}
+.tlc-cockpit-shortcuts>button i {position:absolute;right:7px;top:3px;border-radius:7px;padding:0 4px;font-size:8px;font-style:normal;background:#e75160;}
+.tlc-cockpit-panel {position:absolute;right:11px;bottom:calc(77px + 9px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 22px));max-height:min(65vh,670px);z-index:11;display:flex;flex-direction:column;min-height:0;background:#111a28;border:1px solid #607089;box-shadow:0 15px 60px #000b;animation:tlc-panel-in .17s ease-out;}
+@keyframes tlc-panel-in {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tlc-cockpit-panel-head {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:#1b2737;border-bottom:1px solid #3d4e64;flex:0 0 auto;}
+.tlc-cockpit-panel-head>div {display:flex;flex-direction:column;gap:2px;}
+.tlc-cockpit-panel-head>div>span {color:#ef7881;font-size:8px;font-weight:900;letter-spacing:1.2px;}
+.tlc-cockpit-panel-head>div>strong {font:900 24px 'Barlow Condensed',Impact,sans-serif;letter-spacing:.7px;}
+.tlc-cockpit-panel-head>button {height:34px;width:34px;display:grid;place-items:center;background:#111b2a;border:1px solid #425168;color:#e0e8f1;font-size:16px;}
+.tlc-cockpit-panel-body {overflow-y:auto;overscroll-behavior:contain;min-height:0;padding:12px;scrollbar-color:#465873 #15202c;}
+.tlc-cockpit-panel-body>.broadcast-center {border:0;box-shadow:none;}
+.tlc-cockpit-panel-body .broadcast-section {display:flex;flex-direction:column;}
+.tlc-cockpit-mode-list {display:flex;flex-direction:column;gap:6px;}
+.tlc-cockpit-mode-list button {display:flex;align-items:center;text-align:left;gap:12px;padding:12px;background:#161f2d;border:1px solid #2f4054;color:white;}
+.tlc-cockpit-mode-list button.selected {border-color:#e45e6a;background:#2a2231;}
+.tlc-cockpit-mode-emoji {font-size:24px;flex:0 0 30px;}
+.tlc-cockpit-mode-list button>span:nth-child(2) {flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
+.tlc-cockpit-mode-list strong {font-size:12px;letter-spacing:.6px;font-weight:900;}
+.tlc-cockpit-mode-list small {font-size:10px;color:#9badc2;line-height:1.4;}
+.tlc-cockpit-mode-select {color:#ec7883;font-size:9px;font-weight:900;letter-spacing:1px;}
+.tlc-cockpit-power-grid {display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.tlc-cockpit-power-grid>button {display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;text-align:left;min-height:99px;background:#192b41;border:1px solid #3e6d99;color:#add8ff;padding:12px;}
+.tlc-cockpit-power-grid>button.women {background:#362438;color:#ffadd2;border-color:#a35983;}
+.tlc-cockpit-power-grid>button.active {box-shadow:inset 0 0 0 1px currentColor;}
+.tlc-cockpit-power-grid>button strong {font-size:12px;font-weight:900;letter-spacing:.4px;}
+.tlc-cockpit-power-grid>button small {font-size:10px;opacity:.75;}
+.tlc-cockpit-power-grid>button.tlc-cockpit-meteor {background:#452935;color:#ffd6a6;border-color:#aa7c52;grid-column:span 2;min-height:75px;flex-direction:row;justify-content:flex-start;align-items:center;gap:12px;flex-wrap:wrap;}
+.tlc-cockpit-power-grid>button.tlc-cockpit-meteor:disabled {opacity:.4;}
+.tlc-cockpit-reactions {grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;}
+.tlc-cockpit-reactions>span {color:#9aacbd;font-size:10px;font-weight:900;letter-spacing:.7px;}
+.tlc-cockpit-reactions>div {display:flex;gap:6px;}
+.tlc-cockpit-reactions button {min-width:42px;height:39px;display:flex;align-items:center;justify-content:center;gap:2px;font-size:19px;background:#1b283a;border:1px solid #344257;color:white;}
+.tlc-cockpit-reactions button small {font-size:9px;}
+.tlc-cockpit-settings {display:flex;flex-direction:column;gap:8px;}
+.tlc-cockpit-settings label {min-height:50px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#182231;border:1px solid #354255;}
+.tlc-cockpit-settings label span {display:flex;align-items:center;gap:9px;font-size:11px;font-weight:900;letter-spacing:.4px;}
+.tlc-cockpit-settings label input {width:20px;height:20px;accent-color:#f26070;flex-shrink:0;}
+.tlc-cockpit-settings-row {padding:13px;background:#182231;border:1px solid #354255;display:flex;flex-direction:column;gap:10px;}
+.tlc-cockpit-settings-row>span {font-size:10px;font-weight:900;color:#a2b3c4;}
+.tlc-cockpit-settings-row>div {display:flex;gap:5px;flex-wrap:wrap;}
+.tlc-cockpit-settings-row button {min-width:48px;padding:9px;background:#26364b;border:1px solid #41546c;color:#d8e6f4;font-size:11px;font-weight:900;}
+.tlc-cockpit-settings-row button.active {background:#e85464;color:white;border-color:#ed7d8c;}
+.tlc-cockpit-settings-action {width:100%;padding:13px;background:#202e40;border:1px solid #42546a;color:white;display:flex;align-items:center;justify-content:center;gap:9px;font-size:11px;font-weight:900;}
+.tlc-cockpit-settings>small {font-size:10px;color:#91a0b4;line-height:1.55;padding:9px 2px;}
+.tlc-cockpit-share {display:flex;flex-direction:column;gap:8px;}
+.tlc-cockpit-share button {background:#192739;color:white;border:1px solid #3c526c;display:flex;align-items:center;gap:14px;text-align:left;padding:14px;}
+.tlc-cockpit-share button:hover {background:#24374d;}
+.tlc-cockpit-share button svg {color:#f87c87;flex-shrink:0;}
+.tlc-cockpit-share button span {display:flex;flex-direction:column;gap:4px;}
+.tlc-cockpit-share button strong {font-size:12px;font-weight:900;}
+.tlc-cockpit-share button small {font-size:10px;color:#a9b8c8;}
+.tlc-cockpit-victory-backdrop {position:fixed;inset:0;z-index:25;display:grid;place-items:center;background:#060a12e8;padding:16px;backdrop-filter:blur(10px);}
+.tlc-cockpit-victory-card {width:min(450px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:28px 23px;background:#121d2d;border:1px solid #63809f;text-align:center;}
+.tlc-cockpit-victory-card>span {font-size:10px;color:#fa7581;letter-spacing:2px;font-weight:900;}
+.tlc-cockpit-victory-symbol {font-size:68px;line-height:1.25;color:#fff;}
+.tlc-cockpit-victory-card h2 {font-size:clamp(39px,8vw,60px);line-height:.9;font-weight:900;margin:8px 0;}
+.tlc-cockpit-victory-card h2 em {font-style:normal;color:#f2717c;}
+.tlc-cockpit-victory-card p {font-size:12px;color:#a6b9cd;margin:10px 0 19px;}
+.tlc-cockpit-victory-stats {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px;}
+.tlc-cockpit-victory-stats div {background:#1e2d41;border:1px solid #3c506b;padding:12px;}
+.tlc-cockpit-victory-stats small {font-size:9px;color:#a5b6c7;letter-spacing:.8px;display:block;}
+.tlc-cockpit-victory-stats strong {font:900 34px 'Barlow Condensed',Impact,sans-serif;}
+.tlc-cockpit-victory-replay {width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:9px;border:0;background:#ec5261;color:white;font-size:13px;font-weight:900;}
+.tlc-cockpit-victory-actions {display:flex;justify-content:center;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.tlc-cockpit-victory-actions button {min-height:37px;padding:8px 10px;background:#1e3045;border:1px solid #445a77;color:#dce8f5;display:flex;align-items:center;gap:5px;font-size:10px;font-weight:900;}
+/* Medium displays keep the live arena, then switch analytics to the in-place Stats drawer. */
+@media(max-width:1100px) {
+  .tlc-cockpit-main {grid-template-columns:minmax(0,1fr) minmax(260px,280px);}
+  .tlc-score-team-icon {display:none;}
+  .tlc-score-unit {padding:10px;}
+  .tlc-score-detail>small {font-size:8px;}
+  .tlc-cockpit-right .broadcast-card-hero {padding:10px;}
+}
+@media(max-width:900px) {
+  .tlc-cockpit-main {grid-template-columns:minmax(0,1fr);}
+  .tlc-cockpit-right {display:none;}
+  .tlc-cockpit-score {grid-template-columns:minmax(0,1fr) 126px minmax(0,1fr);}
+  .tlc-score-team-icon {display:grid;}
+  .tlc-score-unit {padding:10px 14px;}
+  .tlc-cockpit-dock {gap:8px;}
+  .tlc-cockpit-shortcuts>button {min-width:63px;}
+}
+@media(max-width:640px) {
+  .tlc-one-screen {grid-template-rows:46px minmax(0,1fr);}
+  .tlc-one-screen .tlc-cockpit-header {height:46px;padding:0 9px;gap:6px;}
+  .tlc-cockpit-monogram {font-size:19px;padding:5px 7px;}
+  .tlc-cockpit-brand {gap:6px;}
+  .tlc-cockpit-brandcopy strong {font-size:19px;}
+  .tlc-cockpit-brandcopy small {font-size:6px;letter-spacing:.3px;}
+  .tlc-broadcast-disclaimer {display:none;}
+  .tlc-cockpit-header-center {margin-left:auto;}
+  .tlc-onair {padding:6px;font-size:8px;letter-spacing:.1px;gap:4px;}
+  .tlc-cockpit-header-actions {gap:3px;}
+  .tlc-cockpit-header-actions button {height:29px;width:29px;}
+  .tlc-cockpit-main {padding:5px;gap:5px;}
+  .tlc-cockpit-score {flex-basis:74px;grid-template-columns:minmax(0,1fr) 83px minmax(0,1fr);}
+  .tlc-score-unit {gap:3px;padding:5px 7px;flex-direction:column;align-items:flex-start;justify-content:center;}
+  .tlc-score-unit.women {align-items:flex-end;}
+  .tlc-score-unit>b {order:2;margin:0;font-size:33px;}
+  .tlc-score-detail {display:contents;}
+  .tlc-score-detail>strong {font-size:16px;line-height:.9;}
+  .tlc-score-detail>span,.tlc-score-detail>small {display:none;}
+  .tlc-cockpit-clock {gap:3px;}
+  .tlc-cockpit-clock>span {font-size:7px;letter-spacing:.4px;}
+  .tlc-cockpit-clock>strong {font-size:29px;}
+  .tlc-cockpit-clock>small {font-size:7px;letter-spacing:0;line-height:1.1;}
+  .tlc-cockpit-field-top {top:6px;left:7px;right:7px;font-size:7px;letter-spacing:.2px;}
+  .tlc-cockpit-field-top span:first-child,.tlc-cockpit-field-top span:last-child {padding:5px 6px;}
+  .tlc-cockpit-field-top svg {height:10px;width:10px;}
+  .tlc-cockpit-lower-third {bottom:6px;left:6px;right:6px;gap:4px;}
+  .tlc-cockpit-ticker {min-height:31px;}
+  .tlc-cockpit-ticker span {padding:0 7px;font-size:7px;}
+  .tlc-cockpit-ticker strong {font-size:9px;padding:0 7px;}
+  .tlc-cockpit-hype {font-size:9px;padding:0 6px;gap:4px;}
+  .tlc-cockpit-hype svg {height:10px;width:10px;}
+  .tlc-cockpit-idle-inner {padding:17px 14px;gap:7px;}
+  .tlc-cockpit-idle-inner>span {font-size:8px;}
+  .tlc-cockpit-idle-inner h1 {font-size:clamp(29px,8vw,43px);}
+  .tlc-cockpit-idle-inner p {font-size:10px;}
+  .tlc-cockpit-idle-inner button {padding:10px 15px;font-size:11px;}
+  .tlc-cockpit-momentum {grid-template-columns:71px minmax(0,1fr) 82px;height:24px;flex-basis:24px;padding:4px 7px;gap:5px;}
+  .tlc-cockpit-momentum>span {font-size:8px;letter-spacing:0;}
+  .tlc-cockpit-dock {flex:0 0 calc(103px + env(safe-area-inset-bottom,0px));padding:5px 6px calc(6px + env(safe-area-inset-bottom,0px));gap:5px;flex-direction:column;justify-content:center;}
+  .tlc-cockpit-primary {width:100%;height:43px;gap:4px;}
+  .tlc-cockpit-primary>button {height:40px;}
+  .tlc-cockpit-primary>.tlc-cockpit-play {flex:1;min-width:0;padding:0 9px;font-size:11px;}
+  .tlc-cockpit-primary>.tlc-cockpit-reset {width:43px;padding:0;}
+  .tlc-cockpit-primary>.tlc-cockpit-reset span {display:none;}
+  .tlc-cockpit-speed {height:40px;gap:2px;flex:1;justify-content:space-between;padding:3px;}
+  .tlc-cockpit-speed>span {font-size:8px;margin:0 3px;}
+  .tlc-cockpit-speed button {min-width:33px;padding:7px 5px;font-size:10px;}
+  .tlc-cockpit-shortcuts {width:100%;flex:1;gap:4px;justify-content:space-between;}
+  .tlc-cockpit-shortcuts>button {min-width:0;height:46px;flex:1;padding:3px 0;font-size:8px;gap:2px;}
+  .tlc-cockpit-shortcuts>button svg {height:17px;width:17px;}
+  .tlc-cockpit-panel {bottom:calc(103px + env(safe-area-inset-bottom,0px) + 6px);max-height:min(65dvh,530px);left:6px;right:6px;width:auto;}
+  .tlc-cockpit-panel-head {padding:9px 11px;}
+  .tlc-cockpit-panel-head>div>strong {font-size:21px;}
+  .tlc-cockpit-panel-body {padding:8px;}
+  .tlc-cockpit-spotlight {padding:9px;gap:7px;}
+  .tlc-cockpit-spotlight strong {font-size:11px;}
+  .tlc-cockpit-spotlight small {font-size:9px;}
+}
+@media(max-height:570px) {
+ .tlc-one-screen {grid-template-rows:42px minmax(0,1fr);}
+ .tlc-one-screen .tlc-cockpit-header {height:42px;}
+ .tlc-cockpit-score {flex-basis:57px;}
+ .tlc-cockpit-clock>strong {font-size:26px;}
+ .tlc-score-unit>b {font-size:30px;}
+ .tlc-cockpit-dock {flex-basis:76px;}
+ .tlc-cockpit-momentum {height:21px;flex-basis:21px;}
+ .tlc-cockpit-panel {bottom:calc(79px + env(safe-area-inset-bottom,0px));max-height:65dvh;}
+}
+@media(prefers-reduced-motion:reduce) {
+ .tlc-cockpit-spotlight,.tlc-cockpit-panel {animation:none;}
+ .tlc-cockpit-momentum-track>div {transition:none;}
+}
