@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
 import { setSoundEnabled } from "@/lib/battleAudio";
 import type { BattlePhase } from "@/lib/battlePhysics";
+import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
 import "./Index.css";
 
 type Team = "men" | "women";
@@ -18,13 +19,14 @@ type Moment = { id: number; at: number; title: string; detail: string; icon: str
 type Preset = { id: string; name: string; tagline: string; men: number; women: number; speed: number; icon: string };
 
 const PRESETS: Preset[] = [
-  { id: "classic", name: "THE CLASSIC", tagline: "The original 500-on-500 grudge match", men: 500, women: 500, speed: 1, icon: "⚔️" },
-  { id: "chaos", name: "TOTAL CHAOS", tagline: "2,400 fighters. Absolutely no chill.", men: 1200, women: 1200, speed: 1.5, icon: "💥" },
-  { id: "upset", name: "THE UPSET", tagline: "350 vs 800. The odds are disrespectful.", men: 350, women: 800, speed: 1.25, icon: "👀" },
-  { id: "last-stand", name: "LAST STAND", tagline: "Small teams. Big main-character energy.", men: 120, women: 120, speed: 2, icon: "🔥" },
+  { id: "classic", name: "THE CLASSIC", tagline: "The original 500-on-500 grudge match", men: 500, women: 500, speed: 0.5, icon: "⚔️" },
+  { id: "chaos", name: "TOTAL CHAOS", tagline: "2,400 fighters. Absolutely no chill.", men: 1200, women: 1200, speed: 0.5, icon: "💥" },
+  { id: "upset", name: "THE UPSET", tagline: "350 vs 800. The odds are disrespectful.", men: 350, women: 800, speed: 0.5, icon: "👀" },
+  { id: "last-stand", name: "LAST STAND", tagline: "Small teams. Big main-character energy.", men: 120, women: 120, speed: 0.75, icon: "🔥" },
 ];
 
 const REACTIONS = ["🔥", "💀", "👑", "😂"];
+const MATCH_DURATION = 240;
 const INITIAL_QUIP = "Two teams. One arena. Unlimited bad decisions.";
 const fmt = (n: number) => Math.max(0, Math.floor(n)).toLocaleString();
 const clock = (seconds: number) => Math.floor(seconds / 60) + ":" + String(Math.floor(seconds % 60)).padStart(2, "0");
@@ -33,13 +35,13 @@ const Index = () => {
   const [presetId, setPresetId] = useState("classic");
   const [menArmySize, setMenArmySize] = useState(500);
   const [womenArmySize, setWomenArmySize] = useState(500);
-  const [battleSpeed, setBattleSpeed] = useState(1);
+  const [battleSpeed, setBattleSpeed] = useState(0.5);
   const [menRage, setMenRage] = useState(false);
   const [womenRage, setWomenRage] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [battleKey, setBattleKey] = useState(0);
   const [phase, setPhase] = useState<BattlePhase>("stand");
-  const [timeRemaining, setTimeRemaining] = useState(180);
+  const [timeRemaining, setTimeRemaining] = useState(MATCH_DURATION);
   const [stats, setStats] = useState<Stats>({ menAlive: 500, womenAlive: 500, menKills: 0, womenKills: 0 });
   const [winner, setWinner] = useState<Team | null>(null);
   const [narratorEnabled, setNarratorEnabled] = useState(false);
@@ -54,6 +56,7 @@ const Index = () => {
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
   const [quip, setQuip] = useState(INITIAL_QUIP);
   const [moments, setMoments] = useState<Moment[]>([]);
+  const [history, setHistory] = useState<BroadcastSnapshot[]>([{ time: 0, men: 100, women: 100 }]);
   const [spotlight, setSpotlight] = useState<Moment | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -62,14 +65,15 @@ const Index = () => {
   const milestoneRef = useRef(new Set<number>());
   const startedRef = useRef(false);
   const finishedRef = useRef(false);
-  const timeRef = useRef(180);
+  const timeRef = useRef(MATCH_DURATION);
+  const lastHistoryAtRef = useRef(0);
   const momentIdRef = useRef(0);
 
   const selectedPreset = useMemo(() => PRESETS.find(p => p.id === presetId) || PRESETS[0], [presetId]);
   const menStrength = menArmySize ? stats.menAlive / menArmySize : 0;
   const womenStrength = womenArmySize ? stats.womenAlive / womenArmySize : 0;
   const momentum = menStrength + womenStrength > 0 ? Math.round((menStrength / (menStrength + womenStrength)) * 100) : 50;
-  const elapsed = Math.max(0, 180 - timeRemaining);
+  const elapsed = Math.max(0, MATCH_DURATION - timeRemaining);
   const isLive = isRunning && !winner;
   const phaseLabel = phase === "stand" ? "THE STANDOFF" : phase === "melee" ? "ALL-OUT MAYHEM" : phase === "sudden_death" ? "FINAL SHOWDOWN" : "MATCH COMPLETE";
 
@@ -91,7 +95,7 @@ const Index = () => {
   }, []);
 
   const recordMoment = useCallback((title: string, detail: string, icon = "⚡", team?: Team) => {
-    const next: Moment = { id: ++momentIdRef.current, at: 180 - timeRef.current, title, detail, icon, team };
+    const next: Moment = { id: ++momentIdRef.current, at: MATCH_DURATION - timeRef.current, title, detail, icon, team };
     setMoments(items => [next, ...items].slice(0, 12));
     setSpotlight(next);
     setQuip(detail);
@@ -99,6 +103,11 @@ const Index = () => {
 
   const handleStats = useCallback((next: Stats) => {
     setStats(next);
+    const at = Math.max(0, MATCH_DURATION - timeRef.current);
+    if (at - lastHistoryAtRef.current >= 3) {
+      lastHistoryAtRef.current = at;
+      setHistory(items => [...items.slice(-79), { time: at, men: 100 * next.menAlive / menArmySize, women: 100 * next.womenAlive / womenArmySize }]);
+    }
     const previous = prevStatsRef.current;
     prevStatsRef.current = next;
     if (!startedRef.current || finishedRef.current || !previous) return;
@@ -131,8 +140,8 @@ const Index = () => {
     setIsRunning(false);
     setWinner(null);
     setPhase("stand");
-    setTimeRemaining(180);
-    timeRef.current = 180;
+    setTimeRemaining(MATCH_DURATION);
+    timeRef.current = MATCH_DURATION;
     setStats({ menAlive: men, womenAlive: women, menKills: 0, womenKills: 0 });
     prevStatsRef.current = null;
     lastLeaderRef.current = null;
@@ -140,6 +149,8 @@ const Index = () => {
     startedRef.current = false;
     finishedRef.current = false;
     setMoments([]);
+    setHistory([{ time: 0, men: 100, women: 100 }]);
+    lastHistoryAtRef.current = 0;
     setSpotlight(null);
     setQuip(INITIAL_QUIP);
     setHype(9);
@@ -311,6 +322,7 @@ const Index = () => {
       </header>
 
       <main className="tlc-main">
+        <div className="tlc-broadcast-brandbar"><div><span className="tlc-broadcast-sign">TLC <b>SPORTS</b></span><span className="tlc-broadcast-onair"><i/> BATTLECAST NETWORK</span></div><div className="tlc-broadcast-trailing">INTERACTIVE MATCH COVERAGE <span>•</span> ORIGINAL TLC GAMING</div></div>
         <div className="tlc-intro">
           <div><div className="tlc-eyebrow"><span className="tlc-gold-line" /> THE WORLD'S MOST UNNECESSARY RIVALRY</div>
             <h1>MEN <span>VS</span> WOMEN<span className="tlc-title-period">.</span></h1>
@@ -318,7 +330,9 @@ const Index = () => {
           <div className="tlc-intro-right"><span>01 / THE MAIN EVENT</span><strong>{selectedPreset.name}</strong><small>{selectedPreset.tagline}</small></div>
         </div>
 
+        <div className="tlc-broadcast-layout"><div className="tlc-broadcast-main">
         <section className="tlc-stage" ref={stageRef} aria-label="TLC Battle arena">
+          <div className="tlc-match-meta-bar"><span><i/> TLC MATCHDAY <b>01</b></span><strong>{selectedPreset.name}</strong><span>{isLive ? "SIM LIVE" : winner ? "FINAL" : "STUDIO READY"} <span className="tlc-match-meta-divider">/</span> FOUR-MINUTE MATCH</span></div>
           <div className="tlc-scoreboard">
             <div className="tlc-score-side tlc-score-men">
               <div className="tlc-team-avatar">♂</div>
@@ -334,6 +348,7 @@ const Index = () => {
           </div>
 
           <div className="tlc-arena-viewport">
+            <div className="tlc-broadcast-arena-heading"><span>▶ TLC ARENA CAM</span><span>THE MAIN EVENT</span><span>SIM FEED</span></div>
             <BattleSimulation
               key={battleKey}
               menArmySize={menArmySize} womenArmySize={womenArmySize}
@@ -350,7 +365,7 @@ const Index = () => {
             <div className="tlc-camera-tag"><span className="tlc-red-dot" /> CAM 01 <span>•</span> TOP-DOWN</div>
             {spotlight && <div key={spotlight.id} className={"tlc-spotlight " + (spotlight.team || "")} aria-live="polite"><div className="tlc-spotlight-icon">{spotlight.icon}</div><div><strong>{spotlight.title}</strong><span>{spotlight.detail}</span></div></div>}
             {!isRunning && !winner && <div className="tlc-ready-banner"><span className="tlc-ready-star">✦</span><strong>{startedRef.current ? "THE ARENA IS PAUSED" : "LET THE CHAOS BEGIN"}</strong><span>{startedRef.current ? "Hit resume. The drama is waiting." : "Pick a mode. Press start. Watch the world unravel."}</span><button onClick={handleStart}><Play size={16} fill="currentColor" /> {startedRef.current ? "RESUME BATTLE" : "START THE BATTLE"}</button></div>}
-            <div className="tlc-arena-bottom"><div className="tlc-arena-hint"><Target size={14} /> TAP THE FIELD TO DROP A METEOR</div><div className="tlc-hype"><span>LOCAL HYPE</span><div className="tlc-hype-track"><div style={{ width: hype + "%" }} /></div><strong>{hype}%</strong></div></div>
+            <div className="tlc-arena-bottom"><div className="tlc-broadcast-scorebug"><span>MEN <b>{fmt(stats.menAlive)}</b></span><span>WOMEN <b>{fmt(stats.womenAlive)}</b></span><strong>{clock(timeRemaining)}</strong></div><div className="tlc-hype"><span>LOCAL HYPE</span><div className="tlc-hype-track"><div style={{ width: hype + "%" }} /></div><strong>{hype}%</strong></div></div>
           </div>
 
           <div className="tlc-momentum">
@@ -362,10 +377,13 @@ const Index = () => {
           </div>
         </section>
 
-        <div className="tlc-ticker"><span className="tlc-ticker-tag"><Activity size={14} /> THE DRAMA DESK</span><span className="tlc-ticker-text" aria-live="polite">{quip}</span><span className="tlc-ticker-right">NO SCRIPT. ALL CHAOS. <Sparkles size={13} /></span></div>
+        <div className="tlc-ticker"><span className="tlc-ticker-tag"><Activity size={14} /> TLC BREAKING PLAY</span><span className="tlc-ticker-text" aria-live="polite">{quip}</span><span className="tlc-ticker-right">LIVE FROM THE SIMULATION <Sparkles size={13} /></span></div>
+        </div>
+        <BroadcastCenter stats={stats} menStart={menArmySize} womenStart={womenArmySize} moments={moments} history={history} timeRemaining={timeRemaining} matchDuration={MATCH_DURATION} phase={phase} isRunning={isRunning} winner={winner} battleSpeed={battleSpeed} hype={hype} />
+        </div>
 
         <section className="tlc-command" aria-label="Battle command center">
-          <div className="tlc-command-head"><div><div className="tlc-eyebrow">THE CONTROL ROOM</div><h2>YOUR ARENA. <em>YOUR RULES.</em></h2></div><div className="tlc-command-head-actions">
+          <div className="tlc-command-head"><div><div className="tlc-eyebrow">TLC MATCHDAY OPERATIONS</div><h2>BROADCAST <em>CONTROL ROOM.</em></h2><p className="tlc-pace-note">Default is 0.5× for a more watchable battle. Change pacing without restarting.</p></div><div className="tlc-command-head-actions">
             <button className={"tlc-utility " + (spectatorMode ? "active" : "")} onClick={() => setSpectatorMode(v => !v)}>{spectatorMode ? <Eye size={16} /> : <EyeOff size={16} />}{spectatorMode ? "EXIT SPECTATOR" : "SPECTATOR VIEW"}</button>
             <button className="tlc-icon-button" aria-label="Toggle fullscreen" onClick={toggleFullscreen}>{fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
           </div></div>
@@ -374,7 +392,7 @@ const Index = () => {
             <div className="tlc-command-toolbar">
               <div className="tlc-primary-controls"><button className={"tlc-launch " + (isRunning ? "tlc-pause" : "")} onClick={handleStart} disabled={Boolean(winner)}>{isRunning ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" />}{isRunning ? "PAUSE BATTLE" : startedRef.current ? "RESUME BATTLE" : "START BATTLE"}</button>
                 <button className="tlc-reset" onClick={() => resetBattle(menArmySize, womenArmySize)}><RotateCcw size={17} /> RESET</button>
-                <div className="tlc-speed-control"><span><Zap size={14} /> SPEED</span><div>{[1, 1.5, 2, 3].map(speed => <button key={speed} className={battleSpeed === speed ? "selected" : ""} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}</div></div>
+                <div className="tlc-speed-control"><span><Zap size={14} /> MATCH PACE</span><div>{[0.25, 0.5, 0.75, 1, 1.5].map(speed => <button key={speed} className={battleSpeed === speed ? "selected" : ""} aria-label={"Set battle pacing to " + speed + " times speed"} aria-pressed={battleSpeed === speed} title={speed === 0.25 ? "Cinematic slow motion" : speed === 0.5 ? "Broadcast default" : speed === 0.75 ? "Relaxed" : speed === 1 ? "Normal" : "Fast highlights"} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}</div></div>
               </div>
               <div className="tlc-mode-picker"><button className="tlc-mode-toggle" onClick={() => setPresetsOpen(v => !v)} aria-expanded={presetsOpen}><span className="tlc-mode-icon">{selectedPreset.icon}</span><span><small>BATTLE PRESET</small><strong>{selectedPreset.name}</strong></span>{presetsOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}</button></div>
             </div>
