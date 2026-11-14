@@ -68,7 +68,6 @@ const BattleSimulation = ({
   const poolRef = useRef<ParticlePool>(createParticlePool());
   const lastTimeRef = useRef<number>(0);
   const phaseTimeRef = useRef<number>(0);
-  const frameAccumulatorRef = useRef(0);
   const killStatsRef = useRef({ menKills: 0, womenKills: 0 });
   const initializedRef = useRef(false);
   const dprRef = useRef<number>(1);
@@ -125,7 +124,6 @@ const BattleSimulation = ({
     clashPointRef.current = { x: width / 2, y: height / 2 };
     resetChargeState(soaRef.current);
     setInitialCounts(menArmySize, womenArmySize, soaRef.current);
-    frameAccumulatorRef.current = 0;
     aliveRef.current = menArmySize + womenArmySize;
     lastStatsRef.current = null;
 
