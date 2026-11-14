@@ -3,6 +3,8 @@
  * Enables 20,000+ units at 60 FPS with zero garbage collection
  */
 
+import { teamBalance } from './battleBalance';
+
 export const MAX_UNITS = 20000;
 
 // State flag bitmasks
@@ -38,6 +40,7 @@ export interface BattleSoA {
   
   // Health
   health: Float32Array;    // 4 bytes × 20K = 80KB
+  stagger: Float32Array;   // remaining recoil animation/slowdown (seconds)
   
   // State
   teamID: Uint8Array;      // 1 byte × 20K = 20KB (0=Men, 1=Women)
@@ -72,6 +75,7 @@ export function createBattleSoA(): BattleSoA {
     targetX: new Float32Array(MAX_UNITS),
     targetY: new Float32Array(MAX_UNITS),
     health: new Float32Array(MAX_UNITS),
+    stagger: new Float32Array(MAX_UNITS),
     teamID: new Uint8Array(MAX_UNITS),
     stateFlags: new Uint8Array(MAX_UNITS),
     spriteIdx: new Uint16Array(MAX_UNITS),
@@ -105,7 +109,7 @@ export function initializeUnits(
   soa.posX.fill(0); soa.posY.fill(0);
   soa.velX.fill(0); soa.velY.fill(0);
   soa.targetX.fill(0); soa.targetY.fill(0);
-  soa.health.fill(0); soa.teamID.fill(0);
+  soa.health.fill(0); soa.stagger.fill(0); soa.teamID.fill(0);
   soa.stateFlags.fill(0); soa.spriteIdx.fill(0);
   soa.formationRow.fill(0); soa.formationCol.fill(0);
   soa.powerupType.fill(0); soa.powerupEndTime.fill(0);
@@ -128,7 +132,7 @@ export function initializeUnits(
       const col = i % columns;
       soa.posX[index] = originX + direction * col * columnSpacing;
       soa.posY[index] = originY + row * spacing;
-      soa.health[index] = 100;
+      soa.health[index] = teamBalance(team).maxHealth;
       soa.teamID[index] = team;
       soa.stateFlags[index] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
       soa.formationRow[index] = row;
