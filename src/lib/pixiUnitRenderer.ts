@@ -4,6 +4,7 @@
  */
 import { Application, Container, Sprite, Texture } from 'pixi.js';
 import { FLAG_ALIVE, FLAG_LEADER, TEAM_MEN, type BattleSoA } from './battleSoA';
+import { teamBalance } from './battleBalance';
 
 const TEX_SIZE = 32;
 
@@ -87,9 +88,14 @@ export function renderPixiUnits(
     s.texture = men ? (leader ? tex.menLead : tex.men) : (leader ? tex.womenLead : tex.women);
     s.visible = true;
     s.position.set(soa.posX[i], soa.posY[i]);
-    const hp = Math.max(0.35, Math.min(1, soa.health[i] / 100));
-    const size = (leader ? 22 : 15) * breath * (0.75 + 0.25 * hp) / TEX_SIZE;
-    s.scale.set(size);
+    const profile = teamBalance(soa.teamID[i]);
+    const hp = Math.max(0.35, Math.min(1, soa.health[i] / profile.maxHealth));
+    const stagger = Math.min(1, Math.max(0, soa.stagger[i] / 0.35));
+    const size = (leader ? 22 : 15) * breath * (0.75 + 0.25 * hp) * (men ? 1.08 : 1) / TEX_SIZE;
+    // Lightweight recoil/tilt: inspired by mass-army hit reactions, not ragdolls.
+    s.scale.set(size * (1 + 0.1 * stagger), size * (1 - 0.23 * stagger));
+    s.rotation = stagger > 0 ? Math.max(-0.22, Math.min(0.22, soa.velX[i] / 430)) : 0;
+    s.tint = stagger > 0 ? 0xffd8bf : 0xffffff;
     s.alpha = 0.6 + 0.4 * hp;
   }
   layer.app.render();

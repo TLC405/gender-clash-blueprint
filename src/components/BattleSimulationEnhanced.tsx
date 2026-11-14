@@ -69,6 +69,8 @@ const BattleSimulation = ({
   const lastTimeRef = useRef<number>(0);
   const phaseTimeRef = useRef<number>(0);
   const killStatsRef = useRef({ menKills: 0, womenKills: 0 });
+  // A bounded, temporary 2D aftermath trail adds readable knockdowns without 3D ragdolls.
+  const fallenRef = useRef<Array<{ x: number; y: number; dx: number; dy: number; angle: number; age: number; color: string }>>([]);
   const initializedRef = useRef(false);
   const dprRef = useRef<number>(1);
   const logicalSizeRef = useRef({ width: 800, height: 600 });
@@ -115,6 +117,7 @@ const BattleSimulation = ({
 
     clearParticles(poolRef.current);
     killStatsRef.current = { menKills: 0, womenKills: 0 };
+    fallenRef.current = [];
     firstClashRef.current = false;
     lastMilestoneRef.current = 0;
     shakeRef.current = { intensity: 0, offsetX: 0, offsetY: 0 };
@@ -490,16 +493,35 @@ const BattleSimulation = ({
     aliveRef.current = result.stats.menAlive + result.stats.womenAlive;
     lastStatsRef.current = result.stats;
 
+    const fallen = fallenRef.current;
+    let livingMarkers = 0;
+    for (let j = 0; j < fallen.length; j++) {
+      const body = fallen[j];
+      body.age += dt;
+      if (body.age >= 2.25) continue;
+      const friction = Math.exp(-2.8 * dt);
+      body.x += body.dx * dt;
+      body.y += body.dy * dt;
+      body.dx *= friction;
+      body.dy *= friction;
+      fallen[livingMarkers++] = body;
+    }
+    fallen.length = livingMarkers;
+
     const newKills = result.stats.menKills + result.stats.womenKills;
     if (newKills > 0) {
       if (!reducedMotionRef.current) shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.2, 5);
       playKills(newKills);
       for (const k of result.kills) {
+        const forward = k.killerTeam === TEAM_MEN ? 1 : -1;
+        const drift = (fallen.length % 7 - 3) * 8;
+        fallen.push({ x: k.x, y: k.y, dx: forward * 46, dy: drift, angle: drift * 0.017, age: 0, color: k.killerTeam === TEAM_MEN ? "#ff8ebd" : "#7ac5ff" });
         addScuff(k.x, k.y);
         clashPointRef.current.x += (k.x - clashPointRef.current.x) * 0.05;
         clashPointRef.current.y += (k.y - clashPointRef.current.y) * 0.05;
       }
     }
+    if (fallen.length > 360) fallen.splice(0, fallen.length - 360);
     if (newKills > 0 && !firstClashRef.current) {
       firstClashRef.current = true;
       if (result.kills.length > 0) spawnClashShockwave(poolRef.current, result.kills[0].x, result.kills[0].y);
@@ -589,7 +611,21 @@ const BattleSimulation = ({
     // Layer 3: particles + lighting
     fx.setTransform(dpr, 0, 0, dpr, 0, 0);
     fx.clearRect(0, 0, width, height);
-    fx.save(); applyCam(fx); renderParticles(fx, poolRef.current); fx.restore();
+    fx.save(); applyCam(fx);
+    // Impact aftermath: brief horizontal trails, not a fake 3D ragdoll claim.
+    for (const body of fallenRef.current) {
+      fx.globalAlpha = 0.47 * (1 - body.age / 2.25);
+      fx.fillStyle = body.color;
+      fx.save();
+      fx.translate(body.x, body.y);
+      fx.rotate(body.angle);
+      fx.beginPath();
+      fx.ellipse(0, 0, 7.3, 3.5, 0, 0, Math.PI * 2);
+      fx.fill();
+      fx.restore();
+    }
+    fx.globalAlpha = 1;
+    renderParticles(fx, poolRef.current); fx.restore();
     renderLighting(fx, width, height, phase);
   }, [ensureArenaCache, renderLighting]);
 

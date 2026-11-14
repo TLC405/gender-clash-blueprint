@@ -2,13 +2,15 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, Play, Sparkles, Swords, Zap } from "lucide-react";
 import "./Index.css";
 import "./AtomicUpgrade.css";
+import { CROWD_PRESETS } from "@/lib/battleBalance";
 
-const modes = [
-  { id: "classic", icon: "⚔️", name: "THE CLASSIC", eyebrow: "01 / THE ORIGINAL", size: "500 VS 500", copy: "A timeless battle of egos. No excuses. No mercy. Just the original showdown.", theme: "blue" },
-  { id: "chaos", icon: "💥", name: "TOTAL CHAOS", eyebrow: "02 / MAXIMUM MAYHEM", size: "1,200 VS 1,200", copy: "The arena is packed. The stakes are imaginary. The spectacle is very, very real.", theme: "pink" },
-  { id: "upset", icon: "👀", name: "THE UPSET", eyebrow: "03 / ODDS DEFIED", size: "350 VS 800", copy: "The most disrespectful matchup on the schedule. Can the underdogs survive?", theme: "gold" },
-  { id: "last-stand", icon: "🔥", name: "LAST STAND", eyebrow: "04 / FAST & FURIOUS", size: "120 VS 120", copy: "A smaller cast. A bigger spotlight. Blink and you'll miss the plot twist.", theme: "purple" },
-];
+const modes = CROWD_PRESETS.map((p, index) => ({
+  ...p,
+  eyebrow: ["01 / POWER VS NUMBERS", "02 / MASSIVE FRONTLINE", "03 / THE ODDS", "04 / ENDURANCE"][index],
+  size: p.men.toLocaleString() + " MEN VS " + p.women.toLocaleString() + " WOMEN",
+  copy: p.tagline + ". Men hit harder individually; women field more fighters.",
+  theme: ["blue", "pink", "gold", "purple"][index],
+}));
 
 const Horde = () => (
   <div className="tlc-app tlc-atomic tlc-atomic-modes">

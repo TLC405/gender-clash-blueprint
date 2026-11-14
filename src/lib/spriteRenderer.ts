@@ -5,6 +5,7 @@
  */
 
 import { TEAM_MEN, TEAM_WOMEN, FLAG_ALIVE, FLAG_LOCKED, FLAG_LEADER, type BattleSoA } from './battleSoA';
+import { teamBalance } from './battleBalance';
 
 const COLORS = {
   menPrimary: '#3B82F6',
@@ -67,7 +68,7 @@ export function renderUnits(
       const color = isLocked ? COLORS.locked : (team === TEAM_MEN ? COLORS.menPrimary : COLORS.womenPrimary);
       const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
       const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
-      const healthRatio = soa.health[i] / 100;
+      const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
       const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale;
 
       const dirX = vx / speed;
@@ -94,7 +95,7 @@ export function renderUnits(
     if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
 
     const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-    const healthRatio = soa.health[i] / 100;
+    const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
     const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
     const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale;
 
@@ -117,7 +118,7 @@ export function renderUnits(
     const team = soa.teamID[i];
     const isLocked = (soa.stateFlags[i] & FLAG_LOCKED) !== 0;
     const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-    const healthRatio = soa.health[i] / 100;
+    const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
     const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
     const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale;
 
@@ -138,9 +139,9 @@ export function renderUnits(
     const team = soa.teamID[i];
     const isLocked = (soa.stateFlags[i] & FLAG_LOCKED) !== 0;
     const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-    const healthRatio = soa.health[i] / 100;
+    const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
     const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
-    const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale;
+    const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale * (soa.teamID[i] === TEAM_MEN ? 1.08 : 1);
 
     const x = soa.posX[i];
     const y = soa.posY[i];

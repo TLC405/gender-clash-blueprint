@@ -441,3 +441,20 @@
   box-shadow:inset 0 1px #fff4,0 0 0 1px #d9a26c33;
 }
 .tlc-atomic .tlc-cockpit-shortcuts>button.armed svg { color:#ffc488; }
+
+/* Gorilla-scale crowd experiment: compact, explicit fictional balance legend. */
+.tlc-atomic .tlc-balance-disclosure {
+  display:flex;flex-direction:column;gap:5px;margin-bottom:10px;
+  background:#223044;border:1px solid #6d7088;border-left:3px solid #df8293;
+  padding:10px 12px;color:#bac8da;
+}
+.tlc-atomic .tlc-balance-disclosure strong {
+  color:#f7e6ee;font-size:11px;letter-spacing:.9px;font-weight:900;
+}
+.tlc-atomic .tlc-balance-disclosure span {
+  font-size:10px;line-height:1.55;
+}
+@media(max-width:640px){
+ .tlc-atomic .tlc-balance-disclosure{padding:8px 10px;}
+ .tlc-atomic .tlc-balance-disclosure span{font-size:9px;}
+}
