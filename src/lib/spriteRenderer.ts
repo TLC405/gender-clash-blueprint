@@ -1,294 +1,101 @@
 /**
- * Premium Unit Sprite Renderer v3
- * Larger units, specular highlights, team rings, health bars, 
- * movement trails, stand-phase breathing, combat flash
+ * TLC Battle — Canvas 2D human stick-figure fallback.
+ * The primary renderer uses actual Three.js 3D rigs. This path uses shaded
+ * articulated silhouettes if WebGL is unavailable or context creation fails.
+ * No health bars, HP indicators or unit-circle sprites are rendered.
  */
-
-import { TEAM_MEN, TEAM_WOMEN, FLAG_ALIVE, FLAG_LOCKED, FLAG_LEADER, type BattleSoA } from './battleSoA';
-import { teamBalance } from './battleBalance';
-
-const COLORS = {
-  menPrimary: '#3B82F6',
-  menSecondary: '#1D4ED8',
-  menGlow: '#93C5FD',
-  menRing: 'rgba(59, 130, 246, 0.35)',
-  womenPrimary: '#EC4899',
-  womenSecondary: '#BE185D',
-  womenGlow: '#F9A8D4',
-  womenRing: 'rgba(236, 72, 153, 0.35)',
-  locked: '#F59E0B',
-  lockedDark: '#B45309',
-  lockedGlow: '#FCD34D',
-  lockedRing: 'rgba(245, 158, 11, 0.35)',
-  leader: '#FFD700',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-  healthGreen: '#22C55E',
-  healthYellow: '#EAB308',
-  healthRed: '#EF4444',
-  specular: 'rgba(255, 255, 255, 0.85)',
-};
+import { TEAM_MEN, FLAG_ALIVE, FLAG_LEADER, type BattleSoA } from './battleSoA';
+import { getStickFigureVariant, getStickMotion, STICK_FIGHTER_PALETTES } from './stickFigureVariants';
 
 export function initSprites(): void {}
 
-/**
- * Render all units with premium broadcast quality
- */
 export function renderUnits(
   ctx: CanvasRenderingContext2D,
   soa: BattleSoA,
-  _discoMode: boolean = false,
-  _globalFrame: number = 0,
-  _lighterBlend: boolean = false,
-  currentPhase: string = 'melee'
+  _discoMode = false,
+  _globalFrame = 0,
+  _lighterBlend = false,
+  currentPhase = 'melee'
 ): void {
-  const BASE_RADIUS = 7;
-  const LEADER_RADIUS = 11;
-  const shadowOffsetY = 4;
-  const now = Date.now();
-
-  // Stand-phase breathing: pulsing scale
-  let breathScale = 1.0;
-  if (currentPhase === 'stand') {
-    breathScale = 1.0 + Math.sin(now * 0.004) * 0.06;
-  }
-
+  const now = performance.now() / 1000;
+  const still = currentPhase === 'stand' || currentPhase === 'victory';
   ctx.save();
-
-  // Pass 1: Movement trails (afterimages for fast units)
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   for (let i = 0; i < soa.unitCount; i++) {
     if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
+    const x = soa.posX[i], y = soa.posY[i];
+    const men = soa.teamID[i] === TEAM_MEN;
+    const style = getStickFigureVariant(i, soa.teamID[i]);
+    const motion = getStickMotion(style, now, still ? 0 : Math.hypot(soa.velX[i], soa.velY[i]), soa.stagger[i], still);
+    const scale = style.height * (men ? 1.03 : 0.98);
+    const stride = motion.stride * 2.4 * scale;
+    const lean = motion.lean * scale;
+    const hip = 2 * style.hips * scale;
+    const shoulder = 3 * style.shoulders * scale;
+    const shades = men ? STICK_FIGHTER_PALETTES.men : STICK_FIGHTER_PALETTES.women;
+    const color = (soa.stateFlags[i] & FLAG_LEADER) !== 0 ? '#f7cc71' : '#' + shades[style.shade].toString(16).padStart(6,'0');
+    const skin = '#' + STICK_FIGHTER_PALETTES.skin[(style.shade + i) % STICK_FIGHTER_PALETTES.skin.length].toString(16).padStart(6,'0');
 
-    const vx = soa.velX[i];
-    const vy = soa.velY[i];
-    const speed = Math.sqrt(vx * vx + vy * vy);
-
-    if (speed > 60) {
-      const team = soa.teamID[i];
-      const isLocked = (soa.stateFlags[i] & FLAG_LOCKED) !== 0;
-      const color = isLocked ? COLORS.locked : (team === TEAM_MEN ? COLORS.menPrimary : COLORS.womenPrimary);
-      const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-      const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
-      const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
-      const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale;
-
-      const dirX = vx / speed;
-      const dirY = vy / speed;
-
-      // Ghost 1: 20% opacity
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(soa.posX[i] - dirX * radius * 2.5, soa.posY[i] - dirY * radius * 2.5, radius * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Ghost 2: 10% opacity
-      ctx.globalAlpha = 0.08;
-      ctx.beginPath();
-      ctx.arc(soa.posX[i] - dirX * radius * 4.5, soa.posY[i] - dirY * radius * 4.5, radius * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // Pass 2: Ground shadows
-  ctx.globalAlpha = 1;
-  for (let i = 0; i < soa.unitCount; i++) {
-    if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
-
-    const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-    const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
-    const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
-    const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale;
-
-    ctx.fillStyle = COLORS.shadow;
+    ctx.fillStyle = 'rgba(4,11,22,.26)';
     ctx.beginPath();
-    ctx.ellipse(
-      soa.posX[i],
-      soa.posY[i] + shadowOffsetY,
-      radius * 1.4,
-      radius * 0.4,
-      0, 0, Math.PI * 2
-    );
+    ctx.ellipse(x, y + 1.1 * scale, 4.7 * scale, 1.7 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-  }
-
-  // Pass 3: Team-colored outer rings (faint identification aura)
-  for (let i = 0; i < soa.unitCount; i++) {
-    if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
-
-    const team = soa.teamID[i];
-    const isLocked = (soa.stateFlags[i] & FLAG_LOCKED) !== 0;
-    const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-    const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
-    const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
-    const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale;
-
-    const ringColor = isLocked ? COLORS.lockedRing : (team === TEAM_MEN ? COLORS.menRing : COLORS.womenRing);
-
-    ctx.globalAlpha = 0.5;
-    ctx.strokeStyle = ringColor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(soa.posX[i], soa.posY[i], radius + 2.5, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // Pass 4: Unit bodies with directional facing, gradients, specular highlights
-  for (let i = 0; i < soa.unitCount; i++) {
-    if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) continue;
-
-    const team = soa.teamID[i];
-    const isLocked = (soa.stateFlags[i] & FLAG_LOCKED) !== 0;
-    const isLeader = (soa.stateFlags[i] & FLAG_LEADER) !== 0;
-    const healthRatio = soa.health[i] / teamBalance(soa.teamID[i]).maxHealth;
-    const baseR = isLeader ? LEADER_RADIUS : BASE_RADIUS;
-    const radius = baseR * (0.7 + healthRatio * 0.3) * breathScale * (soa.teamID[i] === TEAM_MEN ? 1.08 : 1);
-
-    const x = soa.posX[i];
-    const y = soa.posY[i];
-    const vx = soa.velX[i];
-    const vy = soa.velY[i];
-
-    let primary: string, secondary: string, glow: string;
-
-    if (isLocked) {
-      primary = COLORS.locked; secondary = COLORS.lockedDark; glow = COLORS.lockedGlow;
-    } else if (team === TEAM_MEN) {
-      primary = COLORS.menPrimary; secondary = COLORS.menSecondary; glow = COLORS.menGlow;
-    } else {
-      primary = COLORS.womenPrimary; secondary = COLORS.womenSecondary; glow = COLORS.womenGlow;
-    }
-
-    const speed = Math.sqrt(vx * vx + vy * vy);
-    const stretch = Math.min(speed / 150, 0.25);
-
     ctx.save();
     ctx.translate(x, y);
-
-    if (speed > 5) {
-      const angle = Math.atan2(vy, vx);
-      ctx.rotate(angle);
-      ctx.scale(1 + stretch, 1 - stretch * 0.3);
-    }
-
-    // 3D sphere gradient
-    const bodyGrad = ctx.createRadialGradient(
-      -radius * 0.3, -radius * 0.3, 0,
-      0, 0, radius
-    );
-    bodyGrad.addColorStop(0, glow);
-    bodyGrad.addColorStop(0.45, primary);
-    bodyGrad.addColorStop(1, secondary);
-
-    ctx.globalAlpha = 0.6 + healthRatio * 0.4;
-    ctx.fillStyle = bodyGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Outline
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.lineWidth = 0.8;
-    ctx.stroke();
-
-    // Specular highlight (bright white dot, top-left)
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = COLORS.specular;
-    ctx.beginPath();
-    ctx.arc(-radius * 0.3, -radius * 0.35, radius * 0.22, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Combat glow pulse (fast-moving units in combat)
-    if (speed > 80 && !isLocked) {
-      ctx.globalAlpha = 0.2 + Math.sin(now * 0.012 + i) * 0.1;
-      ctx.fillStyle = glow;
+    // Outlined cylinders create volume even in the Canvas fallback.
+    const line = (ax:number,ay:number,bx:number,by:number,w:number) => {
       ctx.beginPath();
-      ctx.arc(0, 0, radius * 1.7, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.restore();
-
-    // Leader star decoration
-    if (isLeader) {
-      ctx.globalAlpha = 0.95;
-      ctx.strokeStyle = COLORS.leader;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+      ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+      ctx.strokeStyle='rgba(1,6,17,.65)'; ctx.lineWidth=w+1.7;
       ctx.stroke();
-
-      // Gold inner glow
-      ctx.globalAlpha = 0.25;
-      ctx.fillStyle = COLORS.leader;
+      ctx.strokeStyle=color; ctx.lineWidth=w; ctx.stroke();
       ctx.beginPath();
-      ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Star above leader
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle = COLORS.leader;
-      drawStar(ctx, x, y - radius - 7, 4, 5);
-    }
-
-    // Health bar (only when < 80% HP)
-    if (healthRatio < 0.8) {
-      const barW = radius * 2.2;
-      const barH = 2;
-      const barX = x - barW / 2;
-      const barY = y + radius + 5;
-
-      // Background
-      ctx.globalAlpha = 0.4;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(barX, barY, barW, barH);
-
-      // Health fill
-      ctx.globalAlpha = 0.85;
-      const hColor = healthRatio > 0.5 ? COLORS.healthGreen : healthRatio > 0.25 ? COLORS.healthYellow : COLORS.healthRed;
-      ctx.fillStyle = hColor;
-      ctx.fillRect(barX, barY, barW * healthRatio, barH);
-    }
+      ctx.moveTo(ax-0.25, ay-0.25); ctx.lineTo(bx-0.25, by-0.25);
+      ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=Math.max(0.35,w*0.26);ctx.stroke();
+    };
+    const pelvisX=lean*.3, pelvisY=-8*scale;
+    const neckX=lean, neckY=-15*scale*(1-motion.recoil*.16);
+    const hipL=pelvisX-hip, hipR=pelvisX+hip;
+    const kneeL=-hip*.8-stride*.5, kneeR=hip*.8+stride*.5;
+    const footL=-hip-stride, footR=hip+stride;
+    line(hipL,pelvisY,kneeL,-4.3*scale,1.9*scale);
+    line(kneeL,-4.3*scale,footL,0,1.45*scale);
+    line(hipR,pelvisY,kneeR,-4.3*scale,1.9*scale);
+    line(kneeR,-4.3*scale,footR,0,1.45*scale);
+    line(pelvisX,pelvisY,neckX,neckY,2.1*scale);
+    const elbowLY=neckY+4*scale,elbowRY=neckY+4*scale;
+    const elbowLX=neckX-shoulder-1.6*scale-stride*.4;
+    const elbowRX=neckX+shoulder+1.6*scale-stride*.4;
+    line(neckX-shoulder,neckY,elbowLX,elbowLY,1.5*scale);
+    line(elbowLX,elbowLY,elbowLX-1.1*scale,elbowLY+3*scale,1.1*scale);
+    line(neckX+shoulder,neckY,elbowRX,elbowRY,1.5*scale);
+    line(elbowRX,elbowRY,elbowRX+1.1*scale,elbowRY+3*scale,1.1*scale);
+    ctx.beginPath();
+    ctx.arc(neckX+.4*scale,neckY-3.6*scale,2.55*scale,0,Math.PI*2);
+    ctx.fillStyle=skin;ctx.fill();
+    ctx.strokeStyle='rgba(12,19,28,.8)';ctx.lineWidth=.8*scale;ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(neckX-.2*scale,neckY-4.4*scale,0.5*scale,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,.6)';ctx.fill();
+    ctx.restore();
   }
-
-  ctx.globalAlpha = 1;
   ctx.restore();
 }
 
-/** Draw a small 5-pointed star */
-function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, points: number) {
-  ctx.beginPath();
-  for (let i = 0; i < points * 2; i++) {
-    const angle = (Math.PI * i) / points - Math.PI / 2;
-    const rad = i % 2 === 0 ? r : r * 0.45;
-    const method = i === 0 ? 'moveTo' : 'lineTo';
-    ctx[method](cx + Math.cos(angle) * rad, cy + Math.sin(angle) * rad);
-  }
-  ctx.closePath();
-  ctx.fill();
-}
-
-/**
- * Render units to offscreen canvas
- */
 export function renderUnitsOffscreen(
-  mainCtx: CanvasRenderingContext2D,
-  soa: BattleSoA,
-  offscreenCanvas: OffscreenCanvas,
-  discoMode: boolean = false,
-  globalFrame: number = 0
+  mainCtx: CanvasRenderingContext2D, soa: BattleSoA,
+  offscreenCanvas: OffscreenCanvas, discoMode = false, globalFrame = 0
 ): void {
   const ctx = offscreenCanvas.getContext('2d');
   if (!ctx) return;
-
   ctx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
   ctx.save();
   ctx.scale(0.5, 0.5);
   renderUnits(ctx as unknown as CanvasRenderingContext2D, soa, discoMode, globalFrame, false);
   ctx.restore();
-
   mainCtx.drawImage(
-    offscreenCanvas,
-    0, 0, offscreenCanvas.width, offscreenCanvas.height,
+    offscreenCanvas, 0, 0, offscreenCanvas.width, offscreenCanvas.height,
     0, 0, offscreenCanvas.width * 2, offscreenCanvas.height * 2
   );
 }
