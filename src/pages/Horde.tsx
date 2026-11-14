@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, Play, Sparkles, Swords, Zap } from "lucide-react";
 import "./Index.css";
+import "./AtomicUpgrade.css";
 
 const modes = [
   { id: "classic", icon: "⚔️", name: "THE CLASSIC", eyebrow: "01 / THE ORIGINAL", size: "500 VS 500", copy: "A timeless battle of egos. No excuses. No mercy. Just the original showdown.", theme: "blue" },
@@ -10,17 +11,17 @@ const modes = [
 ];
 
 const Horde = () => (
-  <div className="tlc-app">
+  <div className="tlc-app tlc-atomic tlc-atomic-modes">
     <header className="tlc-topbar">
       <Link to="/" className="tlc-brand" style={{ textDecoration: "none", color: "inherit" }}>
         <div className="tlc-brand-symbol"><span>T</span><span>✦</span></div>
-        <div><div className="tlc-brand-title">TLC <strong>BATTLE</strong></div><div className="tlc-brand-subtitle">THE BATTLE CLUB <span>•</span> EST. 2026</div></div>
+        <div><div className="tlc-brand-title">TLC <strong>BATTLE</strong></div><div className="tlc-brand-subtitle">THE ATOMIC EDITION <span>•</span> 2026</div></div>
       </Link>
       <Link to="/" className="tlc-utility" style={{ textDecoration: "none" }}><ArrowLeft size={16} /> BACK TO ARENA</Link>
     </header>
     <main className="tlc-main tlc-mode-page">
-      <div className="tlc-eyebrow"><Sparkles size={14} /> PICK YOUR PROBLEM</div>
-      <h1>CHOOSE YOUR <span>CHAOS.</span></h1>
+      <div className="tlc-eyebrow"><Sparkles size={14} /> ATOMIC / MATCH SELECT</div>
+      <h1>SELECT YOUR <span>BATTLE.</span></h1>
       <p className="tlc-mode-description">Four ways to settle the world's most unnecessary debate. Every mode launches a real, playable battle simulation.</p>
       <div className="tlc-mode-grid">
         {modes.map(mode => <Link key={mode.id} to={"/?preset=" + mode.id} className={"tlc-mode-card " + mode.theme}>
