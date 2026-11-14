@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
 import { setSoundEnabled } from "@/lib/battleAudio";
 import type { BattlePhase } from "@/lib/battlePhysics";
-import { CROWD_PRESETS, TEAM_BALANCE } from "@/lib/battleBalance";
+import { CROWD_PRESETS } from "@/lib/battleBalance";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
 import AtomicScoreboard from "@/components/battle/AtomicScoreboard";
 import "./Index.css";
