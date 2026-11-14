@@ -31,6 +31,11 @@ const PRESETS: Preset[] = [
 
 const REACTIONS = ["🔥", "💀", "👑", "😂"];
 const MATCH_DURATION = 240;
+const savedBoolean = (key: string, fallback: boolean): boolean => {
+  if (typeof window === "undefined") return fallback;
+  try { const stored = localStorage.getItem(key); return stored === null ? fallback : stored === "true"; }
+  catch { return fallback; }
+};
 const INITIAL_QUIP = "Two teams. One arena. Unlimited bad decisions.";
 const fmt = (n: number) => Math.max(0, Math.floor(n)).toLocaleString();
 const clock = (seconds: number) => Math.floor(seconds / 60) + ":" + String(Math.floor(seconds % 60)).padStart(2, "0");
@@ -48,9 +53,9 @@ const Index = () => {
   const [timeRemaining, setTimeRemaining] = useState(MATCH_DURATION);
   const [stats, setStats] = useState<Stats>({ menAlive: 500, womenAlive: 500, menKills: 0, womenKills: 0 });
   const [winner, setWinner] = useState<Team | null>(null);
-  const [narratorEnabled, setNarratorEnabled] = useState(false);
-  const [soundEnabled, setAudioEnabled] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [narratorEnabled, setNarratorEnabled] = useState(() => savedBoolean("tlc-atomic-narrator", false));
+  const [soundEnabled, setAudioEnabled] = useState(() => savedBoolean("tlc-atomic-sound", true));
+  const [reducedMotion, setReducedMotion] = useState(() => savedBoolean("tlc-atomic-reduced-motion", typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
   const [spectatorMode, setSpectatorMode] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
@@ -94,6 +99,13 @@ const Index = () => {
   }, [activePanel]);
 
   useEffect(() => { setSoundEnabled(soundEnabled); }, [soundEnabled]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("tlc-atomic-sound", String(soundEnabled));
+      localStorage.setItem("tlc-atomic-narrator", String(narratorEnabled));
+      localStorage.setItem("tlc-atomic-reduced-motion", String(reducedMotion));
+    } catch { /* Private browsing can block storage; the controls still work. */ }
+  }, [soundEnabled, narratorEnabled, reducedMotion]);
   useEffect(() => {
     if (!spotlight) return;
     const id = window.setTimeout(() => setSpotlight(null), 3400);
@@ -392,7 +404,7 @@ const Index = () => {
           </div>
           <div className="tlc-cockpit-shortcuts">
             <button className={activePanel === "modes" ? "active" : ""} aria-pressed={activePanel === "modes"} onClick={() => setActivePanel(p => p === "modes" ? null : "modes")}><Swords size={18}/><span>MODES</span></button>
-            <button className={activePanel === "powers" ? "active" : ""} aria-pressed={activePanel === "powers"} onClick={() => setActivePanel(p => p === "powers" ? null : "powers")}><Zap size={18}/><span>POWERS</span><i>{meteorCharges}</i></button>
+            <button title={menRage || womenRage ? "Boost active" : "Open power-ups"} className={(activePanel === "powers" ? "active " : "") + (menRage || womenRage ? "armed" : "")} aria-pressed={activePanel === "powers"} onClick={() => setActivePanel(p => p === "powers" ? null : "powers")}><Zap size={18}/><span>POWERS</span><i>{meteorCharges}</i></button>
             <button className={activePanel === "stats" ? "active" : ""} aria-pressed={activePanel === "stats"} onClick={() => setActivePanel(p => p === "stats" ? null : "stats")}><Activity size={18}/><span>STATS</span></button>
             <button className={activePanel === "share" ? "active" : ""} aria-pressed={activePanel === "share"} onClick={() => setActivePanel(p => p === "share" ? null : "share")}><Share2 size={18}/><span>SHARE</span></button>
             <button className={activePanel === "settings" ? "active" : ""} aria-pressed={activePanel === "settings"} onClick={() => setActivePanel(p => p === "settings" ? null : "settings")}><Settings2 size={18}/><span>MORE</span></button>
