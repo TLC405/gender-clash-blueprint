@@ -99,6 +99,8 @@ export function createStickFigure3DLayer(
     canvas, alpha: true, antialias: false, powerPreference: 'high-performance',
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
   renderer.setSize(width, height, false);
   renderer.setClearColor(0x000000, 0);
   const scene = new Scene();
@@ -157,6 +159,8 @@ export function resizeStickFigure3DLayer(layer: StickFigure3DLayer, width: numbe
   layer.camera.top = height / 2;
   layer.camera.bottom = -height / 2;
   layer.camera.updateProjectionMatrix();
+  layer.renderer.domElement.style.width = `${width}px`;
+  layer.renderer.domElement.style.height = `${height}px`;
   layer.renderer.setSize(width, height, false);
 }
 
@@ -269,7 +273,9 @@ export function renderStickFigure3DLayer(
     layer.hidden[i] = 0;
     pose(layer, soa, i, timeSeconds, reducedMotion, scale);
   }
-  for (const mesh of [...layer.body, layer.heads, layer.shadows]) mesh.instanceMatrix.needsUpdate = true;
+  for (const mesh of layer.body) mesh.instanceMatrix.needsUpdate = true;
+  layer.heads.instanceMatrix.needsUpdate = true;
+  layer.shadows.instanceMatrix.needsUpdate = true;
   layer.renderer.render(layer.scene, layer.camera);
 }
 
