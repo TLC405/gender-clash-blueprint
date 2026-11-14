@@ -1,0 +1,366 @@
+/*
+ * TLC ATOMIC / V2 DESIGN SYSTEM
+ * Architectural graphite • satin titanium • restrained red / team color.
+ * Designed to work with the single-screen cockpit and Fold-sized viewports.
+ */
+.tlc-atomic {
+  --atomic-bg: #090d14;
+  --atomic-carbon: #111923;
+  --atomic-carbon-2: #192330;
+  --atomic-metal: #293747;
+  --atomic-edge: #526072;
+  --atomic-ink: #eef2f8;
+  --atomic-muted: #99abba;
+  --atomic-red: #f05a65;
+  --atomic-blue: #71bfff;
+  --atomic-pink: #ff86bb;
+  --atomic-focus: #ffd28d;
+  color: var(--atomic-ink);
+  background: var(--atomic-bg);
+  font-family: "DM Sans",system-ui,sans-serif;
+}
+.tlc-atomic ::selection { background:#c34053; color:white; }
+.tlc-atomic button {
+  position:relative;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .12s ease, color .16s ease;
+  user-select:none;
+}
+.tlc-atomic button:focus-visible,
+.tlc-atomic [role="tab"]:focus-visible,
+.tlc-atomic input:focus-visible {
+  outline: 2px solid var(--atomic-focus);
+  outline-offset: 2px;
+}
+.tlc-atomic button:not(:disabled):active { transform:translateY(1px) scale(.985); }
+.tlc-atomic button:disabled { cursor:not-allowed; opacity:.5; }
+.tlc-atomic .tlc-cockpit-header {
+  background: #0d131c;
+  box-shadow: inset 0 -1px #5b687544, 0 4px 20px #0003;
+  border-bottom:1px solid #364254;
+}
+.tlc-atomic .tlc-cockpit-monogram {
+  transform:none;
+  background:#bf3040;
+  border:1px solid #f37f87;
+  box-shadow:inset 1px 1px #ff9aa07c, inset -2px -3px #661824aa, 0 2px 8px #0008;
+  border-radius:2px;
+  letter-spacing:1px;
+  font-size:21px;
+}
+.tlc-atomic .tlc-cockpit-brandcopy strong { letter-spacing:1.3px; }
+.tlc-atomic .tlc-cockpit-brandcopy strong span { color:#f27e84; }
+.tlc-atomic .tlc-cockpit-brandcopy small {color:#a7b6c6;}
+.tlc-atomic .tlc-onair { background:#161f2b;border-color:#455468;box-shadow:inset 0 1px #ffffff0b; }
+.tlc-atomic .tlc-onair.live {background:#3b202b;border-color:#b64e59;color:#ffd8dc; }
+.tlc-atomic .tlc-onair i { width:6px; height:6px; }
+.tlc-atomic .tlc-cockpit-header-actions button {
+  border-radius:3px;
+  background:#202b3b;
+  border:1px solid #596577;
+  box-shadow:inset 0 1px #ffffff1b, 0 2px 4px #0005;
+}
+.tlc-atomic .tlc-cockpit-header-actions button:hover {border-color:#d0a1a4;background:#303b4d;}
+.tlc-atomic .tlc-cockpit-shell {
+  background-color:#0c111a;
+  background-image:repeating-linear-gradient(90deg,transparent 0 27px,#fff1 28px,transparent 29px);
+}
+.tlc-atomic .tlc-cockpit-main { gap:9px; padding:9px; }
+.tlc-atomic .tlc-cockpit-arena {
+  border:1px solid #536175;
+  background:#101822;
+  box-shadow:0 5px 22px #0008, inset 0 0 0 1px #ffffff05;
+}
+.tlc-atomic .tlc-cockpit-field {
+  background:#101c25;
+  box-shadow: inset 0 9px 22px #0008, inset 0 -16px 22px #0009;
+}
+/* Module: score system */
+.tlc-atomic-scoreboard {
+  display:flex;flex-direction:column;flex:0 0 123px;min-width:0;overflow:hidden;
+  background:#0e1722;
+  border-bottom:1px solid #536274;
+  box-shadow:0 5px 15px #0006;
+}
+.tlc-atom-scorebar, .tlc-atom-score-footer {
+  flex:0 0 19px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 13px;
+  background:#1b2635;
+  border-bottom:1px solid #39475b;
+  color:#a4b8ca;letter-spacing:1.1px;font-size:8px;font-weight:900;
+}
+.tlc-atom-scorebar>span:last-child{display:flex;align-items:center;gap:5px;color:#d7b6ae;}
+.tlc-atom-scorebar>span:last-child svg {color:#e87779;}
+.tlc-atom-score-footer {
+  flex-basis:15px;border-bottom:0;border-top:1px solid #3b4b5e;
+  padding:0 13px;background:#111d2a;font-size:7px;letter-spacing:.9px;
+}
+.tlc-atom-score-footer b{color:#e6f3ff;font-weight:900;}
+.tlc-atom-score-footer i{font-style:normal;color:#ed626d;margin:0 5px;}
+.tlc-atom-score-inner {flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 124px minmax(0,1fr);}
+.tlc-atom-team {
+  min-width:0;position:relative;display:flex;justify-content:space-between;align-items:center;
+  gap:8px;padding:7px clamp(8px,1.6vw,20px) 11px;
+  border-right:1px solid #243448;
+  background:#172637;
+  isolation:isolate;
+}
+.tlc-atom-team::before {
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:repeating-linear-gradient(100deg,transparent 0 16px,#ffffff05 17px,transparent 18px);
+}
+.tlc-atom-team.men { background-color:#162d43;box-shadow:inset 5px 0 #4698da;}
+.tlc-atom-team.women { background-color:#352436;flex-direction:row-reverse;text-align:right;box-shadow:inset -5px 0 #e96da6; border-right:0; }
+.tlc-atom-team.leading {background-color:#203449;}
+.tlc-atom-team.women.leading {background-color:#3e293f;}
+.tlc-atom-team.winner::after {content:"VICTOR";position:absolute;right:4px;top:2px;font-size:7px;letter-spacing:.4px;color:#ffd79c;font-weight:900;}
+.tlc-atom-team.women.winner::after {right:auto;left:4px;}
+.tlc-atom-team-head {min-width:0;display:flex;align-items:center;gap:9px;}
+.tlc-atom-team.women .tlc-atom-team-head {flex-direction:row-reverse;}
+.tlc-atom-emblem {
+  width:40px;height:45px;flex:0 0 40px;display:grid;place-items:center;
+  background:#244562;border:1px solid #598fb9;border-radius:3px;
+  color:#cbe9ff;font-size:27px;text-shadow:0 2px 2px #000b;
+  box-shadow:inset 1px 1px #a1c9ef38,inset -2px -2px #071f35a5,0 4px 7px #0006;
+}
+.tlc-atom-team.women .tlc-atom-emblem {background:#613050;border-color:#a45d86;color:#ffd4e8;}
+.tlc-atom-team-id {display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;}
+.tlc-atom-team-kicker {color:#87b5d8;font-size:8px;letter-spacing:1.35px;font-weight:900;white-space:nowrap;}
+.tlc-atom-team.women .tlc-atom-team-kicker{color:#e5a9c4;}
+.tlc-atom-team-id strong {font:900 clamp(22px,2.6vw,35px)/.92 'Barlow Condensed',Impact,sans-serif;letter-spacing:.6px;color:#f8fcff;}
+.tlc-atom-team-meta{color:#aec4da;font-size:9px;font-weight:800;white-space:nowrap;}
+.tlc-atom-team.women .tlc-atom-team-meta {color:#ecc0d8;}
+.tlc-atom-team-meta i {display:inline-block;height:3px;width:3px;vertical-align:middle;margin:0 3px;background:currentColor;border-radius:50%;}
+.tlc-atom-team-score {display:flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1;min-width:0;}
+.tlc-atom-team.women .tlc-atom-team-score{align-items:flex-start;}
+.tlc-atom-team-score strong {
+  font:900 clamp(34px,4vw,62px)/.9 'Barlow Condensed',Impact,sans-serif;
+  color:#9ad6ff;letter-spacing:-.3px;font-variant-numeric:tabular-nums;
+  text-shadow:0 2px 5px #0007;
+}
+.tlc-atom-team.women .tlc-atom-team-score strong{color:#ffa5d2;}
+.tlc-atom-team-score small {font-size:8px;color:#abc5d9;letter-spacing:1.1px;font-weight:900;}
+.tlc-atom-team-survival {height:3px;position:absolute;bottom:0;left:5px;right:5px;overflow:hidden;background:#162230;}
+.tlc-atom-team-survival span{display:block;height:100%;background:#75bded;transition:width .4s ease;box-shadow:0 0 7px #a5dcff;}
+.tlc-atom-team.women .tlc-atom-team-survival span{background:#ff94c3;box-shadow:0 0 7px #ffb8df;}
+.tlc-atom-score-center {
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;
+  padding:3px;background:#dbe3e9;
+  box-shadow:inset 0 2px #ffffff, inset 1px 0 #a0acb7,inset -1px 0 #a0acb7;
+  min-width:0;color:#1b2839;
+}
+.tlc-atom-score-status {font-size:8px;font-weight:900;letter-spacing:1.4px;color:#415268;display:flex;align-items:center;gap:4px;}
+.tlc-atom-score-status i {width:5px;height:5px;border-radius:50%;background:#5c7382;display:inline-block;}
+.tlc-atom-score-status.active{color:#b72e3d;}
+.tlc-atom-score-status.active i{background:#e94251;box-shadow:0 0 7px #e9425150;}
+.tlc-atom-match-clock {display:flex;align-items:center;gap:4px;font:900 34px/.9 'Barlow Condensed',Impact,sans-serif;letter-spacing:-.6px;font-variant-numeric:tabular-nums;color:#172334;}
+.tlc-atom-match-clock svg {color:#b74c56;}
+.tlc-atom-phase {font-size:8px;font-weight:900;letter-spacing:1px;color:#5a6372;}
+.tlc-atom-preset{font-size:8px;font-weight:900;color:#a23b44;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Broadcast HUD details */
+.tlc-atomic .tlc-cockpit-field-top>span:first-child {
+  background:#111b29e8;
+  border:1px solid #7f8ea1;
+  box-shadow:inset 0 1px #ffffff1a,0 3px 7px #0008;
+}
+.tlc-atomic .tlc-cockpit-field-top>span:last-child {
+  background:#1a2534e8;
+  border:1px solid #728094;
+  font-weight:900;
+}
+.tlc-atomic .tlc-cockpit-lower-third{gap:8px;}
+.tlc-atomic .tlc-cockpit-ticker{
+  border-color:#748395;
+  background:#121d2eeb;
+  box-shadow:0 4px 20px #0008,inset 0 1px #ffffff19;
+}
+.tlc-atomic .tlc-cockpit-ticker>span {background:#b62e40;box-shadow:inset 0 1px #f47d85;}
+.tlc-atomic .tlc-cockpit-hype {background:#2a232ae9;border-color:#7e5156;color:#ffb2a1;}
+.tlc-atomic .tlc-cockpit-momentum {
+  background:#151f2c;border-top:1px solid #536276;box-shadow:inset 0 1px #a4b2c522;
+}
+.tlc-atomic .tlc-cockpit-momentum-track {height:7px;box-shadow:inset 0 1px 2px #000a;border:1px solid #122333;background:#e880b0;}
+.tlc-atomic .tlc-cockpit-momentum-track>div {background:#6cb4ec;}
+/* Match center scales inside the fixed viewport, preserving a scrollable card body. */
+.tlc-atomic .tlc-cockpit-right>.broadcast-center {
+  border:1px solid #4d5c70;background:#131c28;
+  box-shadow:0 5px 22px #0008,inset 0 0 0 1px #ffffff0a;
+}
+.tlc-atomic .broadcast-center-heading {background:#1b2838;border-bottom:1px solid #59677a;}
+.tlc-atomic .broadcast-eyebrow svg {color:#ff8d90;}
+.tlc-atomic .broadcast-tabs {background:#121c29;gap:3px;padding:4px 5px 0;}
+.tlc-atomic .broadcast-tabs button {
+  color:#aabccc;border:1px solid #0000;border-bottom:2px solid transparent;
+  background:#172436;border-radius:3px 3px 0 0;letter-spacing:.5px;
+}
+.tlc-atomic .broadcast-tabs button.active {background:#2a394c;border-color:#61758d;border-bottom-color:#ec6870;color:#fff;}
+.tlc-atomic .broadcast-section {gap:10px;padding:11px;background:#111c29;}
+.tlc-atomic .broadcast-card-hero {background:#1b2a3b;border-color:#546779;box-shadow:inset 0 1px #ffffff10;}
+.tlc-atomic .broadcast-stat-pair>div,.tlc-atomic .broadcast-comparison,.tlc-atomic .broadcast-trend {
+  background:#192636;border-color:#43576b;box-shadow:inset 0 1px #ffffff0a;
+}
+.tlc-atomic .broadcast-lead {font-size:29px;}
+.tlc-atomic .broadcast-stat-pair strong {text-shadow:0 2px #0006;}
+.tlc-atomic .broadcast-center-footer {background:#1b2838;border-top-color:#4c596c;}
+/* Physical control deck */
+.tlc-atomic .tlc-cockpit-dock {
+  background:#151e2b;
+  border-top:1px solid #5b6a7d;
+  box-shadow:inset 0 1px #ffffff16,0 -7px 24px #0008;
+}
+.tlc-atomic .tlc-cockpit-primary>button,
+.tlc-atomic .tlc-cockpit-shortcuts>button,
+.tlc-atomic .tlc-cockpit-speed {
+  border-radius:4px;border-color:#566578;
+  background:#283749;box-shadow:inset 0 1px #ffffff24,inset 0 -2px #0004,0 3px 5px #0005;
+}
+.tlc-atomic .tlc-cockpit-primary>button:hover,
+.tlc-atomic .tlc-cockpit-shortcuts>button:hover{background:#34465b;border-color:#8299ac;}
+.tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play {
+  background:#c43b4a;border-color:#f4787f;color:#fff;min-width:112px;
+  box-shadow:inset 0 1px #ffb8b955,inset 0 -3px #842632,0 5px 9px #0007;
+}
+.tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play:not(:disabled):hover {background:#dd4656;}
+.tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play.pause {background:#483038;border-color:#b35b66;}
+.tlc-atomic .tlc-cockpit-speed {background:#0e1825;align-items:stretch;gap:3px;padding:4px;}
+.tlc-atomic .tlc-cockpit-speed button{border-radius:2px;border:1px solid transparent;min-width:39px;}
+.tlc-atomic .tlc-cockpit-speed button.selected {
+  background:#b93a4b;border-color:#ea7482;color:#fff;
+  box-shadow:inset 0 1px #ffffff22,inset 0 -2px #752a38;
+}
+.tlc-atomic .tlc-cockpit-shortcuts>button {
+  background:#223144;color:#dfe9f4;
+  font-size:9px;letter-spacing:.5px;
+}
+.tlc-atomic .tlc-cockpit-shortcuts>button.active{
+  background:#44303f;border:1px solid #de7380;color:#fff;
+  box-shadow:inset 0 1px #ffb4b32e,0 0 0 1px #e47d8725;
+}
+.tlc-atomic .tlc-cockpit-shortcuts>button i {background:#cf4757;color:white;}
+/* Atomic control panels */
+.tlc-atomic .tlc-atomic-shade {
+  position:absolute;inset:0;z-index:10;
+  border:0;background:#02060b80;backdrop-filter:blur(2px);cursor:default;
+}
+.tlc-atomic .tlc-cockpit-panel {
+  z-index:12;background:#131e2c;border:1px solid #7c899c;
+  border-radius:5px 5px 0 0;
+  box-shadow:0 20px 65px #000d,inset 0 1px #fff2;
+}
+.tlc-atomic .tlc-cockpit-panel-head {
+  background:#243246;border-bottom:1px solid #64758a;min-height:59px;
+}
+.tlc-atomic .tlc-cockpit-panel-head>div>span {color:#f3a3a3;}
+.tlc-atomic .tlc-cockpit-panel-head>button {border-radius:3px;background:#172232;border-color:#68788d;}
+.tlc-atomic .tlc-cockpit-panel-body {background:#131e2c;}
+.tlc-atomic .tlc-cockpit-mode-list button {
+  border-radius:4px;background:#1d2b3e;border-color:#4d6178;
+  box-shadow:inset 0 1px #ffffff17;
+}
+.tlc-atomic .tlc-cockpit-mode-list button.selected {
+  border-color:#ef7a84;background:#392b3b;box-shadow:inset 3px 0 #f27e84;
+}
+.tlc-atomic .tlc-cockpit-power-grid>button {
+  border-radius:4px;box-shadow:inset 0 1px #ffffff17,inset 0 -2px #0004;
+}
+.tlc-atomic .tlc-cockpit-settings label,.tlc-atomic .tlc-cockpit-settings-row {
+  background:#1e2b3b;border-color:#506379;border-radius:3px;
+}
+.tlc-atomic .tlc-cockpit-settings label:has(input:checked) {border-color:#91a9be;}
+.tlc-atomic .tlc-cockpit-settings-action,.tlc-atomic .tlc-cockpit-share button {
+  background:#233247;border-color:#526780;border-radius:3px;box-shadow:inset 0 1px #ffffff1a;
+}
+.tlc-atomic .tlc-cockpit-settings-action:hover,.tlc-atomic .tlc-cockpit-share button:hover {background:#33475d;}
+/* Focus, tactical feedback, and responsive behavior */
+.tlc-atomic .tlc-cockpit-idle-inner {
+  border:1px solid #9aabbc;
+  border-radius:4px;
+  background:#162435f2;
+  box-shadow:inset 0 1px #ffffff17,inset 0 0 0 4px #ffffff04,0 25px 60px #000b;
+}
+.tlc-atomic .tlc-cockpit-idle-inner>span {color:#ffacb1;}
+.tlc-atomic .tlc-cockpit-idle-inner button {
+  border-radius:3px;background:#c94051;border:1px solid #f47f8b;
+  box-shadow:inset 0 1px #fff3,inset 0 -3px #781f2c,0 5px 15px #0009;
+}
+.tlc-atomic .tlc-cockpit-spotlight {
+  border-radius:3px;
+  background:#1b2b3ae9;
+  border-left-width:4px;box-shadow:0 9px 30px #000b,inset 0 1px #ffffff17;
+}
+.tlc-atomic .tlc-cockpit-victory-card {
+  background:#19283b;border:1px solid #8a9eb3;
+  box-shadow:inset 0 1px #ffffff2b,0 20px 80px #000d;
+}
+.tlc-atomic .tlc-cockpit-victory-card h2 em {color:#fc929a;}
+.tlc-atomic .tlc-cockpit-victory-replay {background:#cb4052;border:1px solid #f48c94;border-radius:3px;}
+.tlc-atomic .tlc-cockpit-field:focus-within{outline:0;}
+@media(max-width:1100px){
+  .tlc-atomic .tlc-cockpit-main {gap:6px;padding:6px;}
+  .tlc-atom-score-inner{grid-template-columns:minmax(0,1fr) 106px minmax(0,1fr);}
+  .tlc-atom-emblem{display:none;}
+  .tlc-atom-team {padding-inline:9px;}
+  .tlc-atom-team-meta{font-size:8px;}
+  .tlc-atom-team-score strong{font-size:45px;}
+  .tlc-atom-match-clock{font-size:30px;}
+}
+@media(max-width:900px){
+  .tlc-atomic-scoreboard{flex-basis:106px;}
+  .tlc-atom-emblem{display:grid;width:37px;flex-basis:37px;height:39px;}
+  .tlc-atom-score-inner{grid-template-columns:minmax(0,1fr) 114px minmax(0,1fr);}
+}
+@media(max-width:640px){
+  .tlc-atomic .tlc-cockpit-header {height:46px;}
+  .tlc-atomic .tlc-cockpit-monogram{font-size:17px;padding:6px 7px;}
+  .tlc-atomic .tlc-cockpit-brandcopy strong{font-size:19px;letter-spacing:.5px;}
+  .tlc-atomic-scoreboard {flex-basis:78px;}
+  .tlc-atom-scorebar,.tlc-atom-score-footer{display:none;}
+  .tlc-atom-score-inner{grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);}
+  .tlc-atom-team {padding:5px 7px 8px;flex-direction:column;justify-content:center;align-items:flex-start;gap:1px;}
+  .tlc-atom-team.women {flex-direction:column-reverse;justify-content:center;align-items:flex-end;}
+  .tlc-atom-emblem,.tlc-atom-team-kicker,.tlc-atom-team-meta {display:none;}
+  .tlc-atom-team-id strong{font-size:19px;line-height:1;}
+  .tlc-atom-team-score strong{font-size:33px;}
+  .tlc-atom-team-score small{display:none;}
+  .tlc-atom-team-survival{left:4px;right:4px;height:3px;}
+  .tlc-atom-score-center{gap:1px;}
+  .tlc-atom-score-status{font-size:7px;letter-spacing:.4px;}
+  .tlc-atom-match-clock{font-size:28px;gap:0;}
+  .tlc-atom-match-clock svg{display:none;}
+  .tlc-atom-phase{font-size:7px;letter-spacing:.1px;}
+  .tlc-atom-preset{font-size:7px;max-width:76px;}
+  .tlc-atomic .tlc-cockpit-main {padding:4px;}
+  .tlc-atomic .tlc-cockpit-arena{border-color:#5a687b;}
+  .tlc-atomic .tlc-cockpit-lower-third{gap:4px;}
+  .tlc-atomic .tlc-cockpit-ticker>span{font-size:7px;padding:0 6px;}
+  .tlc-atomic .tlc-cockpit-speed button{min-width:30px;padding:5px;}
+  .tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play{min-width:0;padding:0 9px;}
+  .tlc-atomic .tlc-cockpit-panel{border-radius:5px 5px 0 0;}
+}
+@media(max-width:365px){
+  .tlc-atomic .tlc-cockpit-brandcopy small{display:none;}
+  .tlc-atomic .tlc-cockpit-header-center {gap:4px;}
+  .tlc-atomic .tlc-onair {font-size:7px;padding:5px;}
+  .tlc-atom-score-inner{grid-template-columns:minmax(0,1fr) 73px minmax(0,1fr);}
+  .tlc-atom-match-clock{font-size:26px;}
+  .tlc-atom-team-score strong{font-size:31px;}
+  .tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play{min-width:0;}
+  .tlc-atomic .tlc-cockpit-speed>span{display:none;}
+  .tlc-atomic .tlc-cockpit-speed button{min-width:29px;}
+}
+@media(max-height:600px){
+  .tlc-atomic-scoreboard{flex-basis:73px;}
+  .tlc-atom-scorebar,.tlc-atom-score-footer{display:none;}
+  .tlc-atom-team {padding-top:3px;padding-bottom:7px;}
+  .tlc-atom-team-id strong {font-size:21px;}
+  .tlc-atom-team-score strong{font-size:31px;}
+  .tlc-atom-emblem{display:none;}
+  .tlc-atom-match-clock{font-size:28px;}
+}
+@media(hover:none){
+  .tlc-atomic button{ -webkit-tap-highlight-color:transparent;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button {min-height:46px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .tlc-atomic button,.tlc-atom-team-survival span {transition:none;}
+  .tlc-atomic .tlc-cockpit-panel {animation:none;}
+}
