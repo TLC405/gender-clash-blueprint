@@ -10,6 +10,7 @@
  * - C. Reynolds, Steering Behaviors for Autonomous Characters
  * - van den Berg et al., ORCA (principles only; this is NOT ORCA)
  */
+import { teamBalance } from './battleBalance';
 import {
   type BattleSoA,
   MAX_UNITS, FLAG_ALIVE, TEAM_MEN, TEAM_WOMEN,
@@ -45,18 +46,18 @@ export interface PhysicsConfig {
 
 export const DEFAULT_CONFIG: PhysicsConfig = {
   moveSpeed: 95,
-  chargeSpeed: 175,
-  attackRange: 10.5,
-  baseDamage: 18,
-  separationRadius: 9,
-  separationStrength: 1.7,
+  chargeSpeed: 157,
+  attackRange: 11.5,
+  baseDamage: 10,
+  separationRadius: 12.5,
+  separationStrength: 2.25,
   cohesionRadius: 60,
-  cohesionStrength: 0.038,
+  cohesionStrength: 0.05,
   alignmentStrength: 0.035,
   attractionStrength: 3.2,
-  maxSpeed: 175,
+  maxSpeed: 165,
   rageSpeedMultiplier: 1.3,
-  incomingDamageCap: 65,
+  incomingDamageCap: 28,
   enemySightCells: 3,
 };
 
@@ -93,6 +94,8 @@ interface CombatRuntime {
   impulseY: Float32Array;
   nextVX: Float32Array;
   nextVY: Float32Array;
+  impactCooldown: Float32Array;
+  pendingStagger: Float32Array;
 }
 
 const runtimes = new WeakMap<BattleSoA, CombatRuntime>();
@@ -111,6 +114,8 @@ function getRuntime(soa: BattleSoA): CombatRuntime {
       impulseY: new Float32Array(MAX_UNITS),
       nextVX: new Float32Array(MAX_UNITS),
       nextVY: new Float32Array(MAX_UNITS),
+      impactCooldown: new Float32Array(MAX_UNITS),
+      pendingStagger: new Float32Array(MAX_UNITS),
     };
     runtimes.set(soa, runtime);
   }
@@ -158,14 +163,14 @@ function localSteering(
   i: number,
   config: PhysicsConfig,
   inCombat: boolean
-): { x: number; y: number } {
+): { x: number; y: number; crowd: number } {
   const x = soa.posX[i];
   const y = soa.posY[i];
   const team = soa.teamID[i];
   const sep2 = config.separationRadius * config.separationRadius;
   const coh2 = config.cohesionRadius * config.cohesionRadius;
   let sx = 0, sy = 0, cx = 0, cy = 0, ax = 0, ay = 0, allies = 0;
-  let inspected = 0;
+  let inspected = 0, crowd = 0;
 
   for (const j of queryRadius(grid, x, y)) {
     if (j === i || (soa.stateFlags[j] & FLAG_ALIVE) === 0) continue;
@@ -173,6 +178,7 @@ function localSteering(
     const dy = soa.posY[j] - y;
     const d2 = dx * dx + dy * dy;
     const sameSide = soa.teamID[j] === team;
+    if (sameSide && d2 < sep2 * 4) crowd++;
 
     if (d2 < sep2) {
       const d = Math.sqrt(d2);
@@ -207,6 +213,7 @@ function localSteering(
   return {
     x: sx * config.separationStrength + cohX + alignX,
     y: sy * config.separationStrength + cohY + alignY,
+    crowd,
   };
 }
 
@@ -275,10 +282,13 @@ export function updatePhysics(
   r.pendingDamage.fill(0, 0, soa.unitCount);
   r.impulseX.fill(0, 0, soa.unitCount);
   r.impulseY.fill(0, 0, soa.unitCount);
+  r.pendingStagger.fill(0, 0, soa.unitCount);
 
   for (let i = 0; i < soa.unitCount; i++) {
     if (!(soa.stateFlags[i] & FLAG_ALIVE)) continue;
     const team = soa.teamID[i];
+    r.impactCooldown[i] = Math.max(0, r.impactCooldown[i] - step);
+    soa.stagger[i] = Math.max(0, soa.stagger[i] - step);
     if (frozen) {
       r.nextVX[i] = 0;
       r.nextVY[i] = 0;
@@ -292,8 +302,9 @@ export function updatePhysics(
 
     const x = soa.posX[i], y = soa.posY[i];
     const boosted = team === TEAM_MEN ? menRage : womenRage;
+    const profile = teamBalance(team);
     const strength = team === TEAM_MEN ? fury(teams.mn, r.menInitial) : fury(teams.wn, r.womenInitial);
-    const maxSpeed = config.maxSpeed * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
+    const maxSpeed = config.maxSpeed * profile.moveMultiplier * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
     const enemy = findNearestEnemy(
       grid, x, y, team, soa.posX, soa.posY, soa.teamID, soa.stateFlags,
       FLAG_ALIVE, config.enemySightCells
@@ -307,21 +318,30 @@ export function updatePhysics(
     const ny = distance > 0.001 ? dy / distance : 0;
 
     if (enemy.index >= 0 && enemy.distSq <= config.attackRange ** 2) {
-      const damage = config.baseDamage * strength * step
-        * (boosted ? 1.22 : 1) * (phase === 'sudden_death' ? 1.4 : 1);
+      // Long-form attrition with occasional discrete physical impacts.
+      // Men have heavier individual hits; women have more fighters.
+      const damage = config.baseDamage * profile.damageMultiplier * strength * step
+        * (boosted ? 1.22 : 1) * (phase === 'sudden_death' ? 1.25 : 1);
       r.pendingDamage[enemy.index] += damage;
 
-      // Knockback is accumulated, not applied immediately; no ordering bias.
-      r.impulseX[enemy.index] += nx * 7.5;
-      r.impulseY[enemy.index] += ny * 7.5;
-      // Cap particle emissions (previously every hit emitted 5 sparks, every tick).
-      if ((i + r.tick) % 19 === 0) effects(pool, (x + tx) / 2, (y + ty) / 2, team, i + r.tick, false);
+      if (r.impactCooldown[i] <= 0) {
+        const defender = teamBalance(soa.teamID[enemy.index]);
+        const shove = 24 * profile.impulseMultiplier / defender.mass;
+        // Resolve all impulses after both teams plan movement.
+        r.impulseX[enemy.index] += nx * shove;
+        r.impulseY[enemy.index] += ny * shove;
+        r.pendingStagger[enemy.index] = Math.max(r.pendingStagger[enemy.index], 0.35);
+        r.impactCooldown[i] = 0.4 + noise(i, r.tick) * 0.17;
+        if ((i + r.tick) % 7 === 0) effects(pool, (x + tx) / 2, (y + ty) / 2, team, i + r.tick, false);
+      }
     }
 
     const local = localSteering(soa, grid, i, config, inCombat);
     const shouldMove = (team === TEAM_MEN ? teams.wn > 0 : teams.mn > 0);
     const approach = inCombat && distance < config.attackRange ? 0.15 : 0.74;
-    const intendedSpeed = shouldMove ? maxSpeed * approach : 0;
+    const crowdSlowdown = 1 / (1 + Math.max(0, local.crowd - 5) * 0.055);
+    const staggerSlowdown = soa.stagger[i] > 0 ? 0.4 : 1;
+    const intendedSpeed = shouldMove ? maxSpeed * approach * crowdSlowdown * staggerSlowdown : 0;
     const response = Math.min(1, config.attractionStrength * step);
     let vx = soa.velX[i] + ((nx * intendedSpeed - soa.velX[i]) * response);
     let vy = soa.velY[i] + ((ny * intendedSpeed - soa.velY[i]) * response);
@@ -349,7 +369,7 @@ export function updatePhysics(
       const team = soa.teamID[i];
       const boosted = team === TEAM_MEN ? menRage : womenRage;
       const strength = team === TEAM_MEN ? fury(teams.mn, r.menInitial) : fury(teams.wn, r.womenInitial);
-      const limit = config.maxSpeed * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
+      const limit = config.maxSpeed * teamBalance(team).moveMultiplier * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
       let vx = r.nextVX[i] + r.impulseX[i];
       let vy = r.nextVY[i] + r.impulseY[i];
       const velocity = Math.hypot(vx, vy);
@@ -360,6 +380,7 @@ export function updatePhysics(
       if (y < top || y > bottom) { y = Math.max(top, Math.min(bottom, y)); vy *= -0.25; }
       soa.posX[i] = x; soa.posY[i] = y;
       soa.velX[i] = vx; soa.velY[i] = vy;
+      if (r.pendingStagger[i] > 0) soa.stagger[i] = Math.max(soa.stagger[i], r.pendingStagger[i]);
     }
 
     // Kill resolution happens after BOTH teams have attacked this tick.
