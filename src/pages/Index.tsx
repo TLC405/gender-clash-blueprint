@@ -18,6 +18,7 @@ import "./OneScreen.css";
 import "./AtomicUpgrade.css";
 
 type Team = "men" | "women";
+type Outcome = Team | "draw";
 type Stats = { menAlive: number; womenAlive: number; menKills: number; womenKills: number };
 type Moment = { id: number; at: number; title: string; detail: string; icon: string; team?: Team };
 type Preset = { id: string; name: string; tagline: string; men: number; women: number; speed: number; icon: string };
@@ -52,7 +53,7 @@ const Index = () => {
   const [phase, setPhase] = useState<BattlePhase>("stand");
   const [timeRemaining, setTimeRemaining] = useState(MATCH_DURATION);
   const [stats, setStats] = useState<Stats>({ menAlive: 500, womenAlive: 500, menKills: 0, womenKills: 0 });
-  const [winner, setWinner] = useState<Team | null>(null);
+  const [winner, setWinner] = useState<Outcome | null>(null);
   const [narratorEnabled, setNarratorEnabled] = useState(() => savedBoolean("tlc-atomic-narrator", false));
   const [soundEnabled, setAudioEnabled] = useState(() => savedBoolean("tlc-atomic-sound", true));
   const [reducedMotion, setReducedMotion] = useState(() => savedBoolean("tlc-atomic-reduced-motion", typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
@@ -218,12 +219,12 @@ const Index = () => {
     setIsRunning(r => !r);
   };
 
-  const handleVictory = useCallback((side: Team) => {
+  const handleVictory = useCallback((side: Outcome) => {
     if (finishedRef.current) return;
     finishedRef.current = true;
     setWinner(side);
     setIsRunning(false);
-    recordMoment(side === "men" ? "THE BROS TAKE THE CROWN" : "THE QUEENS OWN THE ARENA", "That was ridiculous. And yes, we are absolutely running it back.", "🏆", side);
+    recordMoment(side === "draw" ? "IT ENDS IN A DRAW" : side === "men" ? "THE BROS TAKE THE CROWN" : "THE QUEENS OWN THE ARENA", side === "draw" ? "Both teams finished with the same surviving share." : "That was ridiculous. And yes, we are absolutely running it back.", side === "draw" ? "🤝" : "🏆", side === "draw" ? undefined : side);
     setHype(100);
   }, [recordMoment]);
 
@@ -256,7 +257,7 @@ const Index = () => {
   const shareText = () => "MEN vs WOMEN — TLC BATTLE ⚔️\n" +
     selectedPreset.name + " • " + clock(elapsed) + " elapsed\n" +
     "MEN " + fmt(stats.menAlive) + " (" + fmt(stats.menKills) + " KOs) vs WOMEN " + fmt(stats.womenAlive) + " (" + fmt(stats.womenKills) + " KOs)\n" +
-    (winner ? "🏆 Winner: Team " + winner.toUpperCase() : "🔥 The battle is still on!") + "\n#TLCBattle #MenVsWomen";
+    (winner ? winner === "draw" ? "🤝 Final result: DRAW" : "🏆 Winner: Team " + winner.toUpperCase() : "🔥 The battle is still on!") + "\n#TLCBattle #MenVsWomen";
 
   const shareRecap = async () => {
     const text = shareText();
@@ -295,7 +296,7 @@ const Index = () => {
     c.font = "bold 35px Arial"; c.fillStyle = "#8cc8ff"; c.fillText("MEN LEFT", 270, 1215);
     c.fillStyle = "#ffb1d8"; c.fillText("WOMEN LEFT", 810, 1215);
     c.fillStyle = "#ffffff"; c.font = "bold 42px Arial";
-    c.fillText(winner ? "🏆 TEAM " + winner.toUpperCase() + " WINS" : "THE BATTLE IS ON", 540, 1430);
+    c.fillText(winner === "draw" ? "FINAL RESULT: DRAW" : winner ? "TEAM " + winner.toUpperCase() + " WINS" : "THE BATTLE IS ON", 540, 1430);
     c.fillStyle = "#e8b96d"; c.font = "bold 36px Arial"; c.fillText(clock(elapsed) + "  •  " + fmt(stats.menKills + stats.womenKills) + " TOTAL KOs", 540, 1515);
     c.fillStyle = "#d7d6e4"; c.font = "bold 40px Arial"; c.fillText("WHO'S TAKING THE W?", 540, 1680);
     c.fillStyle = "#e8b96d"; c.font = "bold 33px Arial"; c.fillText("#TLCBattle  #MenVsWomen", 540, 1770);
@@ -443,9 +444,9 @@ const Index = () => {
       {winner && <div className="tlc-cockpit-victory-backdrop" role="dialog" aria-modal="true" aria-label="Battle results">
         <div className="tlc-cockpit-victory-card">
           <span>✦ TLC BATTLECAST / FINAL</span>
-          <div className="tlc-cockpit-victory-symbol">{winner === "men" ? "♂" : "♀"}</div>
-          <h2>TEAM {winner.toUpperCase()} <em>WINS.</em></h2>
-          <p>{selectedPreset.name} · {clock(elapsed)} played</p>
+          <div className="tlc-cockpit-victory-symbol">{winner === "draw" ? "⚖" : winner === "men" ? "♂" : "♀"}</div>
+          <h2>{winner === "draw" ? "MATCH" : "TEAM " + winner.toUpperCase()} <em>{winner === "draw" ? "DRAW." : "WINS."}</em></h2>
+          <p>{selectedPreset.name} · {clock(elapsed)} played{winner === "draw" ? " · Equal survival percentages" : ""}</p>
           <div className="tlc-cockpit-victory-stats"><div><small>MEN KOs</small><strong>{fmt(stats.menKills)}</strong></div><div><small>WOMEN KOs</small><strong>{fmt(stats.womenKills)}</strong></div></div>
           <button className="tlc-cockpit-victory-replay" onClick={() => {setActivePanel(null);resetBattle(menArmySize,womenArmySize);startedRef.current=true;setIsRunning(true);}}><RotateCcw size={17}/> RUN IT BACK</button>
           <div className="tlc-cockpit-victory-actions"><button onClick={savePoster}><Camera size={15}/> POSTER</button><button onClick={shareRecap}><Share2 size={15}/> SHARE</button><button onClick={() => resetBattle(menArmySize,womenArmySize)}>BACK TO ARENA</button></div>

@@ -10,7 +10,7 @@ import { speak, stopSpeaking, type NarratorContext } from "@/utils/battleNarrato
 import { createBattleSoA, initializeUnits, type BattleSoA, TEAM_MEN, TEAM_WOMEN, FLAG_ALIVE } from "@/lib/battleSoA";
 import { createSpatialHashGrid, resizeGrid, type SpatialHashGrid } from "@/lib/spatialHash";
 import { createParticlePool, updateParticles, renderParticles, spawnConfetti, spawnMeteorImpact, spawnClashShockwave, clearParticles, type ParticlePool } from "@/lib/particlePool";
-import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysics";
+import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysicsV4";
 import { renderUnits } from "@/lib/spriteRenderer";
 import { createPixiUnitLayer, renderPixiUnits, resizePixiLayer, destroyPixiLayer, type PixiUnitLayer } from "@/lib/pixiUnitRenderer";
 import { playKills, playBell } from "@/lib/battleAudio";
@@ -31,7 +31,7 @@ type BattleSimulationProps = {
   onPhaseChange: (phase: BattlePhase) => void;
   onTimeUpdate: (time: number) => void;
   onQuipChange: (quip: string) => void;
-  onVictory: (winner: "men" | "women") => void;
+  onVictory: (winner: "men" | "women" | "draw") => void;
   narratorEnabled: boolean;
   meteorTrigger?: number;
   meteorCharges?: number;
@@ -122,8 +122,8 @@ const BattleSimulation = ({
     arenaCacheRef.current = null; // clear scuff marks
     camRef.current = { x: 0, y: 0, zoom: 1 };
     clashPointRef.current = { x: width / 2, y: height / 2 };
-    resetChargeState();
-    setInitialCounts(menArmySize, womenArmySize);
+    resetChargeState(soaRef.current);
+    setInitialCounts(menArmySize, womenArmySize, soaRef.current);
     aliveRef.current = menArmySize + womenArmySize;
     lastStatsRef.current = null;
 
@@ -147,26 +147,68 @@ const BattleSimulation = ({
     return () => observer.disconnect();
   }, [initCanvas]);
 
+  // Settle winners from normalized survivor fractions, so asymmetric presets
+  // are scored fairly (350 vs 800 starts as a 50/50 survival match).
+  const finishBattle = useCallback((menAlive: number, womenAlive: number) => {
+    if (phaseRef.current === "victory") return;
+    phaseRef.current = "victory";
+    const menRatio = menAlive / Math.max(1, menArmySize);
+    const womenRatio = womenAlive / Math.max(1, womenArmySize);
+    const winner: "men" | "women" | "draw" =
+      Math.abs(menRatio - womenRatio) <= 0.000001 ? "draw" :
+      menRatio > womenRatio ? "men" : "women";
+    const p = propsRef.current;
+    p.onPhaseChange("victory");
+    if (winner !== "draw") speakNarration(winner === "men" ? "victoryMen" : "victoryWomen");
+    spawnConfetti(poolRef.current, logicalSizeRef.current.width / 2, logicalSizeRef.current.height / 2, logicalSizeRef.current.width);
+    p.onTimeUpdate(Math.floor(timeRef.current));
+    p.onStatsUpdate({
+      menAlive, womenAlive,
+      menKills: killStatsRef.current.menKills,
+      womenKills: killStatsRef.current.womenKills,
+    });
+    p.onVictory(winner);
+  }, [menArmySize, womenArmySize, speakNarration]);
+
+  const strikeMeteor = useCallback((x: number, y: number) => {
+    const grid = gridRef.current;
+    if (!grid || phaseRef.current === "victory" || !propsRef.current.isRunning) return;
+    const impact = applyMeteorImpact(soaRef.current, grid, x, y, 100, 500);
+    spawnMeteorImpact(poolRef.current, x, y);
+    playKills(Math.max(1, impact.totalLost));
+    if (!reducedMotionRef.current) {
+      shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
+      clashFlashRef.current = 0.14;
+    }
+    if (impact.totalLost > 0) {
+      const menAlive = soaRef.current.menCount, womenAlive = soaRef.current.womenCount;
+      aliveRef.current = menAlive + womenAlive;
+      lastStatsRef.current = { menAlive, womenAlive };
+      // Meteor losses are environmental losses, not awarded team knockouts.
+      propsRef.current.onStatsUpdate({
+        menAlive, womenAlive,
+        menKills: killStatsRef.current.menKills,
+        womenKills: killStatsRef.current.womenKills,
+      });
+      if (menAlive === 0 || womenAlive === 0) finishBattle(menAlive, womenAlive);
+    }
+    return impact;
+  }, [finishBattle]);
+
   const handleMeteorClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isRunning || phaseRef.current === "victory") return;
-    if (!gridRef.current) return;
+    if (!isRunning || phaseRef.current === "victory" || !gridRef.current) return;
     if (meteorCharges <= 0) { toast.info("No meteor drops left this round."); return; }
     const rect = e.currentTarget.getBoundingClientRect();
     const { width, height } = logicalSizeRef.current;
     const cam = camRef.current;
-    // invert camera transform
     const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
     const x = (sx - width / 2 - cam.x * cam.zoom) / cam.zoom + width / 2;
     const y = (sy - height / 2 - cam.y * cam.zoom) / cam.zoom + height / 2;
-    applyMeteorImpact(soaRef.current, gridRef.current, x, y, 100, 500);
-    spawnMeteorImpact(poolRef.current, x, y);
-    playKills(5);
-    if (!reducedMotionRef.current) shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
+    strikeMeteor(x, y);
     onMeteorUsed?.();
     toast.info("Meteor Strike!", { duration: 1000 });
-  }, [isRunning, meteorCharges, onMeteorUsed]);
+  }, [isRunning, meteorCharges, onMeteorUsed, strikeMeteor]);
 
-  // Accessible command button: trigger a cinematic strike at the current clash.
   useEffect(() => {
     if (!meteorTrigger || meteorTrigger === meteorHandledRef.current) return;
     meteorHandledRef.current = meteorTrigger;
@@ -174,14 +216,8 @@ const BattleSimulation = ({
     const { width, height } = logicalSizeRef.current;
     const x = Math.max(30, Math.min(width - 30, clashPointRef.current.x || width / 2));
     const y = Math.max(30, Math.min(height - 30, clashPointRef.current.y || height / 2));
-    applyMeteorImpact(soaRef.current, gridRef.current, x, y, 100, 500);
-    spawnMeteorImpact(poolRef.current, x, y);
-    if (!reducedMotionRef.current) {
-      shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 9, 12);
-      clashFlashRef.current = 0.14;
-    }
-    playKills(5);
-  }, [meteorTrigger, isRunning]);
+    strikeMeteor(x, y);
+  }, [meteorTrigger, isRunning, strikeMeteor]);
 
   // ═══════════════════════════════════════════════
   // PREMIUM ARENA RENDERER - Broadcast Stadium
@@ -482,16 +518,10 @@ const BattleSimulation = ({
     updateParticles(poolRef.current, dt);
 
     if (result.stats.menAlive === 0 || result.stats.womenAlive === 0 ||
-        (timeRef.current <= 0 && result.stats.menAlive !== result.stats.womenAlive)) {
-      phaseRef.current = "victory";
-      p.onPhaseChange("victory");
-      const winner = result.stats.menAlive > 0 ? "men" : "women";
-      speakNarration(winner === "men" ? "victoryMen" : "victoryWomen");
-      spawnConfetti(poolRef.current, width / 2, height / 2, width);
-      pushUi(true);
-      p.onVictory(winner);
+        timeRef.current <= 0) {
+      finishBattle(result.stats.menAlive, result.stats.womenAlive);
     }
-  }, [speakNarration, addScuff]);
+  }, [speakNarration, addScuff, finishBattle]);
 
   // Throttled UI sync (~4x per second)
   const pushUi = useCallback((force = false) => {
@@ -575,7 +605,7 @@ const BattleSimulation = ({
         acc += frame;
         let steps = 0;
         while (acc >= FIXED_DT && steps < 5 && (phaseRef.current as BattlePhase) !== 'victory') { stepFnRef.current(FIXED_DT); acc -= FIXED_DT; steps++; }
-        if (steps === 5) acc = 0;
+        if (steps === 5) acc = Math.min(acc, FIXED_DT); // Backlog clamp instead of dropping all remaining simulation time.
         pushUi();
       } else {
         acc = 0;
