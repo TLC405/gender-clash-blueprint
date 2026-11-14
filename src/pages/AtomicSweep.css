@@ -1,0 +1,422 @@
+/*
+  TLC ATOMIC / FOLD-FIT BROADCAST SWEEP
+
+  Screenshot audit (Nov 14, 2026):
+  - Android in-app browser/taskbar obscured bottom dock.
+  - legacy .tlc-app min-height:100vh overrode shorter dvh.
+  - scoreboard, cam banners and ticker competed for playable arena.
+  - focus camera button had no meaningful effect on mobile.
+
+  Responsive sizing combines CSS dynamic units and an opt-in measured
+  visual-viewport variable for browser toolbars and folding displays.
+  Sources: MDN / CSS lengths, VisualViewport, safe-area env().
+*/
+.tlc-app.tlc-one-screen.tlc-atomic {
+  --tlc-visible-height: 100dvh;
+  --tlc-visible-top: 0px;
+  --tlc-dock-height: calc(68px + env(safe-area-inset-bottom, 0px));
+  top: var(--tlc-visible-top);
+  bottom: auto;
+  height: var(--tlc-visible-height);
+  max-height: var(--tlc-visible-height);
+  min-height: 0; /* Important: overrides .tlc-app {min-height:100vh} */
+  grid-template-rows: 48px minmax(0, 1fr);
+  box-sizing: border-box;
+  contain: layout style;
+  background: #080e17;
+}
+.tlc-atomic .tlc-cockpit-shell {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.tlc-atomic .tlc-cockpit-main {
+  padding: 6px;
+  gap: 7px;
+  min-height: 0;
+  overflow: hidden;
+}
+.tlc-atomic .tlc-cockpit-arena {
+  min-height: 0;
+  overflow: hidden;
+  border-color: #455467;
+  box-shadow: inset 0 0 0 1px #728aa017, 0 6px 20px #0007;
+}
+.tlc-atomic .tlc-cockpit-field {
+  min-height: 0;
+  isolation: isolate;
+}
+.tlc-atomic .tlc-cockpit-dock {
+  height: var(--tlc-dock-height);
+  flex: 0 0 var(--tlc-dock-height);
+  box-sizing: border-box;
+  min-height: 0;
+  gap: 9px;
+  padding: 5px 11px calc(5px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #64758b;
+  box-shadow: 0 -7px 16px #0008, inset 0 1px #ffffff20;
+  background: #111e2d;
+  position: relative;
+  z-index: 9;
+}
+.tlc-atomic .tlc-cockpit-primary,
+.tlc-atomic .tlc-cockpit-shortcuts {
+  gap: 5px;
+}
+.tlc-atomic .tlc-cockpit-primary>button,
+.tlc-atomic .tlc-cockpit-shortcuts>button {
+  flex-shrink: 0;
+  touch-action: manipulation;
+  border-radius: 4px;
+  box-shadow: inset 0 1px #ffffff27, inset 0 -2px #0007, 0 2px 5px #0006;
+}
+.tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play {
+  min-width: 94px;
+  padding-inline: 12px;
+  letter-spacing: .7px;
+  border-color: #fa8d9c;
+  background: #be3347;
+  box-shadow: inset 0 1px #ffc2ca64, inset 0 -3px #842336, 0 4px 9px #0008;
+}
+.tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play.pause {
+  border-color:#9c6473;
+}
+.tlc-atomic .tlc-cockpit-shortcuts>button {
+  min-width: 60px;
+  height: 47px;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .65px;
+  color: #cfdbe9;
+  background: #1b2b3e;
+  border-color: #465e76;
+}
+.tlc-atomic .tlc-cockpit-shortcuts>button svg {height:17px;width:17px;}
+.tlc-atomic .tlc-cockpit-shortcuts>button.active {
+  background: #3f2938;
+  border-color: #f18e9c;
+  color: #fff;
+}
+.tlc-atomic .tlc-cockpit-speed {
+  height: 44px;
+  min-width: 0;
+  align-items: center;
+}
+.tlc-atomic .tlc-cockpit-speed button {
+  font-variant-numeric: tabular-nums;
+}
+.tlc-atomic .tlc-cockpit-header {
+  height: 48px;
+  min-height: 0;
+  padding: 0 13px;
+  border-bottom-color: #526075;
+  box-shadow: inset 0 -1px #ffffff10;
+}
+.tlc-atomic .tlc-cockpit-monogram {
+  padding: 5px 8px;
+  font-size: 19px;
+  line-height: 1;
+  border-radius: 3px;
+}
+.tlc-atomic .tlc-cockpit-brandcopy strong {
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+.tlc-atomic .tlc-cockpit-brandcopy small {
+  font-size: 8px;
+  letter-spacing: .55px;
+}
+.tlc-atomic .tlc-cockpit-header-center {margin-left: auto;}
+.tlc-atomic .tlc-cockpit-header-actions button {width:34px;height:34px;}
+.tlc-atomic .tlc-onair {padding: 7px 9px;}
+
+/* The board is a precise score strip, not a tall second header. */
+.tlc-atomic .tlc-atomic-scoreboard {
+  flex: 0 0 88px;
+  min-height: 0;
+  box-shadow: 0 4px 12px #0006;
+}
+.tlc-atomic .tlc-atom-scorebar {flex-basis:16px;padding:0 11px;font-size:7px;}
+.tlc-atomic .tlc-atom-score-footer {display:none;}
+.tlc-atomic .tlc-atom-score-inner {
+  min-height:0;
+  grid-template-columns:minmax(0,1fr) 116px minmax(0,1fr);
+}
+.tlc-atomic .tlc-atom-team {
+  padding:4px 11px 5px;
+  gap:7px;
+}
+.tlc-atomic .tlc-atom-emblem {width:32px;flex-basis:32px;height:34px;font-size:22px;}
+.tlc-atomic .tlc-atom-team-id strong {
+  font-size:clamp(20px,2.4vw,30px);
+  letter-spacing: .7px;
+}
+.tlc-atomic .tlc-atom-team-kicker {font-size:7px;letter-spacing:.85px;}
+.tlc-atomic .tlc-atom-team-meta {font-size:8px;letter-spacing:.2px;line-height:1.25;}
+.tlc-atomic .tlc-atom-team-score strong {
+  font-size:clamp(34px,3.6vw,53px);
+  letter-spacing:-.8px;
+}
+.tlc-atomic .tlc-atom-team-score small {font-size:7px;letter-spacing:.8px;}
+.tlc-atomic .tlc-atom-score-center {gap:1px;}
+.tlc-atomic .tlc-atom-match-clock {font-size:31px;letter-spacing:-.5px;}
+.tlc-atomic .tlc-atom-phase {font-size:7px;letter-spacing:.7px;}
+.tlc-atomic .tlc-atom-preset {font-size:7px;max-width:111px;}
+
+/* Broadcast overlays should float, not eat the scene. */
+.tlc-atomic .tlc-cockpit-field-top {
+  left:8px;right:8px;top:7px;
+  gap:4px;
+  font-size:8px;
+  letter-spacing:.45px;
+}
+.tlc-atomic .tlc-cockpit-field-top>span:first-child,
+.tlc-atomic .tlc-cockpit-field-top>span:last-child {
+  padding:5px 7px;
+  color:#edf3fa;
+  background:#0e1a28c9;
+  border:1px solid #7b91a788;
+  backdrop-filter:blur(3px);
+  box-shadow:0 2px 9px #0007;
+}
+.tlc-atomic .tlc-cockpit-field-top>span:first-child svg {color:#f37a87;}
+.tlc-atomic .tlc-cockpit-lower-third {
+  bottom:5px;left:6px;right:6px;gap:5px;
+  align-items:stretch;
+}
+.tlc-atomic .tlc-cockpit-ticker {
+  min-height:28px;
+  background:#0b1624cb;
+  border:1px solid #5c728b9e;
+  border-left:3px solid #e15b6d;
+  backdrop-filter:blur(3px);
+  box-shadow:0 3px 9px #0007;
+}
+.tlc-atomic .tlc-cockpit-ticker>span {
+  background:#a92f41;
+  font-size:8px;
+  padding:0 9px;
+  letter-spacing:.45px;
+}
+.tlc-atomic .tlc-cockpit-ticker strong {
+  font-size:10px;
+  padding:0 9px;
+  font-weight:700;
+}
+.tlc-atomic .tlc-cockpit-hype {
+  font-size:10px;
+  padding:0 8px;
+  border-color:#b982735e;
+  background:#241d29db;
+  box-shadow:0 2px 8px #0005;
+}
+.tlc-atomic .tlc-cockpit-momentum {
+  height:22px;
+  flex:0 0 22px;
+  padding:4px 9px;
+  gap:8px;
+  grid-template-columns:91px minmax(0,1fr) 103px;
+  background:#131e2c;
+  border-top-color:#52677b;
+}
+.tlc-atomic .tlc-cockpit-momentum>span {
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.tlc-atomic .tlc-cockpit-momentum-track {height:6px;border-color:#1e2a3d;}
+.tlc-atomic .tlc-cockpit-idle-inner {
+  max-width:min(335px,86%);
+  padding:14px 17px;
+  gap:6px;
+  border-radius:5px;
+}
+.tlc-atomic .tlc-cockpit-idle-inner h1 {font-size:clamp(27px,4vw,42px);}
+.tlc-atomic .tlc-cockpit-idle-inner button {min-height:42px;margin-top:3px;}
+.tlc-atomic .tlc-cockpit-spotlight {
+  max-width:min(430px,88%);
+  padding:8px 10px;
+}
+.tlc-atomic .tlc-cockpit-spotlight>span {font-size:20px;}
+.tlc-atomic .tlc-cockpit-spotlight strong {font-size:12px;}
+.tlc-atomic .tlc-cockpit-spotlight small {font-size:9px;}
+
+/* Focus view is now useful on mobile: no camera labels, feed or momentum. */
+.tlc-atomic .tlc-cockpit-main.focus .tlc-cockpit-field-top,
+.tlc-atomic .tlc-cockpit-main.focus .tlc-cockpit-lower-third,
+.tlc-atomic .tlc-cockpit-main.focus .tlc-cockpit-momentum {
+  display:none;
+}
+.tlc-atomic .tlc-cockpit-main.focus .tlc-cockpit-field {
+  flex:1;
+}
+.tlc-atomic .tlc-cockpit-header-actions button.active {
+  background:#45313f;border-color:#f0979b;color:white;
+}
+
+/* Panels measure the space above the dock and scroll internally. */
+.tlc-atomic .tlc-cockpit-panel {
+  bottom:calc(var(--tlc-dock-height) + 5px);
+  max-height: min(690px, calc(var(--tlc-visible-height) - var(--tlc-dock-height) - 52px));
+  border-radius:5px;
+  overflow:hidden;
+}
+.tlc-atomic .tlc-cockpit-panel-body {
+  min-height:0;
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.tlc-atomic .tlc-cockpit-panel .broadcast-center {
+  min-height:0;
+  max-height:100%;
+  box-shadow:none;
+}
+.tlc-atomic .tlc-cockpit-panel .broadcast-section {
+  min-height:0;
+  overflow-y:auto;
+}
+.tlc-atomic .tlc-cockpit-panel .broadcast-play-list {max-height:180px;}
+.tlc-atomic .tlc-cockpit-panel-head {min-height:50px;}
+.tlc-atomic .tlc-cockpit-panel-head>div>strong {font-size:22px;}
+
+/* Tablet/Fold expanded: dedicate the whole width to the battle, with
+   Match Center available via the Stats dock action. */
+@media(max-width:1050px) {
+  .tlc-atomic .tlc-cockpit-header-center {display:none;}
+  .tlc-atomic .tlc-cockpit-main {grid-template-columns:minmax(0,1fr);}
+  .tlc-atomic .tlc-cockpit-right {display:none;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button {min-width:55px;padding:4px 7px;}
+  .tlc-atomic .tlc-cockpit-header-center {gap:6px;}
+  .tlc-atomic .tlc-atom-scorebar {display:none;}
+  .tlc-atomic .tlc-atomic-scoreboard {flex-basis:78px;}
+}
+@media(min-width:641px) and (max-width:1050px) {
+  .tlc-atomic .tlc-cockpit-dock {
+    --tlc-dock-height:calc(62px + env(safe-area-inset-bottom, 0px));
+    gap:7px;
+    justify-content:space-between;
+    padding-inline:9px;
+  }
+  .tlc-atomic .tlc-cockpit-primary {gap:4px;}
+  .tlc-atomic .tlc-cockpit-primary>button {height:43px;}
+  .tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play {min-width:88px;padding:0 8px;}
+  .tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-reset {padding-inline:7px;}
+  .tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-reset span {display:none;}
+  .tlc-atomic .tlc-cockpit-speed {height:43px;padding:2px;gap:2px;}
+  .tlc-atomic .tlc-cockpit-speed>span {display:none;}
+  .tlc-atomic .tlc-cockpit-speed button {min-width:33px;padding:4px 5px;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button {height:43px;min-width:50px;gap:2px;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button span {font-size:8px;letter-spacing:.4px;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button svg {width:15px;height:15px;}
+}
+@media(max-width:640px) {
+  .tlc-app.tlc-one-screen.tlc-atomic {
+    --tlc-dock-height:calc(99px + env(safe-area-inset-bottom, 0px));
+    grid-template-rows:43px minmax(0,1fr);
+  }
+  .tlc-atomic .tlc-cockpit-header {height:43px;padding:0 7px;gap:6px;}
+  .tlc-atomic .tlc-cockpit-brand {gap:6px;}
+  .tlc-atomic .tlc-cockpit-monogram {font-size:17px;padding:5px;}
+  .tlc-atomic .tlc-cockpit-brandcopy strong {font-size:19px;}
+  .tlc-atomic .tlc-cockpit-brandcopy small {font-size:7px;}
+  .tlc-atomic .tlc-onair {font-size:8px;padding:5px 6px;}
+  .tlc-atomic .tlc-broadcast-disclaimer {display:none;}
+  .tlc-atomic .tlc-cockpit-header-actions {gap:4px;}
+  .tlc-atomic .tlc-cockpit-header-actions button {height:29px;width:29px;}
+  .tlc-atomic .tlc-cockpit-main {padding:4px;}
+  .tlc-atomic .tlc-atomic-scoreboard {flex-basis:70px;}
+  .tlc-atomic .tlc-atom-score-inner {grid-template-columns:minmax(0,1fr) 80px minmax(0,1fr);}
+  .tlc-atomic .tlc-atom-team {padding:3px 6px;gap:3px;}
+  .tlc-atomic .tlc-atom-team-id strong {font-size:18px;}
+  .tlc-atomic .tlc-atom-team-score strong {font-size:32px;}
+  .tlc-atomic .tlc-atom-team-meta {display:none;}
+  .tlc-atomic .tlc-atom-score-center {padding:2px;gap:0;}
+  .tlc-atomic .tlc-atom-match-clock {font-size:27px;}
+  .tlc-atomic .tlc-atom-preset {font-size:7px;}
+  .tlc-atomic .tlc-cockpit-momentum {grid-template-columns:62px minmax(0,1fr) 77px;gap:5px;height:20px;flex-basis:20px;}
+  .tlc-atomic .tlc-cockpit-momentum>span {font-size:7px;letter-spacing:0;}
+  .tlc-atomic .tlc-cockpit-dock {
+    height:var(--tlc-dock-height);
+    flex-basis:var(--tlc-dock-height);
+    flex-direction:column;
+    align-items:stretch;
+    gap:4px;
+    justify-content:center;
+    padding:5px 6px calc(5px + env(safe-area-inset-bottom, 0px));
+  }
+  .tlc-atomic .tlc-cockpit-primary {width:100%;height:40px;}
+  .tlc-atomic .tlc-cockpit-primary>button {height:38px;}
+  .tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-play {flex:1;min-width:80px;}
+  .tlc-atomic .tlc-cockpit-primary>.tlc-cockpit-reset {width:40px;padding:0;}
+  .tlc-atomic .tlc-cockpit-speed {flex:1;justify-content:space-around;height:38px;}
+  .tlc-atomic .tlc-cockpit-speed>span {display:none;}
+  .tlc-atomic .tlc-cockpit-speed button {min-width:30px;padding:4px;}
+  .tlc-atomic .tlc-cockpit-shortcuts {width:100%;flex:1;gap:4px;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button {height:43px;flex:1;min-width:0;padding:3px 0;gap:2px;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button svg {width:17px;height:17px;}
+  .tlc-atomic .tlc-cockpit-shortcuts>button span {font-size:8px;}
+  .tlc-atomic .tlc-cockpit-lower-third {bottom:3px;left:4px;right:4px;}
+  .tlc-atomic .tlc-cockpit-ticker {min-height:24px;}
+  .tlc-atomic .tlc-cockpit-ticker>span {font-size:7px;padding:0 6px;}
+  .tlc-atomic .tlc-cockpit-ticker strong {font-size:9px;padding:0 7px;}
+  .tlc-atomic .tlc-cockpit-hype {font-size:8px;padding:0 5px;}
+  .tlc-atomic .tlc-cockpit-panel {left:5px;right:5px;width:auto;max-height:calc(var(--tlc-visible-height) - var(--tlc-dock-height) - 47px);}
+}
+/* Fold in short landscape, or browser with large bars. Do not let scorebug
+   and controls expand and push any button underneath the taskbar. */
+.tlc-app.tlc-one-screen.tlc-atomic.tlc-compact-viewport {
+  --tlc-dock-height:calc(59px + env(safe-area-inset-bottom, 0px));
+  grid-template-rows:42px minmax(0,1fr);
+}
+.tlc-atomic.tlc-compact-viewport .tlc-cockpit-header {height:42px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atomic-scoreboard {flex-basis:69px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-scorebar,
+.tlc-atomic.tlc-compact-viewport .tlc-atom-score-footer {display:none;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-emblem {display:none;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-team {padding:3px 7px;gap:4px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-team-score strong {font-size:35px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-team-id strong {font-size:20px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-team-kicker {font-size:7px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-team-meta {font-size:7px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-match-clock {font-size:27px;}
+.tlc-atomic.tlc-compact-viewport .tlc-atom-phase {font-size:7px;}
+.tlc-atomic.tlc-compact-viewport .tlc-cockpit-main {padding:4px;}
+.tlc-atomic.tlc-compact-viewport .tlc-cockpit-field-top {top:5px;left:5px;right:5px;}
+.tlc-atomic.tlc-compact-viewport .tlc-cockpit-momentum {height:19px;flex-basis:19px;padding:3px 7px;}
+.tlc-atomic.tlc-compact-viewport .tlc-cockpit-ticker {min-height:24px;}
+.tlc-atomic.tlc-compact-viewport .tlc-cockpit-ticker strong {font-size:9px;}
+.tlc-atomic.tlc-compact-viewport .tlc-cockpit-dock {--tlc-dock-height:calc(59px + env(safe-area-inset-bottom, 0px));}
+@media(max-width:640px) {
+  .tlc-app.tlc-one-screen.tlc-atomic.tlc-compact-viewport {--tlc-dock-height:calc(96px + env(safe-area-inset-bottom, 0px));}
+  .tlc-atomic.tlc-compact-viewport .tlc-cockpit-dock {
+    --tlc-dock-height:calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+  .tlc-atomic.tlc-compact-viewport .tlc-atom-team-meta {display:none;}
+}
+.tlc-app.tlc-one-screen.tlc-atomic.tlc-tiny-viewport {--tlc-dock-height:calc(56px + env(safe-area-inset-bottom, 0px));grid-template-rows:38px minmax(0,1fr);}
+.tlc-atomic.tlc-tiny-viewport .tlc-cockpit-header {height:38px;}
+.tlc-atomic.tlc-tiny-viewport .tlc-atomic-scoreboard {flex-basis:61px;}
+.tlc-atomic.tlc-tiny-viewport .tlc-atom-team-id strong {font-size:18px;}
+.tlc-atomic.tlc-tiny-viewport .tlc-atom-team-score strong {font-size:29px;}
+.tlc-atomic.tlc-tiny-viewport .tlc-atom-team-meta {display:none;}
+.tlc-atomic.tlc-tiny-viewport .tlc-atom-match-clock {font-size:25px;}
+.tlc-atomic.tlc-tiny-viewport .tlc-cockpit-dock {--tlc-dock-height:calc(56px + env(safe-area-inset-bottom, 0px));}
+@media(max-width:640px) {
+  .tlc-app.tlc-one-screen.tlc-atomic.tlc-tiny-viewport {--tlc-dock-height:calc(91px + env(safe-area-inset-bottom, 0px));}
+  .tlc-atomic.tlc-tiny-viewport .tlc-cockpit-dock {
+    --tlc-dock-height:calc(91px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media(prefers-reduced-motion:reduce){
+ .tlc-atomic .tlc-cockpit-ticker,
+ .tlc-atomic .tlc-cockpit-momentum-track>div {transition:none;}
+}
+
+/* No health-bar-like meters across the bottom of the mobile battlefield.
+   Relative survival remains available from the Match Center's Stats tab. */
+@media(max-width:1050px) {
+  .tlc-atomic .tlc-cockpit-momentum {display:none;}
+}

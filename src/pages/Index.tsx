@@ -9,6 +9,7 @@ import {
 import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
 import { setSoundEnabled } from "@/lib/battleAudio";
+import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
 import { CROWD_PRESETS } from "@/lib/battleBalance";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
@@ -17,6 +18,7 @@ import "./Index.css";
 import "./BroadcastOverhaul.css";
 import "./OneScreen.css";
 import "./AtomicUpgrade.css";
+import "./AtomicSweep.css";
 
 type Team = "men" | "women";
 type Outcome = Team | "draw";
@@ -67,6 +69,7 @@ const Index = () => {
   const [spotlight, setSpotlight] = useState<Moment | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const panelCloseRef = useRef<HTMLButtonElement>(null);
   const prevStatsRef = useRef<Stats | null>(null);
   const lastLeaderRef = useRef<Team | null>(null);
@@ -76,6 +79,39 @@ const Index = () => {
   const timeRef = useRef(MATCH_DURATION);
   const lastHistoryAtRef = useRef(0);
   const momentIdRef = useRef(0);
+
+  // The in-app Android browser can show less than CSS 100vh. Fit the
+  // complete cockpit — including the dock — to the visual viewport.
+  useEffect(() => {
+    const target = viewportRef.current;
+    if (!target) return;
+    let scheduled = 0;
+    const measure = () => {
+      scheduled = 0;
+      const visual = window.visualViewport;
+      const fit = fitArenaViewport(window.innerHeight, visual?.height, visual?.offsetTop);
+      target.style.setProperty("--tlc-visible-height", fit.height + "px");
+      target.style.setProperty("--tlc-visible-top", fit.top + "px");
+      target.classList.toggle("tlc-compact-viewport", fit.compact);
+      target.classList.toggle("tlc-tiny-viewport", fit.tiny);
+    };
+    const schedule = () => {
+      if (scheduled) cancelAnimationFrame(scheduled);
+      scheduled = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener("resize", schedule);
+    window.addEventListener("orientationchange", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("scroll", schedule);
+    return () => {
+      if (scheduled) cancelAnimationFrame(scheduled);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("orientationchange", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("scroll", schedule);
+    };
+  }, []);
 
   const selectedPreset = useMemo(() => PRESETS.find(p => p.id === presetId) || PRESETS[0], [presetId]);
   const menStrength = menArmySize ? stats.menAlive / menArmySize : 0;
@@ -328,7 +364,7 @@ const Index = () => {
 
 
   return (
-    <div className="tlc-app tlc-one-screen tlc-atomic">
+    <div ref={viewportRef} className="tlc-app tlc-one-screen tlc-atomic">
       <header className="tlc-cockpit-header">
         <div className="tlc-cockpit-brand">
           <span className="tlc-cockpit-monogram">TLC</span>
@@ -339,13 +375,13 @@ const Index = () => {
           <span className="tlc-broadcast-disclaimer">LOCAL SIMULATION</span>
         </div>
         <div className="tlc-cockpit-header-actions">
-          <button type="button" title="Toggle broadcast-only camera" aria-label="Toggle spectator camera" aria-pressed={spectatorMode} className={spectatorMode ? "active" : ""} onClick={() => setSpectatorMode(v => !v)}>{spectatorMode ? <Eye size={17} /> : <EyeOff size={17} />}</button>
+          <button type="button" title={spectatorMode ? "Show broadcast graphics" : "Focus on the arena"} aria-label={spectatorMode ? "Show broadcast graphics" : "Hide broadcast graphics for focus view"} aria-pressed={spectatorMode} className={spectatorMode ? "active" : ""} onClick={() => setSpectatorMode(v => !v)}>{spectatorMode ? <Eye size={17} /> : <EyeOff size={17} />}</button>
           <button type="button" title="Fullscreen game" aria-label="Toggle fullscreen" onClick={toggleFullscreen}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button>
         </div>
       </header>
 
       <div className="tlc-cockpit-shell" ref={stageRef}>
-        <main className={spectatorMode ? "tlc-cockpit-main spectator" : "tlc-cockpit-main"}>
+        <main className={spectatorMode ? "tlc-cockpit-main spectator focus" : "tlc-cockpit-main"}>
           <section className="tlc-cockpit-arena" aria-label="Live battle arena">
             <AtomicScoreboard
               men={{ alive: stats.menAlive, initial: menArmySize, kills: stats.menKills }}
@@ -366,13 +402,13 @@ const Index = () => {
                 onStatsUpdate={handleStats} onPhaseChange={handlePhase}
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
-              <div className="tlc-cockpit-field-top"><span><Radio size={12} /> ATOMIC CAM 01</span><span>{phaseLabel} · {battleSpeed}×</span></div>
+              <div className="tlc-cockpit-field-top"><span><Radio size={12} /> FIELD CAM / 3D</span><span>{battleSpeed}× PACE</span></div>
               {spotlight && <div key={spotlight.id} className={"tlc-cockpit-spotlight " + (spotlight.team || "")} aria-live="polite"><span>{spotlight.icon}</span><div><strong>{spotlight.title}</strong><small>{spotlight.detail}</small></div></div>}
               {!isRunning && !winner && <div className="tlc-cockpit-idle">
                 <div className="tlc-cockpit-idle-inner"><span>✦ TLC ATOMIC / MAIN EVENT</span><h1>{startedRef.current ? "MATCH PAUSED" : "LET THEM BATTLE."}</h1><p>{startedRef.current ? "Resume where you left off." : "Two teams. One arena. You control the chaos."}</p><button onClick={handleStart}><Play size={16} fill="currentColor" /> {startedRef.current ? "RESUME MATCH" : "START MATCH"}</button></div>
               </div>}
               <div className="tlc-cockpit-lower-third">
-                <div className="tlc-cockpit-ticker"><span>ATOMIC FEED</span><strong aria-live="polite">{quip}</strong></div>
+                <div className="tlc-cockpit-ticker"><span>LIVE FEED</span><strong aria-live="polite">{quip}</strong></div>
                 <div className="tlc-cockpit-hype"><Flame size={12} /> {hype}%</div>
               </div>
             </div>
@@ -424,7 +460,7 @@ const Index = () => {
               <label><span><Radio size={18}/> VOICE COMMENTARY</span><input type="checkbox" checked={narratorEnabled} onChange={e => setNarratorEnabled(e.target.checked)}/></label>
               <label><span><Shield size={18}/> REDUCED FLASH & SHAKE</span><input type="checkbox" checked={reducedMotion} onChange={e => setReducedMotion(e.target.checked)}/></label>
               <div className="tlc-cockpit-settings-row"><span>PLAYBACK PACE</span><div>{[0.25,0.5,0.75,1,1.5].map(speed => <button className={battleSpeed===speed?"active":""} key={speed} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}</div></div>
-              <button className="tlc-cockpit-settings-action" onClick={() => setSpectatorMode(v=>!v)}>{spectatorMode ? <Eye size={17}/> : <EyeOff size={17}/>} {spectatorMode?"SHOW MATCH CENTER":"SPECTATOR CAMERA"}</button>
+              <button className="tlc-cockpit-settings-action" onClick={() => setSpectatorMode(v=>!v)}>{spectatorMode ? <Eye size={17}/> : <EyeOff size={17}/>} {spectatorMode?"SHOW BROADCAST GRAPHICS":"FOCUS ON THE ARENA"}</button>
               <button className="tlc-cockpit-settings-action" onClick={toggleFullscreen}>{fullscreen?<Minimize2 size={17}/>:<Maximize2 size={17}/>} {fullscreen?"EXIT FULLSCREEN":"ENTER FULLSCREEN"}</button>
               <small>All matches run locally. No account, real online audience, or multiplayer connection is implied.</small>
             </div>}
