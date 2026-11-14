@@ -55,9 +55,6 @@ function TeamScore({
         <strong aria-label={`${name}: ${number(data.alive)} fighters standing`}>{number(data.alive)}</strong>
         <small>STANDING</small>
       </div>
-      <div className="tlc-atom-team-survival" aria-label={`${name} survival: ${surviving.toFixed(0)} percent`}>
-        <span style={{ width: surviving + "%" }} />
-      </div>
     </div>
   );
 }
