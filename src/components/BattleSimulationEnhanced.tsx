@@ -12,7 +12,7 @@ import { createSpatialHashGrid, resizeGrid, type SpatialHashGrid } from "@/lib/s
 import { createParticlePool, updateParticles, renderParticles, spawnConfetti, spawnMeteorImpact, spawnClashShockwave, clearParticles, type ParticlePool } from "@/lib/particlePool";
 import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysicsV4";
 import { renderUnits } from "@/lib/spriteRenderer";
-import { createPixiUnitLayer, renderPixiUnits, resizePixiLayer, destroyPixiLayer, type PixiUnitLayer } from "@/lib/pixiUnitRenderer";
+import type { StickFigure3DLayer } from "@/lib/stickFigure3DRenderer";
 import { playKills, playBell } from "@/lib/battleAudio";
 
 type BattleSimulationProps = {
@@ -55,7 +55,8 @@ const BattleSimulation = ({
   const lastStatsRef = useRef<{ menAlive: number; womenAlive: number } | null>(null);
   const lastUiPushRef = useRef(0);
   const arenaCacheRef = useRef<HTMLCanvasElement | null>(null);
-  const pixiRef = useRef<PixiUnitLayer | null>(null);
+  const stick3DRef = useRef<StickFigure3DLayer | null>(null);
+  const stick3DOpsRef = useRef<typeof import("@/lib/stickFigure3DRenderer") | null>(null);
   const camRef = useRef({ x: 0, y: 0, zoom: 1 });
   const clashPointRef = useRef({ x: 0, y: 0 });
   const stepFnRef = useRef<(dt: number) => void>(() => {});
@@ -100,7 +101,9 @@ const BattleSimulation = ({
       c.style.width = `${w}px`; c.style.height = `${h}px`;
       c.width = Math.floor(w * dpr); c.height = Math.floor(h * dpr);
     }
-    if (pixiRef.current) resizePixiLayer(pixiRef.current, w, h);
+    if (stick3DRef.current && stick3DOpsRef.current) {
+      stick3DOpsRef.current.resizeStickFigure3DLayer(stick3DRef.current, w, h);
+    }
     logicalSizeRef.current = { width: w, height: h };
     return { width: w, height: h };
   }, []);
@@ -601,9 +604,13 @@ const BattleSimulation = ({
     ctx.fillRect(0, 0, width, height);
     ctx.save(); applyCam(ctx); ctx.drawImage(arena, 0, 0, width, height); ctx.restore();
 
-    // Layer 2: units on GPU (fallback to 2D if Pixi unavailable)
-    if (pixiRef.current) {
-      renderPixiUnits(pixiRef.current, soaRef.current, phase, { x: camX, y: camY, zoom: cam.zoom, w: width, h: height });
+    // Layer 2: genuine 3D instanced human rigs; 2D human stick fallback.
+    if (stick3DRef.current && stick3DOpsRef.current) {
+      stick3DOpsRef.current.renderStickFigure3DLayer(
+        stick3DRef.current, soaRef.current,
+        { x: camX, y: camY, zoom: cam.zoom, w: width, h: height },
+        reducedMotionRef.current, performance.now() / 1000
+      );
     } else {
       ctx.save(); applyCam(ctx); renderUnits(ctx, soaRef.current, false, 0, false, phase); ctx.restore();
     }
@@ -657,18 +664,39 @@ const BattleSimulation = ({
   stepFnRef.current = stepBattle;
   renderFnRef.current = renderBattle;
 
-  // Pixi GPU layer
+  // Lazily load real 3D fighter meshes. Keep the battlefield playable on
+  // older devices by drawing human stick figures on Canvas 2D if WebGL fails.
   useEffect(() => {
-    const c = unitCanvasRef.current;
-    if (!c) return;
-    let layer: PixiUnitLayer | null = null;
+    const canvas = unitCanvasRef.current;
+    if (!canvas) return;
     let cancelled = false;
-    const { width, height } = logicalSizeRef.current;
-    createPixiUnitLayer(c, width, height)
-      .then(l => { if (cancelled) destroyPixiLayer(l); else { layer = l; pixiRef.current = l; } })
-      .catch(err => console.warn('PixiJS unavailable, using 2D fallback', err));
-    return () => { cancelled = true; pixiRef.current = null; if (layer) destroyPixiLayer(layer); };
-  }, []);
+    let ownedLayer: StickFigure3DLayer | null = null;
+    import("@/lib/stickFigure3DRenderer")
+      .then(ops => {
+        if (cancelled) return;
+        try {
+          const { width, height } = logicalSizeRef.current;
+          ownedLayer = ops.createStickFigure3DLayer(canvas, width, height, menArmySize + womenArmySize);
+          if (cancelled) {
+            ops.destroyStickFigure3DLayer(ownedLayer);
+            return;
+          }
+          stick3DOpsRef.current = ops;
+          stick3DRef.current = ownedLayer;
+        } catch (error) {
+          console.warn("3D fighters unavailable; using 2D human stick figures", error);
+        }
+      })
+      .catch(error => console.warn("3D fighter renderer could not load; using 2D fallback", error));
+    return () => {
+      cancelled = true;
+      if (ownedLayer && stick3DOpsRef.current) {
+        stick3DOpsRef.current.destroyStickFigure3DLayer(ownedLayer);
+      }
+      stick3DRef.current = null;
+      stick3DOpsRef.current = null;
+    };
+  }, [menArmySize, womenArmySize]);
 
   useEffect(() => { initCanvas(); }, [initCanvas]);
 
