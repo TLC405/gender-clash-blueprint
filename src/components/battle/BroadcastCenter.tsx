@@ -35,7 +35,7 @@ interface BroadcastCenterProps {
   matchDuration: number;
   phase: BattlePhase;
   isRunning: boolean;
-  winner: "men" | "women" | null;
+  winner: "men" | "women" | "draw" | null;
   battleSpeed: number;
   hype: number;
 }
