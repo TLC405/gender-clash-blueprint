@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TEAM_BALANCE, CROWD_PRESETS } from './battleBalance';
 import { createBattleSoA, initializeUnits, MAX_UNITS, TEAM_MEN, TEAM_WOMEN, FLAG_ALIVE } from './battleSoA';
 import { createSpatialHashGrid, findNearestEnemy, rebuildGrid, resizeGrid } from './spatialHash';
 import { createParticlePool } from './particlePool';
@@ -25,8 +26,8 @@ describe('Atomic V4 engine and spatial indexing', () => {
     for (let t = 0; t < 20; t++) {
       updatePhysics(soa, grid, pool, DEFAULT_CONFIG, 'stand', 1 / 60, 500, 300, 0.5);
     }
-    expect(soa.health[0]).toBe(100);
-    expect(soa.health[1]).toBe(100);
+    expect(soa.health[0]).toBe(TEAM_BALANCE.men.maxHealth);
+    expect(soa.health[1]).toBe(TEAM_BALANCE.women.maxHealth);
     expect(soa.menCount).toBe(1);
     expect(soa.womenCount).toBe(1);
   });
@@ -140,4 +141,45 @@ describe('Atomic V4 engine and spatial indexing', () => {
     expect(soa.menCount).toBe(MAX_UNITS / 2);
     expect(soa.womenCount).toBe(MAX_UNITS / 2);
   });
+
+  it('configures every match with women outnumbering men', () => {
+    for (const preset of CROWD_PRESETS) {
+      expect(preset.women).toBeGreaterThan(preset.men);
+      expect(preset.men + preset.women).toBeLessThanOrEqual(MAX_UNITS);
+    }
+  });
+
+  it('gives each male game unit higher hit points, damage and collision mass', () => {
+    expect(TEAM_BALANCE.men.maxHealth).toBeGreaterThan(TEAM_BALANCE.women.maxHealth);
+    expect(TEAM_BALANCE.men.damageMultiplier).toBeGreaterThan(TEAM_BALANCE.women.damageMultiplier);
+    expect(TEAM_BALANCE.men.mass).toBeGreaterThan(TEAM_BALANCE.women.mass);
+    const { soa } = newBattle(2, 3);
+    expect(soa.health[0]).toBe(TEAM_BALANCE.men.maxHealth);
+    expect(soa.health[2]).toBe(TEAM_BALANCE.women.maxHealth);
+  });
+
+  it('has slower attrition than old instant knockouts even in direct melee', () => {
+    const { soa, grid, pool } = newBattle();
+    soa.posX[0] = 100; soa.posX[1] = 108;
+    soa.posY[0] = 100; soa.posY[1] = 100;
+    for (let t = 0; t < 120; t++) {
+      updatePhysics(soa, grid, pool, DEFAULT_CONFIG, 'melee', 1 / 60, 500, 300, 0.5);
+    }
+    expect(soa.menCount).toBe(1);
+    expect(soa.womenCount).toBe(1);
+  });
+
+  it('applies a stronger per-step attack to a man and readable impact stagger', () => {
+    const { soa, grid, pool } = newBattle();
+    soa.posX[0] = 100; soa.posX[1] = 106;
+    soa.posY[0] = 100; soa.posY[1] = 100;
+    updatePhysics(soa, grid, pool, DEFAULT_CONFIG, 'melee', 1 / 60, 500, 300, 1);
+    const menLoss = TEAM_BALANCE.men.maxHealth - soa.health[0];
+    const womenLoss = TEAM_BALANCE.women.maxHealth - soa.health[1];
+    expect(womenLoss).toBeGreaterThan(menLoss);
+    expect(soa.stagger[0]).toBeGreaterThan(0);
+    expect(soa.stagger[1]).toBeGreaterThan(0);
+    expect(Number.isFinite(soa.posX[0] + soa.posX[1])).toBe(true);
+  });
+
 });
