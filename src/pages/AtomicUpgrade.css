@@ -434,3 +434,10 @@
   .tlc-atomic-modes .tlc-mode-page{padding-top:28px;}
   .tlc-atomic-modes .tlc-mode-grid{gap:10px;}
 }
+
+.tlc-atomic .tlc-cockpit-shortcuts>button.armed {
+  border-color:#d8a36a;
+  color:#ffdbb1;
+  box-shadow:inset 0 1px #fff4,0 0 0 1px #d9a26c33;
+}
+.tlc-atomic .tlc-cockpit-shortcuts>button.armed svg { color:#ffc488; }
