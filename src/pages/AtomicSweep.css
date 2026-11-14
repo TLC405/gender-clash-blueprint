@@ -414,3 +414,9 @@
  .tlc-atomic .tlc-cockpit-ticker,
  .tlc-atomic .tlc-cockpit-momentum-track>div {transition:none;}
 }
+
+/* No health-bar-like meters across the bottom of the mobile battlefield.
+   Relative survival remains available from the Match Center's Stats tab. */
+@media(max-width:1050px) {
+  .tlc-atomic .tlc-cockpit-momentum {display:none;}
+}
