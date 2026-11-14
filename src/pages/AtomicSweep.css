@@ -285,6 +285,7 @@
 /* Tablet/Fold expanded: dedicate the whole width to the battle, with
    Match Center available via the Stats dock action. */
 @media(max-width:1050px) {
+  .tlc-atomic .tlc-cockpit-header-center {display:none;}
   .tlc-atomic .tlc-cockpit-main {grid-template-columns:minmax(0,1fr);}
   .tlc-atomic .tlc-cockpit-right {display:none;}
   .tlc-atomic .tlc-cockpit-shortcuts>button {min-width:55px;padding:4px 7px;}
@@ -367,6 +368,7 @@
 /* Fold in short landscape, or browser with large bars. Do not let scorebug
    and controls expand and push any button underneath the taskbar. */
 .tlc-app.tlc-one-screen.tlc-atomic.tlc-compact-viewport {
+  --tlc-dock-height:calc(59px + env(safe-area-inset-bottom, 0px));
   grid-template-rows:42px minmax(0,1fr);
 }
 .tlc-atomic.tlc-compact-viewport .tlc-cockpit-header {height:42px;}
@@ -388,12 +390,13 @@
 .tlc-atomic.tlc-compact-viewport .tlc-cockpit-ticker strong {font-size:9px;}
 .tlc-atomic.tlc-compact-viewport .tlc-cockpit-dock {--tlc-dock-height:calc(59px + env(safe-area-inset-bottom, 0px));}
 @media(max-width:640px) {
+  .tlc-app.tlc-one-screen.tlc-atomic.tlc-compact-viewport {--tlc-dock-height:calc(96px + env(safe-area-inset-bottom, 0px));}
   .tlc-atomic.tlc-compact-viewport .tlc-cockpit-dock {
     --tlc-dock-height:calc(96px + env(safe-area-inset-bottom, 0px));
   }
   .tlc-atomic.tlc-compact-viewport .tlc-atom-team-meta {display:none;}
 }
-.tlc-app.tlc-one-screen.tlc-atomic.tlc-tiny-viewport {grid-template-rows:38px minmax(0,1fr);}
+.tlc-app.tlc-one-screen.tlc-atomic.tlc-tiny-viewport {--tlc-dock-height:calc(56px + env(safe-area-inset-bottom, 0px));grid-template-rows:38px minmax(0,1fr);}
 .tlc-atomic.tlc-tiny-viewport .tlc-cockpit-header {height:38px;}
 .tlc-atomic.tlc-tiny-viewport .tlc-atomic-scoreboard {flex-basis:61px;}
 .tlc-atomic.tlc-tiny-viewport .tlc-atom-team-id strong {font-size:18px;}
@@ -402,6 +405,7 @@
 .tlc-atomic.tlc-tiny-viewport .tlc-atom-match-clock {font-size:25px;}
 .tlc-atomic.tlc-tiny-viewport .tlc-cockpit-dock {--tlc-dock-height:calc(56px + env(safe-area-inset-bottom, 0px));}
 @media(max-width:640px) {
+  .tlc-app.tlc-one-screen.tlc-atomic.tlc-tiny-viewport {--tlc-dock-height:calc(91px + env(safe-area-inset-bottom, 0px));}
   .tlc-atomic.tlc-tiny-viewport .tlc-cockpit-dock {
     --tlc-dock-height:calc(91px + env(safe-area-inset-bottom, 0px));
   }
