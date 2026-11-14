@@ -11,9 +11,11 @@ import BattleSimulation from "@/components/BattleSimulationEnhanced";
 import { setSoundEnabled } from "@/lib/battleAudio";
 import type { BattlePhase } from "@/lib/battlePhysics";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
+import AtomicScoreboard from "@/components/battle/AtomicScoreboard";
 import "./Index.css";
 import "./BroadcastOverhaul.css";
 import "./OneScreen.css";
+import "./AtomicUpgrade.css";
 
 type Team = "men" | "women";
 type Stats = { menAlive: number; womenAlive: number; menKills: number; womenKills: number };
@@ -63,6 +65,7 @@ const Index = () => {
   const [spotlight, setSpotlight] = useState<Moment | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
+  const panelCloseRef = useRef<HTMLButtonElement>(null);
   const prevStatsRef = useRef<Stats | null>(null);
   const lastLeaderRef = useRef<Team | null>(null);
   const milestoneRef = useRef(new Set<number>());
@@ -79,6 +82,16 @@ const Index = () => {
   const elapsed = Math.max(0, MATCH_DURATION - timeRemaining);
   const isLive = isRunning && !winner;
   const phaseLabel = phase === "stand" ? "THE STANDOFF" : phase === "melee" ? "ALL-OUT MAYHEM" : phase === "sudden_death" ? "FINAL SHOWDOWN" : "MATCH COMPLETE";
+
+  useEffect(() => {
+    if (!activePanel) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActivePanel(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    panelCloseRef.current?.focus();
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activePanel]);
 
   useEffect(() => { setSoundEnabled(soundEnabled); }, [soundEnabled]);
   useEffect(() => {
@@ -306,11 +319,11 @@ const Index = () => {
 
 
   return (
-    <div className="tlc-app tlc-one-screen">
+    <div className="tlc-app tlc-one-screen tlc-atomic">
       <header className="tlc-cockpit-header">
         <div className="tlc-cockpit-brand">
           <span className="tlc-cockpit-monogram">TLC</span>
-          <div className="tlc-cockpit-brandcopy"><strong>BATTLE<span>CAST</span></strong><small>MEN VS WOMEN · ATOMIC LEAGUE</small></div>
+          <div className="tlc-cockpit-brandcopy"><strong>BATTLE<span>CAST</span></strong><small>THE ATOMIC EDITION / 2026</small></div>
         </div>
         <div className="tlc-cockpit-header-center">
           <span className={isLive ? "tlc-onair live" : "tlc-onair"}><i /> {winner ? "FINAL" : isLive ? "SIM LIVE" : startedRef.current ? "PAUSED" : "PRE-MATCH"}</span>
@@ -325,19 +338,15 @@ const Index = () => {
       <div className="tlc-cockpit-shell" ref={stageRef}>
         <main className={spectatorMode ? "tlc-cockpit-main spectator" : "tlc-cockpit-main"}>
           <section className="tlc-cockpit-arena" aria-label="Live battle arena">
-            <div className="tlc-cockpit-score" aria-label="Live matchup score">
-              <div className="tlc-score-unit men">
-                <span className="tlc-score-team-icon">♂</span>
-                <div className="tlc-score-detail"><span>BLUE CORNER</span><strong>MEN</strong><small>{fmt(stats.menKills)} KOs · {Math.round(menStrength * 100)}% survive</small></div>
-                <b>{fmt(stats.menAlive)}</b>
-              </div>
-              <div className="tlc-cockpit-clock"><span>{winner ? "FINAL" : isLive ? "LIVE" : phase === "stand" ? "READY" : "PAUSED"}</span><strong>{clock(timeRemaining)}</strong><small>{selectedPreset.name}</small></div>
-              <div className="tlc-score-unit women">
-                <b>{fmt(stats.womenAlive)}</b>
-                <div className="tlc-score-detail"><span>PINK CORNER</span><strong>WOMEN</strong><small>{fmt(stats.womenKills)} KOs · {Math.round(womenStrength * 100)}% survive</small></div>
-                <span className="tlc-score-team-icon">♀</span>
-              </div>
-            </div>
+            <AtomicScoreboard
+              men={{ alive: stats.menAlive, initial: menArmySize, kills: stats.menKills }}
+              women={{ alive: stats.womenAlive, initial: womenArmySize, kills: stats.womenKills }}
+              phase={phase}
+              isRunning={isRunning}
+              winner={winner}
+              timeRemaining={timeRemaining}
+              presetName={selectedPreset.name}
+            />
             <div className="tlc-cockpit-field">
               <BattleSimulation
                 key={battleKey}
@@ -348,13 +357,13 @@ const Index = () => {
                 onStatsUpdate={handleStats} onPhaseChange={handlePhase}
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
-              <div className="tlc-cockpit-field-top"><span><Radio size={12} /> CAM 01 / ARENA</span><span>{phaseLabel}</span></div>
+              <div className="tlc-cockpit-field-top"><span><Radio size={12} /> ATOMIC CAM 01</span><span>{phaseLabel} · {battleSpeed}×</span></div>
               {spotlight && <div key={spotlight.id} className={"tlc-cockpit-spotlight " + (spotlight.team || "")} aria-live="polite"><span>{spotlight.icon}</span><div><strong>{spotlight.title}</strong><small>{spotlight.detail}</small></div></div>}
               {!isRunning && !winner && <div className="tlc-cockpit-idle">
-                <div className="tlc-cockpit-idle-inner"><span>✦ TLC MAIN EVENT</span><h1>{startedRef.current ? "MATCH PAUSED" : "LET THEM BATTLE."}</h1><p>{startedRef.current ? "Resume where you left off." : "Two teams. One arena. You control the chaos."}</p><button onClick={handleStart}><Play size={16} fill="currentColor" /> {startedRef.current ? "RESUME MATCH" : "START MATCH"}</button></div>
+                <div className="tlc-cockpit-idle-inner"><span>✦ TLC ATOMIC / MAIN EVENT</span><h1>{startedRef.current ? "MATCH PAUSED" : "LET THEM BATTLE."}</h1><p>{startedRef.current ? "Resume where you left off." : "Two teams. One arena. You control the chaos."}</p><button onClick={handleStart}><Play size={16} fill="currentColor" /> {startedRef.current ? "RESUME MATCH" : "START MATCH"}</button></div>
               </div>}
               <div className="tlc-cockpit-lower-third">
-                <div className="tlc-cockpit-ticker"><span>GAME FEED</span><strong aria-live="polite">{quip}</strong></div>
+                <div className="tlc-cockpit-ticker"><span>ATOMIC FEED</span><strong aria-live="polite">{quip}</strong></div>
                 <div className="tlc-cockpit-hype"><Flame size={12} /> {hype}%</div>
               </div>
             </div>
@@ -371,11 +380,11 @@ const Index = () => {
 
         <footer className="tlc-cockpit-dock" aria-label="Battle controls">
           <div className="tlc-cockpit-primary">
-            <button className={isRunning ? "tlc-cockpit-play pause" : "tlc-cockpit-play"} onClick={handleStart} disabled={Boolean(winner)}>
+            <button type="button" className={isRunning ? "tlc-cockpit-play pause" : "tlc-cockpit-play"} onClick={handleStart} disabled={Boolean(winner)} aria-label={isRunning ? "Pause the battle" : "Start or resume the battle"}>
               {isRunning ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
               <span>{isRunning ? "PAUSE" : startedRef.current ? "RESUME" : "START"}</span>
             </button>
-            <button className="tlc-cockpit-reset" onClick={() => resetBattle(menArmySize, womenArmySize)} title="Reset match"><RotateCcw size={17} /><span>RESET</span></button>
+            <button type="button" className="tlc-cockpit-reset" onClick={() => { setActivePanel(null); resetBattle(menArmySize, womenArmySize); }} title="Reset match" aria-label="Reset match"><RotateCcw size={17} /><span>RESET</span></button>
             <div className="tlc-cockpit-speed" role="group" aria-label="Match playback pace">
               <span>PACE</span>
               {[0.25, 0.5, 1].map(speed => <button key={speed} className={battleSpeed === speed ? "selected" : ""} aria-pressed={battleSpeed === speed} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}
@@ -390,8 +399,8 @@ const Index = () => {
           </div>
         </footer>
 
-        {activePanel && <div className="tlc-cockpit-panel" role="dialog" aria-modal="false" aria-label={activePanel + " controls"}>
-          <div className="tlc-cockpit-panel-head"><div><span>TLC / CONTROL ROOM</span><strong>{activePanel === "modes" ? "CHOOSE A MATCH" : activePanel === "powers" ? "BATTLE POWER-UPS" : activePanel === "stats" ? "MATCH CENTER" : activePanel === "share" ? "SHARE THE MATCH" : "GAME SETTINGS"}</strong></div><button aria-label="Close panel" onClick={() => setActivePanel(null)}>✕</button></div>
+        {activePanel && <><button className="tlc-atomic-shade" type="button" aria-label="Close controls panel" onClick={() => setActivePanel(null)} /><div className="tlc-cockpit-panel" role="dialog" aria-modal="true" aria-label={activePanel + " controls"}>
+          <div className="tlc-cockpit-panel-head"><div><span>TLC / CONTROL ROOM</span><strong>{activePanel === "modes" ? "CHOOSE A MATCH" : activePanel === "powers" ? "BATTLE POWER-UPS" : activePanel === "stats" ? "MATCH CENTER" : activePanel === "share" ? "SHARE THE MATCH" : "GAME SETTINGS"}</strong></div><button ref={panelCloseRef} type="button" aria-label="Close panel" onClick={() => setActivePanel(null)}>✕</button></div>
           <div className="tlc-cockpit-panel-body">
             {activePanel === "modes" && <div className="tlc-cockpit-mode-list">{PRESETS.map(p => <button key={p.id} className={presetId === p.id ? "selected" : ""} onClick={() => { if(isRunning){toast.info("Pause the match before switching modes.");return;} applyPreset(p);setActivePanel(null); }}><span className="tlc-cockpit-mode-emoji">{p.icon}</span><span><strong>{p.name}</strong><small>{p.men.toLocaleString()} vs {p.women.toLocaleString()} · {p.tagline}</small></span><span className="tlc-cockpit-mode-select">{presetId === p.id ? "ACTIVE" : "SELECT"}</span></button>)}</div>}
             {activePanel === "powers" && <div className="tlc-cockpit-power-grid">
@@ -416,7 +425,7 @@ const Index = () => {
               <button onClick={exportLog}><Download size={19}/><span><strong>EXPORT MATCH LOG</strong><small>Download factual play-by-play as JSON</small></span></button>
             </div>}
           </div>
-        </div>}
+        </div></>}
       </div>
 
       {winner && <div className="tlc-cockpit-victory-backdrop" role="dialog" aria-modal="true" aria-label="Battle results">
