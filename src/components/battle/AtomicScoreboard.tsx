@@ -17,7 +17,7 @@ interface AtomicScoreboardProps {
   women: TeamScoreData;
   phase: BattlePhase;
   isRunning: boolean;
-  winner: "men" | "women" | null;
+  winner: "men" | "women" | "draw" | null;
   timeRemaining: number;
   presetName: string;
 }
