@@ -364,3 +364,73 @@
   .tlc-atomic button,.tlc-atom-team-survival span {transition:none;}
   .tlc-atomic .tlc-cockpit-panel {animation:none;}
 }
+
+/* Atomic mode-select surface: entry point and deep-link routes use the same materials. */
+.tlc-atomic-modes {
+  min-height:100dvh;
+  background-color:#0c1119;
+  background-image:repeating-linear-gradient(90deg,transparent 0 31px,#ffffff05 32px,transparent 33px);
+}
+.tlc-atomic-modes .tlc-topbar {
+  background:#111924;
+  border-bottom:1px solid #556276;
+  box-shadow:inset 0 -1px #ffffff16;
+}
+.tlc-atomic-modes .tlc-brand-symbol {
+  background:#bd3848;
+  border:1px solid #f68e97;
+  color:white;
+  box-shadow:inset 0 1px #ffffff26,0 4px 9px #0008;
+  clip-path:none;
+  border-radius:3px;
+}
+.tlc-atomic-modes .tlc-brand-title strong{color:#ef7783;}
+.tlc-atomic-modes .tlc-brand-subtitle span{color:#f88e95;}
+.tlc-atomic-modes .tlc-topbar>.tlc-utility {
+  background:#1d2b3e;border:1px solid #53657a;border-radius:3px;
+  color:#e8eff7;padding:11px 13px;
+  box-shadow:inset 0 1px #ffffff15;
+}
+.tlc-atomic-modes .tlc-mode-page {padding-top:clamp(27px,6vw,70px);padding-bottom:70px;}
+.tlc-atomic-modes .tlc-mode-page>.tlc-eyebrow{color:#ee8088;}
+.tlc-atomic-modes .tlc-mode-page>h1 {letter-spacing:-1px;}
+.tlc-atomic-modes .tlc-mode-page>h1 span{color:#f47b87;}
+.tlc-atomic-modes .tlc-mode-description{color:#b1c0d0;max-width:650px;}
+.tlc-atomic-modes .tlc-mode-grid{gap:12px;}
+.tlc-atomic-modes .tlc-mode-card {
+  background:#182537;
+  border:1px solid #526377;
+  border-radius:5px;
+  box-shadow:inset 0 1px #ffffff1b,inset 0 -4px #0004,0 10px 20px #0004;
+  overflow:hidden;
+}
+.tlc-atomic-modes .tlc-mode-card:before {
+  opacity:.6;
+  background:repeating-linear-gradient(110deg,transparent 0 18px,#ffffff07 19px,transparent 20px);
+}
+.tlc-atomic-modes .tlc-mode-card.blue{border-top:3px solid #6fb8ec;}
+.tlc-atomic-modes .tlc-mode-card.pink{border-top:3px solid #eb86b9;}
+.tlc-atomic-modes .tlc-mode-card.gold{border-top:3px solid #ddaf72;}
+.tlc-atomic-modes .tlc-mode-card.purple{border-top:3px solid #a999dd;}
+.tlc-atomic-modes .tlc-mode-card:hover{
+  background:#223448;
+  border-color:#a1aec0;
+  transform:translateY(-3px);
+  box-shadow:inset 0 1px #ffffff22,0 14px 24px #0007;
+}
+.tlc-atomic-modes .tlc-mode-card-top{color:#a7b8c9;}
+.tlc-atomic-modes .tlc-mode-card h2{color:#f7f9fb;}
+.tlc-atomic-modes .tlc-mode-card-size{color:#dfc6ac;}
+.tlc-atomic-modes .tlc-mode-card p{color:#b8c6d5;}
+.tlc-atomic-modes .tlc-mode-card-launch{
+  border-top:1px solid #526175;
+  background:#293b4d;color:#fafbfe;
+}
+.tlc-atomic-modes .tlc-mode-card:hover .tlc-mode-card-launch {background:#ab3949;}
+.tlc-atomic-modes .tlc-mode-note{background:#19283a;border:1px solid #526175;border-radius:4px;color:#aabacc;}
+.tlc-atomic-modes .tlc-mode-note strong{color:#f7e3dd;}
+@media (max-width:640px) {
+  .tlc-atomic-modes .tlc-topbar{height:61px;padding-inline:14px;}
+  .tlc-atomic-modes .tlc-mode-page{padding-top:28px;}
+  .tlc-atomic-modes .tlc-mode-grid{gap:10px;}
+}
