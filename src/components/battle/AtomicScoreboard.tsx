@@ -39,7 +39,6 @@ function TeamScore({
   leading: boolean;
   won: boolean;
 }) {
-  const surviving = percentage(data.alive, data.initial);
   const name = side === "men" ? "MEN" : "WOMEN";
   return (
     <div className={`tlc-atom-team ${side} ${leading ? "leading" : ""} ${won ? "winner" : ""}`}>
@@ -48,7 +47,7 @@ function TeamScore({
         <div className="tlc-atom-team-id">
           <span className="tlc-atom-team-kicker">{side === "men" ? "BLUE CORNER" : "PINK CORNER"}</span>
           <strong>{name}</strong>
-          <span className="tlc-atom-team-meta">{number(data.kills)} KOs <i /> {surviving.toFixed(0)}% REMAIN</span>
+          <span className="tlc-atom-team-meta">{number(data.kills)} KOs <i /> {number(Math.max(0, data.initial - data.alive))} OUT</span>
         </div>
       </div>
       <div className="tlc-atom-team-score">
