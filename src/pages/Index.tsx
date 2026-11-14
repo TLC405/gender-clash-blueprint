@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
 import { setSoundEnabled } from "@/lib/battleAudio";
 import type { BattlePhase } from "@/lib/battlePhysics";
+import { CROWD_PRESETS, TEAM_BALANCE } from "@/lib/battleBalance";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
 import AtomicScoreboard from "@/components/battle/AtomicScoreboard";
 import "./Index.css";
@@ -23,12 +24,7 @@ type Stats = { menAlive: number; womenAlive: number; menKills: number; womenKill
 type Moment = { id: number; at: number; title: string; detail: string; icon: string; team?: Team };
 type Preset = { id: string; name: string; tagline: string; men: number; women: number; speed: number; icon: string };
 
-const PRESETS: Preset[] = [
-  { id: "classic", name: "THE CLASSIC", tagline: "The original 500-on-500 grudge match", men: 500, women: 500, speed: 0.5, icon: "⚔️" },
-  { id: "chaos", name: "TOTAL CHAOS", tagline: "2,400 fighters. Absolutely no chill.", men: 1200, women: 1200, speed: 0.5, icon: "💥" },
-  { id: "upset", name: "THE UPSET", tagline: "350 vs 800. The odds are disrespectful.", men: 350, women: 800, speed: 0.5, icon: "👀" },
-  { id: "last-stand", name: "LAST STAND", tagline: "Small teams. Big main-character energy.", men: 120, women: 120, speed: 0.75, icon: "🔥" },
-];
+const PRESETS: Preset[] = CROWD_PRESETS.map(p => ({ ...p }));
 
 const REACTIONS = ["🔥", "💀", "👑", "😂"];
 const MATCH_DURATION = 240;
@@ -37,14 +33,14 @@ const savedBoolean = (key: string, fallback: boolean): boolean => {
   try { const stored = localStorage.getItem(key); return stored === null ? fallback : stored === "true"; }
   catch { return fallback; }
 };
-const INITIAL_QUIP = "Two teams. One arena. Unlimited bad decisions.";
+const INITIAL_QUIP = "More women. Stronger men. One massive moving frontline.";
 const fmt = (n: number) => Math.max(0, Math.floor(n)).toLocaleString();
 const clock = (seconds: number) => Math.floor(seconds / 60) + ":" + String(Math.floor(seconds % 60)).padStart(2, "0");
 
 const Index = () => {
   const [presetId, setPresetId] = useState("classic");
-  const [menArmySize, setMenArmySize] = useState(500);
-  const [womenArmySize, setWomenArmySize] = useState(500);
+  const [menArmySize, setMenArmySize] = useState(CROWD_PRESETS[0].men);
+  const [womenArmySize, setWomenArmySize] = useState(CROWD_PRESETS[0].women);
   const [battleSpeed, setBattleSpeed] = useState(0.5);
   const [menRage, setMenRage] = useState(false);
   const [womenRage, setWomenRage] = useState(false);
@@ -52,7 +48,7 @@ const Index = () => {
   const [battleKey, setBattleKey] = useState(0);
   const [phase, setPhase] = useState<BattlePhase>("stand");
   const [timeRemaining, setTimeRemaining] = useState(MATCH_DURATION);
-  const [stats, setStats] = useState<Stats>({ menAlive: 500, womenAlive: 500, menKills: 0, womenKills: 0 });
+  const [stats, setStats] = useState<Stats>({ menAlive: CROWD_PRESETS[0].men, womenAlive: CROWD_PRESETS[0].women, menKills: 0, womenKills: 0 });
   const [winner, setWinner] = useState<Outcome | null>(null);
   const [narratorEnabled, setNarratorEnabled] = useState(() => savedBoolean("tlc-atomic-narrator", false));
   const [soundEnabled, setAudioEnabled] = useState(() => savedBoolean("tlc-atomic-sound", true));
@@ -415,7 +411,7 @@ const Index = () => {
         {activePanel && <><button className="tlc-atomic-shade" type="button" aria-label="Close controls panel" onClick={() => setActivePanel(null)} /><div className="tlc-cockpit-panel" role="dialog" aria-modal="true" aria-label={activePanel + " controls"}>
           <div className="tlc-cockpit-panel-head"><div><span>TLC / CONTROL ROOM</span><strong>{activePanel === "modes" ? "CHOOSE A MATCH" : activePanel === "powers" ? "BATTLE POWER-UPS" : activePanel === "stats" ? "MATCH CENTER" : activePanel === "share" ? "SHARE THE MATCH" : "GAME SETTINGS"}</strong></div><button ref={panelCloseRef} type="button" aria-label="Close panel" onClick={() => setActivePanel(null)}>✕</button></div>
           <div className="tlc-cockpit-panel-body">
-            {activePanel === "modes" && <div className="tlc-cockpit-mode-list">{PRESETS.map(p => <button key={p.id} className={presetId === p.id ? "selected" : ""} onClick={() => { if(isRunning){toast.info("Pause the match before switching modes.");return;} applyPreset(p);setActivePanel(null); }}><span className="tlc-cockpit-mode-emoji">{p.icon}</span><span><strong>{p.name}</strong><small>{p.men.toLocaleString()} vs {p.women.toLocaleString()} · {p.tagline}</small></span><span className="tlc-cockpit-mode-select">{presetId === p.id ? "ACTIVE" : "SELECT"}</span></button>)}</div>}
+            {activePanel === "modes" && <><div className="tlc-balance-disclosure"><strong>POWER VS NUMBERS</strong><span>Women outnumber men in every mode. Men: {TEAM_BALANCE.men.maxHealth} HP · {TEAM_BALANCE.men.damageMultiplier}× strike power. Women: {TEAM_BALANCE.women.maxHealth} HP · larger army. Fictional game settings.</span></div><div className="tlc-cockpit-mode-list">{PRESETS.map(p => <button key={p.id} className={presetId === p.id ? "selected" : ""} onClick={() => { if(isRunning){toast.info("Pause the match before switching modes.");return;} applyPreset(p);setActivePanel(null); }}><span className="tlc-cockpit-mode-emoji">{p.icon}</span><span><strong>{p.name}</strong><small>{p.men.toLocaleString()} vs {p.women.toLocaleString()} · {p.tagline}</small></span><span className="tlc-cockpit-mode-select">{presetId === p.id ? "ACTIVE" : "SELECT"}</span></button>)}</div></>}
             {activePanel === "powers" && <div className="tlc-cockpit-power-grid">
               <button className={menRage ? "active men" : "men"} onClick={() => { setMenRage(v => !v);recordMoment(menRage ? "BRO MODE OFF" : "BRO MODE ON",menRage ? "Men return to normal speed." : "Team Men gets a combat boost.","⚡","men"); }}><Flame size={19}/><strong>{menRage ? "BRO MODE ON" : "BRO MODE"}</strong><small>Boost Team Men</small></button>
               <button className={womenRage ? "active women" : "women"} onClick={() => { setWomenRage(v => !v);recordMoment(womenRage ? "QUEEN MODE OFF" : "QUEEN MODE ON",womenRage ? "Women return to normal speed." : "Team Women gets a combat boost.","👑","women"); }}><Crown size={19}/><strong>{womenRage ? "QUEEN MODE ON" : "QUEEN MODE"}</strong><small>Boost Team Women</small></button>
