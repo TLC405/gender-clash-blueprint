@@ -57,10 +57,12 @@ export function resizeGrid(
   grid.gridHeight = Math.ceil(worldHeight / grid.cellSize);
   const newCellCount = grid.gridWidth * grid.gridHeight;
   
+  // cellCount must also shrink when a Fold/phone viewport changes size.
+  // Otherwise clearing visits stale cells and can skew broadphase diagnostics.
   if (newCellCount > grid.cellHead.length) {
     grid.cellHead = new Int32Array(newCellCount);
-    grid.cellCount = newCellCount;
   }
+  grid.cellCount = newCellCount;
 }
 
 /**
@@ -218,23 +220,49 @@ export function findNearestEnemy(
   FLAG_ALIVE: number,
   maxRadiusCells: number = 20
 ): { index: number; distSq: number } {
+  // Ring search: inspect only previously unseen cells. The legacy version
+  // visited a square 51x51 region for EVERY unit, even when an enemy was
+  // directly in front of it. Modern combat callers use a 3-cell sense range.
+  const cx = Math.max(0, Math.min(grid.gridWidth - 1, Math.floor(x / grid.cellSize)));
+  const cy = Math.max(0, Math.min(grid.gridHeight - 1, Math.floor(y / grid.cellSize)));
+  const limit = Math.min(
+    Math.max(0, Math.floor(maxRadiusCells)),
+    Math.max(grid.gridWidth, grid.gridHeight)
+  );
   let nearestIdx = -1;
   let nearestDistSq = Infinity;
-  
-  for (const unitIdx of queryWideRadius(grid, x, y, maxRadiusCells)) {
-    if ((stateFlags[unitIdx] & FLAG_ALIVE) === 0) continue;
-    if (teamID[unitIdx] === myTeam) continue;
-    
-    const dx = posX[unitIdx] - x;
-    const dy = posY[unitIdx] - y;
-    const distSq = dx * dx + dy * dy;
-    
-    if (distSq < nearestDistSq) {
-      nearestDistSq = distSq;
-      nearestIdx = unitIdx;
+
+  for (let ring = 0; ring <= limit; ring++) {
+    const left = Math.max(0, cx - ring);
+    const right = Math.min(grid.gridWidth - 1, cx + ring);
+    const top = Math.max(0, cy - ring);
+    const bottom = Math.min(grid.gridHeight - 1, cy + ring);
+
+    for (let gy = top; gy <= bottom; gy++) {
+      for (let gx = left; gx <= right; gx++) {
+        if (ring > 0 && gx !== cx - ring && gx !== cx + ring &&
+            gy !== cy - ring && gy !== cy + ring) continue;
+
+        let idx = grid.cellHead[gy * grid.gridWidth + gx];
+        while (idx !== -1) {
+          if ((stateFlags[idx] & FLAG_ALIVE) !== 0 && teamID[idx] !== myTeam) {
+            const dx = posX[idx] - x;
+            const dy = posY[idx] - y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < nearestDistSq || (d2 === nearestDistSq && idx < nearestIdx)) {
+              nearestDistSq = d2;
+              nearestIdx = idx;
+            }
+          }
+          idx = grid.cellNext[idx];
+        }
+      }
     }
+
+    // Any cell outside the searched ring is at least ring*cellSize away
+    // in one axis; beyond this threshold no unseen candidate can be closer.
+    if (nearestIdx >= 0 && nearestDistSq <= (ring * grid.cellSize) ** 2) break;
   }
-  
   return { index: nearestIdx, distSq: nearestDistSq };
 }
 
