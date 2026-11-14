@@ -46,6 +46,7 @@ export function getStickMotion(
   const velocity = Math.min(1, Math.max(0, speed / 65));
   const recoil = Math.min(1, Math.max(0, staggerSeconds / 0.35));
   if (reducedMotion) return { stride: 0, lean: 0, recoil: 0 };
+  if (velocity === 0) return { stride: 0, lean: variant.lean - recoil * 1.4, recoil };
   return {
     stride: Math.sin(timeSeconds * (4.5 + velocity * 3.6) + variant.phase) * velocity * variant.stride,
     lean: variant.lean + velocity * 0.35 - recoil * 1.4,
