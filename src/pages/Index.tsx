@@ -39,8 +39,8 @@ const clock = (seconds: number) => Math.floor(seconds / 60) + ":" + String(Math.
 
 const Index = () => {
   const [presetId, setPresetId] = useState("classic");
-  const [menArmySize, setMenArmySize] = useState(CROWD_PRESETS[0].men);
-  const [womenArmySize, setWomenArmySize] = useState(CROWD_PRESETS[0].women);
+  const [menArmySize, setMenArmySize] = useState<number>(CROWD_PRESETS[0].men);
+  const [womenArmySize, setWomenArmySize] = useState<number>(CROWD_PRESETS[0].women);
   const [battleSpeed, setBattleSpeed] = useState(0.5);
   const [menRage, setMenRage] = useState(false);
   const [womenRage, setWomenRage] = useState(false);
