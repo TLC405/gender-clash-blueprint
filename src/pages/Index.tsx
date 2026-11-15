@@ -19,6 +19,7 @@ import "./BroadcastOverhaul.css";
 import "./OneScreen.css";
 import "./AtomicUpgrade.css";
 import "./AtomicSweep.css";
+import "./AudioArena.css";
 
 type Team = "men" | "women";
 type Outcome = Team | "draw";
@@ -402,20 +403,16 @@ const Index = () => {
                 onStatsUpdate={handleStats} onPhaseChange={handlePhase}
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
-              <div className="tlc-cockpit-field-top"><span><Radio size={12} /> FIELD CAM / 3D</span><span>{battleSpeed}× PACE</span></div>
-              {spotlight && <div key={spotlight.id} className={"tlc-cockpit-spotlight " + (spotlight.team || "")} aria-live="polite"><span>{spotlight.icon}</span><div><strong>{spotlight.title}</strong><small>{spotlight.detail}</small></div></div>}
-              {!isRunning && !winner && <div className="tlc-cockpit-idle">
-                <div className="tlc-cockpit-idle-inner"><span>✦ TLC ATOMIC / MAIN EVENT</span><h1>{startedRef.current ? "MATCH PAUSED" : "LET THEM BATTLE."}</h1><p>{startedRef.current ? "Resume where you left off." : "Two teams. One arena. You control the chaos."}</p><button onClick={handleStart}><Play size={16} fill="currentColor" /> {startedRef.current ? "RESUME MATCH" : "START MATCH"}</button></div>
-              </div>}
-              <div className="tlc-cockpit-lower-third">
-                <div className="tlc-cockpit-ticker"><span>LIVE FEED</span><strong aria-live="polite">{quip}</strong></div>
-                <div className="tlc-cockpit-hype"><Flame size={12} /> {hype}%</div>
-              </div>
             </div>
-            <div className="tlc-cockpit-momentum">
-              <span>MEN <b>{momentum}%</b></span>
-              <div className="tlc-cockpit-momentum-track" role="meter" aria-label="Relative survival advantage for team men" aria-valuemin={0} aria-valuemax={100} aria-valuenow={momentum}><div style={{ width: momentum + "%" }} /></div>
-              <span>WOMEN <b>{100 - momentum}%</b></span>
+            <div className="tlc-atomic-commentary-rail" aria-label="Match status and play-by-play">
+              <span className={"tlc-atomic-rail-status" + (isLive ? " is-live" : "")}>
+                <span className="tlc-atomic-live-dot" aria-hidden="true" />
+                {winner ? "FINAL" : isLive ? "LIVE" : startedRef.current ? "PAUSED" : "READY"}
+              </span>
+              <div className="tlc-atomic-rail-message" aria-live="polite" aria-atomic="true">
+                {spotlight ? <><strong>{spotlight.title}</strong><span>{spotlight.detail}</span></> : <span>{!isRunning && !startedRef.current ? "Start the battle using the controls below." : quip}</span>}
+              </div>
+              <span className="tlc-atomic-rail-hype"><Flame size={13} aria-hidden="true" /> {hype}%</span>
             </div>
           </section>
           {!spectatorMode && <div className="tlc-cockpit-right">
