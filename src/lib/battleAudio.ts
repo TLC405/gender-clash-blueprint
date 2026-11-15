@@ -43,18 +43,23 @@ function legacy() {
   legacyBell = new Howl({ src: [base + "sfx/impactBell_heavy_000.ogg"], volume: 0.5 });
 }
 
-function createCue(cue: ElevenCue, file: string): Howl {
+/** A bank is playable only after EVERY cue has successfully decoded. */
+function loadCue(cue: ElevenCue, file: string): Promise<Howl | null> {
   const base = import.meta.env.BASE_URL + "audio/elevenlabs/";
   const isVoice = ELEVEN_VOICES.includes(cue as ElevenVoice);
-  return new Howl({
-    src: [base + file],
-    html5: false,
-    preload: true,
-    volume: isVoice ? 0.72 : cue === "meteor" ? 0.65 : cue === "ui_click" ? 0.2 : 0.4,
-    onloaderror: () => {
-      custom.delete(cue);
-      console.warn("[TLC Audio] Custom cue unavailable:", cue);
-    },
+  return new Promise(resolve => {
+    const sound = new Howl({
+      src: [base + file],
+      html5: false,
+      preload: true,
+      volume: isVoice ? 0.72 : cue === "meteor" ? 0.65 : cue === "ui_click" ? 0.2 : 0.4,
+      onload: () => resolve(sound),
+      onloaderror: () => {
+        console.warn("[TLC Audio] Custom cue unavailable:", cue);
+        sound.unload();
+        resolve(null);
+      },
+    });
   });
 }
 
@@ -67,9 +72,16 @@ export function primeElevenLabsAudio(): Promise<boolean> {
       const files = getReadyAudioFiles(await response.json());
       // Never mix partially generated packs with the temporary stock bank.
       if (Object.keys(files).length !== ELEVEN_SFX.length + ELEVEN_VOICES.length) return false;
-      for (const [cue, filename] of Object.entries(files) as [ElevenCue, string][]) {
-        custom.set(cue, createCue(cue, filename));
+      const decoded = await Promise.all(
+        (Object.entries(files) as [ElevenCue, string][]).map(
+          async ([cue, filename]) => [cue, await loadCue(cue, filename)] as const
+        )
+      );
+      if (decoded.some(([, sound]) => sound === null)) {
+        for (const [, sound] of decoded) sound?.unload();
+        return false;
       }
+      for (const [cue, sound] of decoded) if (sound) custom.set(cue, sound);
       packReady = true;
       return true;
     } catch {

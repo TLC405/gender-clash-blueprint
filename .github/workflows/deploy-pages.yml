@@ -1,8 +1,7 @@
 name: Publish TLC Battle to GitHub Pages
 
 on:
-  push:
-    branches: [main]
+  # Render is the production host. Pages is manual/opt-in only.
   workflow_dispatch:
 
 permissions:
@@ -16,6 +15,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ vars.TLC_ENABLE_PAGES == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
