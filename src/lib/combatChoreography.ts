@@ -16,6 +16,9 @@ const clamp=(x:number,min:number,max:number)=>Math.max(min,Math.min(max,x));
 
 /** Same squad lanes for BOTH armies, even when one side greatly outnumbers the other. */
 export function getSquadCount(maxArmySize:number):number {
+  // Tiny matches are centered, rather than placed in the top-most lane.
+  if(maxArmySize<40)return 1;
+  if(maxArmySize<90)return 2;
   return clamp(Math.round(Math.sqrt(Math.max(1,maxArmySize)/50)),3,MAX_SQUADS);
 }
 
