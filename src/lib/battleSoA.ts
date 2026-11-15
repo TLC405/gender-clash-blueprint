@@ -64,6 +64,7 @@ export interface BattleSoA {
   
   // Battle tactic shared by the two independent armies.
   formationPattern: FormationPattern;
+  womenFormationPattern: FormationPattern;
   // Counts
   unitCount: number;
   menCount: number;
@@ -98,6 +99,7 @@ export function createBattleSoA(): BattleSoA {
     powerupType: new Uint8Array(MAX_UNITS),
     powerupEndTime: new Float32Array(MAX_UNITS),
     formationPattern: 'battle-lines',
+    womenFormationPattern: 'battle-lines',
     unitCount: 0,
     menCount: 0,
     womenCount: 0,
@@ -114,7 +116,8 @@ export function initializeUnits(
   canvasWidth: number,
   canvasHeight: number,
   womenArmySize: number = menArmySize,
-  formationPattern: FormationPattern = 'battle-lines'
+  formationPattern: FormationPattern = 'battle-lines',
+  womenFormationPattern: FormationPattern = formationPattern
 ): void {
   const men = Math.max(1, Math.min(MAX_UNITS / 2, Math.floor(menArmySize)));
   const women = Math.max(1, Math.min(MAX_UNITS - men, Math.floor(womenArmySize)));
@@ -122,6 +125,7 @@ export function initializeUnits(
   soa.menCount = men;
   soa.womenCount = women;
   soa.formationPattern = formationPattern;
+  soa.womenFormationPattern = womenFormationPattern;
 
   soa.posX.fill(0); soa.posY.fill(0);
   soa.velX.fill(0); soa.velY.fill(0);
@@ -137,7 +141,8 @@ export function initializeUnits(
   const placeArmy = (count: number, offset: number, team: number) => {
     for(let i=0;i<count;i++){
       const index=offset+i;
-      const slot=formationSlot(i,count,maxArmy,team,canvasWidth,canvasHeight,formationPattern);
+      const pattern = team===TEAM_MEN?formationPattern:womenFormationPattern;
+      const slot=formationSlot(i,count,maxArmy,team,canvasWidth,canvasHeight,pattern);
       soa.posX[index]=slot.x;
       soa.posY[index]=slot.y;
       soa.targetX[index]=slot.x;
