@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
-import { setSoundEnabled, playUiClick, primeElevenLabsAudio } from "@/lib/battleAudio";
+import { setSoundEnabled, setAudioMix, playUiClick, primeElevenLabsAudio } from "@/lib/battleAudio";
+import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "@/lib/audioMix";
 import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
 import { CROWD_PRESETS } from "@/lib/battleBalance";
@@ -56,6 +57,10 @@ const Index = () => {
   const [narratorEnabled, setNarratorEnabled] = useState(() => savedBoolean("tlc-atomic-narrator", false));
   const [soundEnabled, setAudioEnabled] = useState(() => savedBoolean("tlc-atomic-sound", true));
   const [elevenAudioReady, setElevenAudioReady] = useState(false);
+  const [audioMix, setAudioMixState] = useState<AudioMix>(()=>{
+    try{return normalizeAudioMix(JSON.parse(localStorage.getItem("tlc-atomic-audio-mix")||"null"));}
+    catch{return {...DEFAULT_AUDIO_MIX};}
+  });
   const [reducedMotion, setReducedMotion] = useState(() => savedBoolean("tlc-atomic-reduced-motion", typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
   const [spectatorMode, setSpectatorMode] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -134,6 +139,11 @@ const Index = () => {
   }, [activePanel]);
 
   useEffect(() => { setSoundEnabled(soundEnabled); }, [soundEnabled]);
+  useEffect(() => {
+    setAudioMix(audioMix);
+    try{localStorage.setItem("tlc-atomic-audio-mix",JSON.stringify(audioMix));}
+    catch{/* Private mode: audio controls still work. */}
+  },[audioMix]);
   useEffect(() => {
     let connected = true;
     void primeElevenLabsAudio().then(ready => { if (connected) setElevenAudioReady(ready); });
@@ -463,6 +473,15 @@ const Index = () => {
               <label><span><Volume2 size={18}/> SOUND EFFECTS</span><input type="checkbox" checked={soundEnabled} onChange={e => setAudioEnabled(e.target.checked)}/></label>
               <div className="tlc-atomic-audio-pack"><strong>ELEVENLABS ORIGINAL AUDIO PACK</strong><small>{elevenAudioReady ? "Pre-rendered original game audio active." : "Custom voice and sound clips are awaiting generation. Existing sounds remain temporarily available."}</small></div>
               <label><span><Radio size={18}/> VOICE COMMENTARY</span><input type="checkbox" checked={narratorEnabled} onChange={e => setNarratorEnabled(e.target.checked)}/></label>
+              <div className="tlc-atomic-mixer" role="group" aria-label="Separate game audio levels">
+                {(["effects","voice","ui"] as const).map(channel=><div className="tlc-atomic-mix-row" key={channel}>
+                  <label htmlFor={"tlc-mix-"+channel}>{channel==="effects"?"BATTLE IMPACTS":channel==="voice"?"ANNOUNCER":"BUTTON SOUNDS"}</label>
+                  <input id={"tlc-mix-"+channel} type="range" min={0} max={100} step={5}
+                    value={Math.round(audioMix[channel]*100)}
+                    onChange={event=>setAudioMixState(m=>({...m,[channel]:Number(event.target.value)/100}))}/>
+                  <output htmlFor={"tlc-mix-"+channel}>{Math.round(audioMix[channel]*100)}%</output>
+                </div>)}
+              </div>
               <label><span><Shield size={18}/> REDUCED FLASH & SHAKE</span><input type="checkbox" checked={reducedMotion} onChange={e => setReducedMotion(e.target.checked)}/></label>
               <div className="tlc-cockpit-settings-row"><span>PLAYBACK PACE</span><div>{[0.25,0.5,0.75,1,1.5].map(speed => <button className={battleSpeed===speed?"active":""} key={speed} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}</div></div>
               <button className="tlc-cockpit-settings-action" onClick={() => setSpectatorMode(v=>!v)}>{spectatorMode ? <Eye size={17}/> : <EyeOff size={17}/>} {spectatorMode?"SHOW BROADCAST GRAPHICS":"FOCUS ON THE ARENA"}</button>

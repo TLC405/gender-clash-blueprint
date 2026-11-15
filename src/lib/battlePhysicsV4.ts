@@ -11,10 +11,11 @@
  * - van den Berg et al., ORCA (principles only; this is NOT ORCA)
  */
 import { teamBalance } from './battleBalance';
+import { getSquadCount, laneTargetY, MAX_SQUADS, STRIKE_DURATION, STRIKE_JAB, STRIKE_SHOVE } from './combatChoreography';
 import {
   type BattleSoA,
   MAX_UNITS, FLAG_ALIVE, TEAM_MEN, TEAM_WOMEN,
-  killUnit, setFormationLocked
+  killUnit, setFormationLocked, FORMATION_CHARGING, FORMATION_BROKEN, FORMATION_LOCKED
 } from './battleSoA';
 import {
   type SpatialHashGrid, rebuildGrid, queryRadius, findNearestEnemy
@@ -73,6 +74,7 @@ export interface BattleStats {
 export interface PhysicsResult {
   stats: BattleStats;
   kills: Array<{ x: number; y: number; killerTeam: number }>;
+  impacts: number; // verified physical contact pulses this step, for sound & animation
   menFormationActive: boolean;
   womenFormationActive: boolean;
 }
@@ -96,6 +98,12 @@ interface CombatRuntime {
   nextVY: Float32Array;
   impactCooldown: Float32Array;
   pendingStagger: Float32Array;
+  menLaneX: Float32Array;
+  menLaneY: Float32Array;
+  menLaneCount: Float32Array;
+  womenLaneX: Float32Array;
+  womenLaneY: Float32Array;
+  womenLaneCount: Float32Array;
 }
 
 const runtimes = new WeakMap<BattleSoA, CombatRuntime>();
@@ -116,6 +124,12 @@ function getRuntime(soa: BattleSoA): CombatRuntime {
       nextVY: new Float32Array(MAX_UNITS),
       impactCooldown: new Float32Array(MAX_UNITS),
       pendingStagger: new Float32Array(MAX_UNITS),
+      menLaneX: new Float32Array(MAX_SQUADS),
+      menLaneY: new Float32Array(MAX_SQUADS),
+      menLaneCount: new Float32Array(MAX_SQUADS),
+      womenLaneX: new Float32Array(MAX_SQUADS),
+      womenLaneY: new Float32Array(MAX_SQUADS),
+      womenLaneCount: new Float32Array(MAX_SQUADS),
     };
     runtimes.set(soa, runtime);
   }
@@ -259,6 +273,7 @@ export function updatePhysics(
   const runtime = getRuntime(soa);
   const kills: PhysicsResult['kills'] = [];
   let menKills = 0, womenKills = 0;
+  let impacts=0;
   let menInFormation = 0, womenInFormation = 0;
   const step = Math.min(1 / 30, Math.max(0, deltaTime)) * Math.min(2, Math.max(0.1, battleSpeed));
   const frozen = phase === 'stand' || phase === 'victory' || step <= 0;
@@ -271,7 +286,10 @@ export function updatePhysics(
       if (!(soa.stateFlags[i] & FLAG_ALIVE)) continue;
       const side = soa.teamID[i] === TEAM_MEN ? 1 : -1;
       soa.velX[i] = side * Math.min(config.chargeSpeed * (0.65 + noise(i, 71) * 0.4), config.maxSpeed);
-      soa.velY[i] = (noise(i, 73) - 0.5) * config.chargeSpeed * 0.25;
+      // Preserve battalion lanes during the opening charge. No random
+      // sideways velocity that immediately fragments the front line.
+      soa.velY[i] = (noise(i, 73) - 0.5) * config.chargeSpeed * 0.025;
+      soa.formationState[i] = FORMATION_CHARGING;
       setFormationLocked(soa, i, false);
     }
   }
@@ -279,6 +297,19 @@ export function updatePhysics(
   rebuildGrid(grid, soa.posX, soa.posY, soa.stateFlags, soa.unitCount, FLAG_ALIVE);
   const teams = centroid(soa);
   const r = runtime;
+  // Keep a bounded enemy-centroid target for each vertical squad lane.
+  // This O(N) pass replaces a global chase that scattered both armies.
+  const laneCount = getSquadCount(Math.max(r.menInitial,r.womenInitial));
+  for(const lanes of [r.menLaneX,r.menLaneY,r.menLaneCount,r.womenLaneX,r.womenLaneY,r.womenLaneCount]) lanes.fill(0);
+  for(let j=0;j<soa.unitCount;j++){
+    if(!(soa.stateFlags[j]&FLAG_ALIVE))continue;
+    const lane=Math.min(laneCount-1,soa.squadLane[j]);
+    if(soa.teamID[j]===TEAM_MEN){
+      r.menLaneX[lane]+=soa.posX[j];r.menLaneY[lane]+=soa.posY[j];r.menLaneCount[lane]++;
+    }else{
+      r.womenLaneX[lane]+=soa.posX[j];r.womenLaneY[lane]+=soa.posY[j];r.womenLaneCount[lane]++;
+    }
+  }
   r.pendingDamage.fill(0, 0, soa.unitCount);
   r.impulseX.fill(0, 0, soa.unitCount);
   r.impulseY.fill(0, 0, soa.unitCount);
@@ -289,10 +320,14 @@ export function updatePhysics(
     const team = soa.teamID[i];
     r.impactCooldown[i] = Math.max(0, r.impactCooldown[i] - step);
     soa.stagger[i] = Math.max(0, soa.stagger[i] - step);
+    soa.attackTimer[i] = Math.max(0, soa.attackTimer[i] - step);
+    soa.guardTimer[i] = Math.max(0, soa.guardTimer[i] - step);
+    if(soa.attackTimer[i]===0) soa.attackKind[i]=0;
     if (frozen) {
       r.nextVX[i] = 0;
       r.nextVY[i] = 0;
       if (phase === 'stand') {
+        soa.formationState[i]=FORMATION_LOCKED;
         setFormationLocked(soa, i, true);
         if (team === TEAM_MEN) menInFormation++;
         else womenInFormation++;
@@ -310,8 +345,27 @@ export function updatePhysics(
       FLAG_ALIVE, config.enemySightCells
     );
     const inCombat = enemy.index >= 0 && enemy.distSq < 55 * 55;
-    const tx = enemy.index >= 0 ? soa.posX[enemy.index] : team === TEAM_MEN ? teams.womenX : teams.menX;
-    const ty = enemy.index >= 0 ? soa.posY[enemy.index] : team === TEAM_MEN ? teams.womenY : teams.menY;
+    const closeEnemy = enemy.index >= 0 && enemy.distSq < 85 * 85;
+    const lane = Math.min(laneCount-1,soa.squadLane[i]);
+    const enemyLaneCount = team === TEAM_MEN ? r.womenLaneCount[lane] : r.menLaneCount[lane];
+    const enemyLaneX = team === TEAM_MEN ? r.womenLaneX[lane] : r.menLaneX[lane];
+    const enemyLaneY = team === TEAM_MEN ? r.womenLaneY[lane] : r.menLaneY[lane];
+    const oppositeX = team === TEAM_MEN ? teams.womenX : teams.menX;
+    const oppositeY = team === TEAM_MEN ? teams.womenY : teams.menY;
+    const aimX = enemyLaneCount ? enemyLaneX/enemyLaneCount : oppositeX;
+    const laneY = laneTargetY(lane,laneCount,canvasHeight);
+    const aimY = enemyLaneCount ? enemyLaneY/enemyLaneCount : oppositeY;
+    // Far from an enemy, seek the opposing squad while holding a readable
+    // vertical front. Only inside contact range pursue an individual.
+    const tx = closeEnemy ? soa.posX[enemy.index] : aimX;
+    const ty = closeEnemy ? soa.posY[enemy.index] : laneY*0.68 + aimY*0.32;
+    soa.formationState[i]=inCombat?FORMATION_BROKEN:FORMATION_CHARGING;
+    setFormationLocked(soa,i,!inCombat);
+    if(!inCombat){
+      if(team===TEAM_MEN)menInFormation++; else womenInFormation++;
+    }else if(soa.attackTimer[i]===0){
+      soa.guardTimer[i]=0.25;
+    }
     const dx = tx - x, dy = ty - y;
     const distance = Math.hypot(dx, dy);
     const nx = distance > 0.001 ? dx / distance : (team === TEAM_MEN ? 1 : -1);
@@ -331,7 +385,13 @@ export function updatePhysics(
         r.impulseX[enemy.index] += nx * shove;
         r.impulseY[enemy.index] += ny * shove;
         r.pendingStagger[enemy.index] = Math.max(r.pendingStagger[enemy.index], 0.35);
-        r.impactCooldown[i] = 0.4 + noise(i, r.tick) * 0.17;
+        // The renderer reads this authoritative impact state. Attack animation,
+        // hit particles and knockback all originate from the same contact event.
+        impacts++;
+        soa.attackTimer[i] = STRIKE_DURATION;
+        soa.attackKind[i] = (i + r.tick) % 4 === 0 ? STRIKE_SHOVE : STRIKE_JAB;
+        soa.guardTimer[i]=0;
+        r.impactCooldown[i] = 0.58 + noise(i, r.tick) * 0.12;
         if ((i + r.tick) % 7 === 0) effects(pool, (x + tx) / 2, (y + ty) / 2, team, i + r.tick, false);
       }
     }
@@ -408,6 +468,7 @@ export function updatePhysics(
       menKills, womenKills, menInFormation, womenInFormation,
     },
     kills,
+    impacts,
     menFormationActive: phase === 'stand' && menInFormation >= teams.mn * 0.5,
     womenFormationActive: phase === 'stand' && womenInFormation >= teams.wn * 0.5,
   };

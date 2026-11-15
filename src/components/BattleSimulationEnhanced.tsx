@@ -13,7 +13,7 @@ import { createParticlePool, updateParticles, renderParticles, spawnConfetti, sp
 import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysicsV4";
 import { renderUnits } from "@/lib/spriteRenderer";
 import type { StickFigure3DLayer } from "@/lib/stickFigure3DRenderer";
-import { playKills, playBell, playClash, playMeteor, playVictory } from "@/lib/battleAudio";
+import { playKills, playImpacts, playBell, playClash, playMeteor, playVictory } from "@/lib/battleAudio";
 
 type BattleSimulationProps = {
   menArmySize: number;
@@ -493,6 +493,7 @@ const BattleSimulation = ({
     fallen.length = livingMarkers;
 
     const newKills = result.stats.menKills + result.stats.womenKills;
+    if(newKills===0 && result.impacts>0) playImpacts(result.impacts);
     if (newKills > 0) {
       if (!reducedMotionRef.current) shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.2, 5);
       playKills(newKills);

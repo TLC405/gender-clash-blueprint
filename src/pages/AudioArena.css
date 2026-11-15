@@ -111,3 +111,57 @@
 .tlc-atomic .tlc-atomic-audio-pack small {
   color:#afc0d3;font-size:10px;line-height:1.55;
 }
+
+/* High-contrast, individual channel faders. All controls live in Settings,
+   outside the playing field. */
+.tlc-atomic .tlc-atomic-mixer {
+  padding:12px 13px;
+  background:#162537;
+  border:1px solid #50677e;
+  border-radius:4px;
+  display:flex;
+  flex-direction:column;
+  gap:13px;
+}
+.tlc-atomic .tlc-atomic-mix-row {
+  display:grid;
+  grid-template-columns:115px minmax(0,1fr) 42px;
+  gap:10px;
+  align-items:center;
+  min-width:0;
+}
+.tlc-atomic .tlc-atomic-mix-row label {
+  display:block;
+  margin:0;
+  padding:0;
+  background:none;
+  border:0;
+  color:#c4d7e9;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.45px;
+}
+.tlc-atomic .tlc-atomic-mix-row input[type="range"] {
+  display:block;
+  width:100%;
+  height:22px;
+  margin:0;
+  accent-color:#ef748f;
+  touch-action:pan-x;
+  cursor:pointer;
+}
+.tlc-atomic .tlc-atomic-mix-row output {
+  font-size:10px;
+  font-weight:900;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  color:#fff;
+}
+@media(max-width:430px){
+  .tlc-atomic .tlc-atomic-mix-row {
+    grid-template-columns:91px minmax(0,1fr) 35px;
+    gap:7px;
+  }
+  .tlc-atomic .tlc-atomic-mix-row label,
+  .tlc-atomic .tlc-atomic-mix-row output {font-size:9px;}
+}
