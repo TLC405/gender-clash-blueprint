@@ -33,6 +33,19 @@ for(const scenario of scenarios){
     if(response?.status()!==200)throw new Error("HTTP "+response?.status());
     await page.locator(".tlc-cockpit-arena").waitFor({state:"visible",timeout:15000});
     await page.waitForTimeout(1300);
+    // Test real published WAV files, not just the source generator or manifest.
+    if (scenario.name==="Fold closed Android") {
+      const manifestReply=await page.request.get(new URL("audio/tlc/manifest.json",app).href);
+      if(!manifestReply.ok()) throw new Error("Missing original SFX manifest: "+manifestReply.status());
+      const manifest=await manifestReply.json();
+      for (const cue of ["ui_click","arena_bell","light_hit","heavy_hit","crowd_clash","meteor","victory_sting"]) {
+        const reply=await page.request.get(new URL("audio/tlc/"+manifest.assets[cue],app).href);
+        if(!reply.ok()) throw new Error("Missing original SFX "+cue+" HTTP "+reply.status());
+        const bytes=await reply.body();
+        if(bytes.length<2000||bytes.toString("ascii",0,4)!=="RIFF") throw new Error("Corrupted original SFX "+cue);
+      }
+      console.log("PASS all 7 TLC original sounds served as playable WAV files");
+    }
     const canvases=await page.locator(".tlc-cockpit-field canvas").count();
     if(canvases<2)throw new Error("Missing arena canvases");
     const initial=await page.locator(".tlc-cockpit-field").boundingBox();
