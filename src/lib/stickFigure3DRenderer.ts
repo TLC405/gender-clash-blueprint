@@ -17,6 +17,7 @@ import {
   Vector3, WebGLRenderer, DoubleSide,
 } from 'three';
 import { FLAG_ALIVE, FLAG_LEADER, TEAM_MEN, type BattleSoA } from './battleSoA';
+import { attackEnvelope, guardEnvelope, STRIKE_JAB, STRIKE_SHOVE } from './combatChoreography';
 import {
   getStickFigureVariant, getStickMotion, STICK_FIGHTER_PALETTES,
   STICK_FIGHTER_SEGMENTS, type StickFigureVariant,
@@ -196,7 +197,13 @@ function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: num
   const hip = 1.9 * style.hips * s;
   const shoulder = 2.6 * style.shoulders * s;
   const walk = moving.stride;
-  const tilt = moving.lean * s;
+  const front = soa.teamID[i] === TEAM_MEN ? 1 : -1;
+  // These angles come from the same fixed-step combat event as the hit impulse.
+  const strike = reducedMotion ? 0 : attackEnvelope(soa.attackTimer[i]);
+  const jab = soa.attackKind[i] === STRIKE_JAB ? strike : 0;
+  const shove = soa.attackKind[i] === STRIKE_SHOVE ? strike : 0;
+  const guard = reducedMotion ? 0 : guardEnvelope(soa.guardTimer[i], soa.attackTimer[i]);
+  const tilt = moving.lean * s + front * (jab * 0.8 + shove * 1.2) * s;
   const recoil = moving.recoil;
   const height = (1 - recoil * 0.16);
   const pivotY = baseY + 8.1 * s * height;
@@ -213,10 +220,24 @@ function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: num
   point(rightKnee, baseX + hip * 0.9 + walk * 1.1 * s, baseY + 4.4 * s, z + 0.7 * s - depthSwing);
   point(leftFoot, baseX - hip * 1.15 - walk * 2.25 * s, baseY, z + depthSwing * 1.5);
   point(rightFoot, baseX + hip * 1.15 + walk * 2.25 * s, baseY, z - depthSwing * 1.5);
-  point(leftElbow, leftShoulder.x - (1.7 + walk * 1.2) * s, neckY - (4.2 - recoil) * s, z - 1.6 * s - depthSwing);
-  point(rightElbow, rightShoulder.x + (1.7 - walk * 1.2) * s, neckY - (4.2 - recoil) * s, z + 1.6 * s + depthSwing);
-  point(leftHand, leftElbow.x - (1.2 + recoil * 1.6) * s, leftElbow.y - 3.2 * s, leftElbow.z - 1.8 * s);
-  point(rightHand, rightElbow.x + (1.2 + recoil * 1.6) * s, rightElbow.y - 3.2 * s, rightElbow.z + 1.8 * s);
+  // Bracing tucks the hands near the face; a jab throws one fist forward,
+  // while a heavy shove drives BOTH arms forward. No detached limb endpoints.
+  point(leftElbow,
+    leftShoulder.x - (1.7 + walk*1.2) * s + front * shove * 3.2*s,
+    neckY - (4.2 - recoil*1.2 - guard*2.2 - shove*2) * s,
+    z - 1.6*s - depthSwing);
+  point(rightElbow,
+    rightShoulder.x + (1.7 - walk*1.2) * s + front*(jab*3.5 + shove*3.2)*s,
+    neckY - (4.2 - recoil*1.2 - guard*2.2 - jab*2.3 - shove*2)*s,
+    z + 1.6*s + depthSwing);
+  point(leftHand,
+    leftElbow.x - 1.2*s + front*(shove*5.1 + guard*0.6)*s,
+    leftElbow.y - 3.2*s + (shove*3 + guard*5)*s,
+    leftElbow.z - (1.8 - shove*0.6)*s);
+  point(rightHand,
+    rightElbow.x + 1.2*s + front*(jab*6.3 + shove*5.1 + guard*0.6)*s,
+    rightElbow.y - 3.2*s + (jab*4.1 + shove*3 + guard*5)*s,
+    rightElbow.z + (1.8 + jab*1.7)*s);
   point(head, neck.x + 0.45 * s, neckY + 3.8 * s, z + 0.8 * s);
   const radius = style.thickness * s * (soa.teamID[i] === TEAM_MEN ? 1.14 : 0.97);
   const m = layer.body;
