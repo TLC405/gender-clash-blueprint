@@ -165,3 +165,21 @@
   .tlc-atomic .tlc-atomic-mix-row label,
   .tlc-atomic .tlc-atomic-mix-row output {font-size:9px;}
 }
+
+/* Small in-panel playback QA, never on top of the arena. */
+.tlc-atomic .tlc-atomic-sound-preview {
+  align-self:stretch;
+  width:100%;
+  min-height:42px;
+  margin-top:4px;
+  border:1px solid #dd9a66;
+  background:#223a53;
+  color:#ffdcbb;
+  border-radius:5px;
+  padding:10px 12px;
+  font-weight:900;
+  font-size:11px;
+  letter-spacing:.65px;
+  cursor:pointer;
+}
+.tlc-atomic .tlc-atomic-sound-preview:disabled {opacity:.45;cursor:not-allowed;}
