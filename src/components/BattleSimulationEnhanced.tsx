@@ -493,6 +493,7 @@ const BattleSimulation = ({
     fallen.length = livingMarkers;
 
     const newKills = result.stats.menKills + result.stats.womenKills;
+    if(newKills===0 && result.impacts>0) playImpacts(result.impacts);
     if (newKills > 0) {
       if (!reducedMotionRef.current) shakeRef.current.intensity = Math.min(shakeRef.current.intensity + newKills * 1.2, 5);
       playKills(newKills);
