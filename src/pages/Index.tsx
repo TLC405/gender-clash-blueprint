@@ -49,6 +49,11 @@ const Index = () => {
     try { const saved=localStorage.getItem("tlc-battle-formation");return isFormationPattern(saved)?saved:"battle-lines"; }
     catch { return "battle-lines"; }
   });
+  const [womenFormationPattern, setWomenFormationPattern] = useState<FormationPattern>(()=>{
+    try { const saved=localStorage.getItem("tlc-battle-women-formation")??localStorage.getItem("tlc-battle-formation");return isFormationPattern(saved)?saved:"battle-lines"; }
+    catch { return "battle-lines"; }
+  });
+  const [formationTarget, setFormationTarget] = useState<"both"|"men"|"women">("both");
   const [arenaSurface, setArenaSurface] = useState<ArenaSurface>(()=>{
     try { const saved=localStorage.getItem("tlc-battle-surface");return isArenaSurface(saved)?saved:"championship"; }
     catch { return "championship"; }
@@ -150,9 +155,9 @@ const Index = () => {
 
   useEffect(() => { setSoundEnabled(soundEnabled); }, [soundEnabled]);
   useEffect(() => {
-    try { localStorage.setItem("tlc-battle-formation",formationPattern);localStorage.setItem("tlc-battle-surface",arenaSurface); }
+    try { localStorage.setItem("tlc-battle-formation",formationPattern);localStorage.setItem("tlc-battle-women-formation",womenFormationPattern);localStorage.setItem("tlc-battle-surface",arenaSurface); }
     catch {/* Storage optional for private browsers. */}
-  },[formationPattern,arenaSurface]);
+  },[formationPattern,womenFormationPattern,arenaSurface]);
   useEffect(() => {
     setAudioMix(audioMix);
     try{localStorage.setItem("tlc-atomic-audio-mix",JSON.stringify(audioMix));}
@@ -428,7 +433,7 @@ const Index = () => {
               <BattleSimulation
                 key={battleKey}
                 menArmySize={menArmySize} womenArmySize={womenArmySize}
-                formationPattern={formationPattern} arenaSurface={arenaSurface}
+                formationPattern={formationPattern} womenFormationPattern={womenFormationPattern} arenaSurface={arenaSurface}
                 battleSpeed={battleSpeed} menRageEnabled={menRage} womenRageEnabled={womenRage}
                 isRunning={isRunning} narratorEnabled={narratorEnabled}
                 meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion}
@@ -483,19 +488,32 @@ const Index = () => {
                 if(isRunning){toast.info("Pause the match before switching modes.");return;}
                 applyPreset(p);
               }}><span className="tlc-cockpit-mode-emoji">{p.icon}</span><span><strong>{p.name}</strong><small>{p.men.toLocaleString()} vs {p.women.toLocaleString()} · {p.tagline}</small></span><span className="tlc-cockpit-mode-select">{presetId===p.id?"ACTIVE":"SELECT"}</span></button>)}</div>
-              <div className="tlc-arena-section-title"><strong>FORMATION PLAYBOOK</strong><small>8 strategies · real movement changes</small></div>
+              <div className="tlc-arena-section-title"><strong>FORMATION PLAYBOOK</strong><small>8 tactics · mix up each team</small></div>
+              <div className="tlc-formation-team-picker" role="group" aria-label="Choose which team gets a formation">
+                {(["both","men","women"] as const).map(side=><button type="button" key={side}
+                  aria-pressed={formationTarget===side}
+                  className={formationTarget===side?"selected":""}
+                  onClick={()=>{playUiClick();setFormationTarget(side);}}>
+                  {side==="both"?"BOTH TEAMS":side==="men"?"BLUE / MEN":"PINK / WOMEN"}
+                </button>)}
+              </div>
+              <div className="tlc-formation-vs">
+                <span><b>BLUE</b> {FORMATIONS.find(f=>f.id===formationPattern)?.name}</span>
+                <span className="tlc-formation-vs-divider">VS</span>
+                <span><b>PINK</b> {FORMATIONS.find(f=>f.id===womenFormationPattern)?.name}</span>
+              </div>
               <div className="tlc-formation-grid" role="group" aria-label="Choose battle formation">
-                {FORMATIONS.map(f=><button type="button" key={f.id} className={"tlc-formation-card"+(formationPattern===f.id?" selected":"")}
-                  aria-pressed={formationPattern===f.id} onClick={()=>{
+                {FORMATIONS.map(f=><button type="button" key={f.id} className={"tlc-formation-card"+((formationTarget==="both"?formationPattern===f.id&&womenFormationPattern===f.id:formationTarget==="men"?formationPattern===f.id:womenFormationPattern===f.id)?" selected":"")}
+                  aria-pressed={formationTarget==="both"?formationPattern===f.id&&womenFormationPattern===f.id:formationTarget==="men"?formationPattern===f.id:womenFormationPattern===f.id} onClick={()=>{
                     if(isRunning){toast.info("Pause the battle to deploy a new formation.");return;}
-                    playUiClick();setFormationPattern(f.id);resetBattle(menArmySize,womenArmySize);
+                    playUiClick();if(formationTarget!=="women")setFormationPattern(f.id);if(formationTarget!=="men")setWomenFormationPattern(f.id);resetBattle(menArmySize,womenArmySize);
                   }}>
                   <span className="tlc-formation-preview" aria-hidden="true">
                     <span className="tlc-formation-axis"/>
                     {f.preview.map(([px,py],i)=><i key={i} style={{left:px+"%",top:py+"%"}} />)}
                   </span>
                   <span className="tlc-formation-card-copy"><strong>{f.name}</strong><small>{f.tagline}</small></span>
-                  <span className="tlc-formation-indicator">{formationPattern===f.id?"ACTIVE":"DEPLOY"}</span>
+                  <span className="tlc-formation-indicator">{(formationTarget==="both"?formationPattern===f.id&&womenFormationPattern===f.id:formationTarget==="men"?formationPattern===f.id:womenFormationPattern===f.id)?"ACTIVE":"DEPLOY"}</span>
                 </button>)}
               </div>
               <div className="tlc-arena-section-title"><strong>ARENA SURFACE</strong><small>4 premium floors · switch live</small></div>
