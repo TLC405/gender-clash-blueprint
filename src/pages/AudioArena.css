@@ -97,3 +97,17 @@
 @media(prefers-reduced-motion: reduce) {
   .tlc-atomic .tlc-atomic-live-dot {box-shadow:none!important;}
 }
+
+/* Audio pack is available from Settings, not cluttering the arena. */
+.tlc-atomic .tlc-atomic-audio-pack {
+  display:flex;flex-direction:column;gap:6px;
+  border:1px solid #5b6273;border-left:3px solid #be637f;
+  background:#1a2938;
+  padding:11px 12px;
+}
+.tlc-atomic .tlc-atomic-audio-pack strong {
+  color:#f1cad9;font-size:10px;font-weight:900;letter-spacing:.7px;
+}
+.tlc-atomic .tlc-atomic-audio-pack small {
+  color:#afc0d3;font-size:10px;line-height:1.55;
+}
