@@ -13,7 +13,7 @@ import { createParticlePool, updateParticles, renderParticles, spawnConfetti, sp
 import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysicsV4";
 import { renderUnits } from "@/lib/spriteRenderer";
 import type { StickFigure3DLayer } from "@/lib/stickFigure3DRenderer";
-import { playKills, playBell } from "@/lib/battleAudio";
+import { playKills, playBell, playClash, playMeteor, playVictory } from "@/lib/battleAudio";
 
 type BattleSimulationProps = {
   menArmySize: number;
@@ -167,6 +167,7 @@ const BattleSimulation = ({
     p.onPhaseChange("victory");
     if (winner !== "draw") speakNarration(winner === "men" ? "victoryMen" : "victoryWomen");
     spawnConfetti(poolRef.current, logicalSizeRef.current.width / 2, logicalSizeRef.current.height / 2, logicalSizeRef.current.width);
+    playVictory();
     p.onTimeUpdate(Math.floor(timeRef.current));
     p.onStatsUpdate({
       menAlive, womenAlive,
@@ -181,6 +182,7 @@ const BattleSimulation = ({
     if (!grid || phaseRef.current === "victory" || !propsRef.current.isRunning) return;
     const impact = applyMeteorImpact(soaRef.current, grid, x, y, 100, 500);
     spawnMeteorImpact(poolRef.current, x, y);
+    playMeteor();
     playKills(Math.max(1, impact.totalLost));
     if (!reducedMotionRef.current) {
       shakeRef.current.intensity = Math.min(shakeRef.current.intensity + 8, 12);
@@ -477,6 +479,7 @@ const BattleSimulation = ({
       p.onPhaseChange("melee");
       phaseTimeRef.current = 0;
       playBell();
+      playClash();
       speakNarration("meleePhase");
     }
     if (timeRef.current <= 30 && prevTime > 30) {
