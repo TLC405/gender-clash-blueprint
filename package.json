@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run --maxWorkers=1 --minWorkers=1"
+    "test": "vitest run --maxWorkers=1 --minWorkers=1",
+    "prebuild": "node scripts/generate-tlc-sfx.mjs",
+    "postbuild": "node scripts/verify-tlc-sfx.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
