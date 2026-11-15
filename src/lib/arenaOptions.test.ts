@@ -32,6 +32,22 @@ describe("Eight playable TLC tactical formations", () => {
     expect(new Set(variants).size).toBe(FORMATIONS.length);
   });
 
+  it("supports independent opposing strategies in a single match",()=>{
+    const soa=createBattleSoA();
+    initializeUnits(soa,500,800,500,850,"thunder-wedge","shield-wall");
+    expect(soa.formationPattern).toBe("thunder-wedge");
+    expect(soa.womenFormationPattern).toBe("shield-wall");
+    const menWedge=soa.posX[50];
+    const womenWall=soa.posX[551];
+    const mirrored=createBattleSoA();
+    initializeUnits(mirrored,500,800,500,850,"battle-lines","battle-lines");
+    expect(menWedge).not.toBe(mirrored.posX[50]);
+    expect(womenWall).not.toBe(mirrored.posX[551]);
+    const index=readFileSync(new URL("../pages/Index.tsx",import.meta.url),"utf8");
+    expect(index).toContain('formationTarget==="both"');
+    expect(index).toContain('setWomenFormationPattern(f.id)');
+  });
+
   it("keeps both armies in bounds, out of each other's spawn zone, for all match sizes", () => {
     for(const p of CROWD_PRESETS){
       for(const f of FORMATIONS){
@@ -93,7 +109,7 @@ describe("High-definition TLC championship fields",()=>{
   it("wires formation selection and four field styles to the real battle component",()=>{
     const index=readFileSync(new URL("../pages/Index.tsx",import.meta.url),"utf8");
     const simulation=readFileSync(new URL("../components/BattleSimulationEnhanced.tsx",import.meta.url),"utf8");
-    expect(index).toContain("formationPattern={formationPattern} arenaSurface={arenaSurface}");
+    expect(index).toContain("formationPattern={formationPattern} womenFormationPattern={womenFormationPattern} arenaSurface={arenaSurface}");
     expect(index).toContain("setFormationPattern(f.id)");
     expect(index).toContain("setArenaSurface(a.id)");
     expect(simulation).toContain("formationPattern");
