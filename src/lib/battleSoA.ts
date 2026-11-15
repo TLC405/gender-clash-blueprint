@@ -4,6 +4,7 @@
  */
 
 import { teamBalance } from './battleBalance';
+import { formationSlot } from './combatChoreography';
 
 export const MAX_UNITS = 20000;
 
@@ -41,6 +42,9 @@ export interface BattleSoA {
   // Health
   health: Float32Array;    // 4 bytes × 20K = 80KB
   stagger: Float32Array;   // remaining recoil animation/slowdown (seconds)
+  attackTimer: Float32Array; // synchronized hit animations, seconds left
+  attackKind: Uint8Array;    // 0=none, 1=jab, 2=two-arm shove
+  guardTimer: Float32Array;  // short bracing animation, seconds left
   
   // State
   teamID: Uint8Array;      // 1 byte × 20K = 20KB (0=Men, 1=Women)
@@ -50,6 +54,8 @@ export interface BattleSoA {
   // Formation
   formationRow: Uint16Array;  // 2 bytes × 20K = 40KB
   formationCol: Uint16Array;  // 2 bytes × 20K = 40KB
+  squadLane: Uint8Array;       // vertical tactical formation lane
+  formationState: Uint8Array; // forming / charging / broken
   
   // Powerup
   powerupType: Uint8Array;    // 1 byte × 20K = 20KB
@@ -76,11 +82,16 @@ export function createBattleSoA(): BattleSoA {
     targetY: new Float32Array(MAX_UNITS),
     health: new Float32Array(MAX_UNITS),
     stagger: new Float32Array(MAX_UNITS),
+    attackTimer: new Float32Array(MAX_UNITS),
+    attackKind: new Uint8Array(MAX_UNITS),
+    guardTimer: new Float32Array(MAX_UNITS),
     teamID: new Uint8Array(MAX_UNITS),
     stateFlags: new Uint8Array(MAX_UNITS),
     spriteIdx: new Uint16Array(MAX_UNITS),
     formationRow: new Uint16Array(MAX_UNITS),
     formationCol: new Uint16Array(MAX_UNITS),
+    squadLane: new Uint8Array(MAX_UNITS),
+    formationState: new Uint8Array(MAX_UNITS),
     powerupType: new Uint8Array(MAX_UNITS),
     powerupEndTime: new Float32Array(MAX_UNITS),
     unitCount: 0,
@@ -110,34 +121,30 @@ export function initializeUnits(
   soa.velX.fill(0); soa.velY.fill(0);
   soa.targetX.fill(0); soa.targetY.fill(0);
   soa.health.fill(0); soa.stagger.fill(0); soa.teamID.fill(0);
+  soa.attackTimer.fill(0); soa.attackKind.fill(0); soa.guardTimer.fill(0);
   soa.stateFlags.fill(0); soa.spriteIdx.fill(0);
   soa.formationRow.fill(0); soa.formationCol.fill(0);
+  soa.squadLane.fill(0); soa.formationState.fill(0);
   soa.powerupType.fill(0); soa.powerupEndTime.fill(0);
 
+  const maxArmy=Math.max(men,women);
   const placeArmy = (count: number, offset: number, team: number) => {
-    const columns = Math.max(1, Math.ceil(Math.sqrt(count * 0.85)));
-    const rows = Math.ceil(count / columns);
-    const spacing = Math.min(8, Math.max(2.4, (canvasHeight * 0.80) / Math.max(rows, 1)));
-    const originY = canvasHeight / 2 - ((rows - 1) * spacing) / 2;
-    const originX = team === TEAM_MEN
-      ? Math.max(24, canvasWidth * 0.11)
-      : Math.min(canvasWidth - 24, canvasWidth * 0.89);
-    const direction = team === TEAM_MEN ? 1 : -1;
-    const maxWidth = Math.max(24, canvasWidth * 0.32);
-    const columnSpacing = Math.min(spacing, maxWidth / Math.max(columns - 1, 1));
-
-    for (let i = 0; i < count; i++) {
-      const index = offset + i;
-      const row = Math.floor(i / columns);
-      const col = i % columns;
-      soa.posX[index] = originX + direction * col * columnSpacing;
-      soa.posY[index] = originY + row * spacing;
-      soa.health[index] = teamBalance(team).maxHealth;
-      soa.teamID[index] = team;
-      soa.stateFlags[index] = FLAG_ALIVE | (i === 0 ? FLAG_LEADER : 0);
-      soa.formationRow[index] = row;
-      soa.formationCol[index] = col;
-      soa.spriteIdx[index] = Math.floor(Math.random() * 36);
+    for(let i=0;i<count;i++){
+      const index=offset+i;
+      const slot=formationSlot(i,count,maxArmy,team,canvasWidth,canvasHeight);
+      soa.posX[index]=slot.x;
+      soa.posY[index]=slot.y;
+      soa.targetX[index]=slot.x;
+      soa.targetY[index]=slot.laneCenterY;
+      soa.health[index]=teamBalance(team).maxHealth;
+      soa.teamID[index]=team;
+      soa.stateFlags[index]=FLAG_ALIVE | (i===0?FLAG_LEADER:0);
+      soa.squadLane[index]=slot.lane;
+      soa.formationState[index]=FORMATION_FORMING;
+      soa.formationRow[index]=slot.row;
+      soa.formationCol[index]=slot.col;
+      // Avoid global Math.random so a match has a stable identical starting layout.
+      soa.spriteIdx[index]=(index*17+team*11)%36;
     }
   };
 
