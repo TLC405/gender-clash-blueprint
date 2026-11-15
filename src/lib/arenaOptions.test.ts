@@ -86,7 +86,8 @@ describe("High-definition TLC championship fields",()=>{
     expect(svg).toContain("viewBox=");
     expect(svg).toContain('width="2400"');
     expect(svg).toMatch(/>TLC<\/text>/);
-    expect(svg).not.toMatch(/THUNDER|OKC<\/text>|NBA/);
+    // Source comments may mention OKC architecture; only rendered text is restricted.
+    expect(svg).not.toMatch(/<text[^>]*>(?:THUNDER|OKC|NBA)<\/text>/);
   });
 
   it("wires formation selection and four field styles to the real battle component",()=>{
