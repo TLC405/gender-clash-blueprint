@@ -7,12 +7,17 @@
  * impacts remain the explicit, temporary fallback (NOT labeled ElevenLabs).
  */
 import { Howl } from "howler";
+import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "./audioMix";
 import {
   ELEVEN_SFX, ELEVEN_VOICES, getReadyAudioFiles, type ElevenCue,
   type ElevenSfx, type ElevenVoice,
 } from "./elevenAudioPack";
 
 let effectsEnabled = true;
+let mix:AudioMix={...DEFAULT_AUDIO_MIX};
+let voiceDucking=false;
+export function setAudioMix(next:Partial<AudioMix>):void {mix=normalizeAudioMix({...mix,...next});}
+export function getAudioMix():AudioMix{return {...mix};}
 let lastImpactAt = 0;
 let lastUIClickAt = 0;
 let lastVoiceAt = 0;
@@ -82,11 +87,16 @@ export function setSoundEnabled(on: boolean): void {
   void primeElevenLabsAudio();
 }
 
-function customSound(cue: ElevenSfx, volume?: number): boolean {
+function customSound(cue: ElevenSfx): boolean {
   const sound = custom.get(cue);
   if (!effectsEnabled || !sound) return false;
+  const channel = cue === "ui_click" ? mix.ui : mix.effects;
+  if(channel<=0)return true;
   const id = sound.play();
-  if (typeof volume === "number") sound.volume(volume, id);
+  const base=cue==="ui_click"?0.20:cue==="meteor"?0.65:0.4;
+  // Lower battle impacts under the spoken announcer.
+  const gain=cue==="ui_click"?channel:channel*(voiceDucking?0.38:1);
+  sound.volume(base*gain,id);
   return true;
 }
 
@@ -102,13 +112,14 @@ export function playKills(count: number): void {
   const sound = pool[Math.floor(Math.random() * pool.length)];
   const id = sound.play();
   sound.rate(0.88 + Math.random() * .24, id);
+  sound.volume(0.25*mix.effects*(voiceDucking?0.38:1),id);
 }
 export function playBell(): void {
   if (!effectsEnabled) return;
   void primeElevenLabsAudio();
   if (customSound("arena_bell")) return;
   legacy();
-  legacyBell?.play();
+  if (legacyBell){const id=legacyBell.play();legacyBell.volume(0.5*mix.effects*(voiceDucking?0.38:1),id);}
 }
 export function playClash(): void {
   if (!effectsEnabled) return;
@@ -147,10 +158,16 @@ export function playVoiceCue(cue: ElevenVoice): boolean {
   lastVoiceAt = now;
   if (currentVoice) currentVoice.stop();
   currentVoice = sound;
-  sound.play();
+  if(mix.voice<=0)return true;
+  const id=sound.play();
+  sound.volume(0.8*mix.voice,id);
+  voiceDucking=true;
+  sound.once("end",()=>{if(currentVoice===sound){currentVoice=null;voiceDucking=false;}},id);
+  sound.once("stop",()=>{if(currentVoice===sound){currentVoice=null;voiceDucking=false;}},id);
   return true;
 }
 export function stopVoiceCue(): void {
   currentVoice?.stop();
   currentVoice = null;
+  voiceDucking=false;
 }
