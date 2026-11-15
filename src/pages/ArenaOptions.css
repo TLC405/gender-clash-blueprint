@@ -120,3 +120,29 @@
 @media(prefers-reduced-motion:reduce){
   .tlc-atomic .tlc-formation-card {transition:none;}
 }
+
+.tlc-atomic .tlc-formation-team-picker {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:3px 0 8px;
+  background:#0e1c2d;padding:4px;border:1px solid #394e64;border-radius:5px;
+}
+.tlc-atomic .tlc-formation-team-picker button {
+  min-width:0;min-height:34px;padding:5px 3px;
+  font-size:8px;letter-spacing:.35px;font-weight:950;
+  border:1px solid transparent;border-radius:3px;
+  background:#1f3044;color:#b0c3d5;cursor:pointer;
+}
+.tlc-atomic .tlc-formation-team-picker button.selected {
+  color:#fff;border-color:#cf895d;
+  background:#35506d;box-shadow:inset 0 1px #ffffff25;
+}
+.tlc-atomic .tlc-formation-vs {
+  display:grid;grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr);
+  align-items:center;gap:4px;margin-bottom:9px;padding:6px 8px;
+  border:1px solid #3d5066;background:#101e2f;color:#dae6f1;
+  border-radius:3px;
+}
+.tlc-atomic .tlc-formation-vs span {min-width:0;font-size:9px;font-weight:800;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;}
+.tlc-atomic .tlc-formation-vs span:last-child {text-align:right;}
+.tlc-atomic .tlc-formation-vs b {color:#79baff;font-size:8px;margin-right:4px;}
+.tlc-atomic .tlc-formation-vs span:last-child b {color:#f0a3cb;}
+.tlc-atomic .tlc-formation-vs .tlc-formation-vs-divider {color:#eaa971;font-size:9px;text-align:center;}
