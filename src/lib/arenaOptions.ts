@@ -34,7 +34,7 @@ export function isArenaSurface(value: unknown): value is ArenaSurface {
   return ARENA_SURFACES.some(item => item.id === value);
 }
 
-export function getTacticSpeed(pattern: FormationPattern, lane: number): number {
+export function getTacticSpeed(pattern: FormationPattern, lane: number, lanes = 6): number {
   if (pattern === "blitz") return lane % 2 === 0 ? 1.14 : 1.02;
   if (pattern === "shield-wall") return 0.76;
   if (pattern === "citadel") return lane % 2 === 0 ? 0.89 : 0.95;
