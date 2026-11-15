@@ -74,6 +74,7 @@ export interface BattleStats {
 export interface PhysicsResult {
   stats: BattleStats;
   kills: Array<{ x: number; y: number; killerTeam: number }>;
+  impacts: number; // verified physical contact pulses this step, for sound & animation
   menFormationActive: boolean;
   womenFormationActive: boolean;
 }
@@ -272,6 +273,7 @@ export function updatePhysics(
   const runtime = getRuntime(soa);
   const kills: PhysicsResult['kills'] = [];
   let menKills = 0, womenKills = 0;
+  let impacts=0;
   let menInFormation = 0, womenInFormation = 0;
   const step = Math.min(1 / 30, Math.max(0, deltaTime)) * Math.min(2, Math.max(0.1, battleSpeed));
   const frozen = phase === 'stand' || phase === 'victory' || step <= 0;
@@ -385,6 +387,7 @@ export function updatePhysics(
         r.pendingStagger[enemy.index] = Math.max(r.pendingStagger[enemy.index], 0.35);
         // The renderer reads this authoritative impact state. Attack animation,
         // hit particles and knockback all originate from the same contact event.
+        impacts++;
         soa.attackTimer[i] = STRIKE_DURATION;
         soa.attackKind[i] = (i + r.tick) % 4 === 0 ? STRIKE_SHOVE : STRIKE_JAB;
         soa.guardTimer[i]=0;
@@ -465,6 +468,7 @@ export function updatePhysics(
       menKills, womenKills, menInFormation, womenInFormation,
     },
     kills,
+    impacts,
     menFormationActive: phase === 'stand' && menInFormation >= teams.mn * 0.5,
     womenFormationActive: phase === 'stand' && womenInFormation >= teams.wn * 0.5,
   };
