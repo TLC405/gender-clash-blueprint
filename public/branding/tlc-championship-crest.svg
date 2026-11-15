@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1600" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+<title id="title">TLC Battlecast Championship Crest</title>
+<desc id="desc">Original metallic TLC lettering above a faceted midnight-blue championship crest, Oklahoma City skyline and amber lightning accents. An independent logo inspired by professional sports energy.</desc>
+<defs>
+ <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e5f4ff"/><stop offset=".22" stop-color="#689cce"/><stop offset=".47" stop-color="#f5f9ff"/><stop offset=".75" stop-color="#546f95"/><stop offset="1" stop-color="#fcffff"/></linearGradient>
+ <linearGradient id="blue" x1=".1" y1="0" x2=".9" y2="1"><stop stop-color="#1265ba"/><stop offset=".42" stop-color="#072b65"/><stop offset="1" stop-color="#040f2c"/></linearGradient>
+ <linearGradient id="metal" x1=".04" y1="0" x2=".3" y2="1"><stop stop-color="#ffffff"/><stop offset=".40" stop-color="#d6e7f7"/><stop offset=".66" stop-color="#879bb8"/><stop offset="1" stop-color="#f7fbff"/></linearGradient>
+ <linearGradient id="orange" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#ffe29b"/><stop offset=".38" stop-color="#ff8c2a"/><stop offset=".72" stop-color="#ef5a20"/><stop offset="1" stop-color="#843313"/></linearGradient>
+ <linearGradient id="night" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#062453"/><stop offset=".6" stop-color="#051228"/><stop offset="1" stop-color="#010712"/></linearGradient>
+ <filter id="lift" x="-20%" y="-20%" width="150%" height="155%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#020912" flood-opacity=".55"/></filter>
+ <filter id="inner" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="#00102c" flood-opacity=".75"/></filter>
+ <pattern id="hex" patternUnits="userSpaceOnUse" width="24" height="22"><path d="M6 1L18 1L23 11L18 21L6 21L1 11Z" fill="none" stroke="#8abde2" stroke-opacity=".11" stroke-width="1"/></pattern>
+</defs>
+<!-- original faceted championship badge, not any NBA shield -->
+<g filter="url(#lift)">
+ <path d="M600 48 890 130 1067 284 1010 560 786 711 600 776 414 711 190 560 133 284 310 130Z" fill="#07132a" stroke="url(#rim)" stroke-width="18" stroke-linejoin="round"/>
+ <path d="M600 80 867 153 1033 299 978 533 768 681 600 742 432 681 222 533 167 299 333 153Z" fill="url(#blue)" stroke="#ff892d" stroke-width="11" stroke-linejoin="round"/>
+ <path d="M600 108 840 175 998 305 951 510 752 651 600 707 448 651 249 510 202 305 360 175Z" fill="url(#night)" stroke="#59a8dd" stroke-opacity=".73" stroke-width="5"/>
+ <path d="M600 108 840 175 998 305 951 510 752 651 600 707 448 651 249 510 202 305 360 175Z" fill="url(#hex)"/>
+ <!-- bold angular orange/blue velocity wings -->
+ <path d="M225 318 65 281 136 358 17 416 259 401 295 341Z" fill="url(#orange)" stroke="#fdf4df" stroke-width="6" stroke-linejoin="round"/>
+ <path d="M975 318 1135 281 1064 358 1183 416 941 401 905 341Z" fill="url(#orange)" stroke="#fdf4df" stroke-width="6" stroke-linejoin="round"/>
+ <path d="M219 385 70 455 273 433 332 389Z" fill="#0e78bd" stroke="#d9eaff" stroke-width="4"/>
+ <path d="M981 385 1130 455 927 433 868 389Z" fill="#0e78bd" stroke="#d9eaff" stroke-width="4"/>
+ <!-- unique skyline silhouette inspired by OKC architecture -->
+ <path d="M368 300V226H412V262H442V206H476V230H506V182H534V151L553 131 572 151V280H590V205H625V227H650V162H669V138L690 109 711 138V247H744V224H786V256H817V198H845V300Z" fill="#0a3d78" stroke="#75bdff" stroke-width="5" stroke-linejoin="round"/>
+ <path d="M535 153 553 131 572 153M690 110V284M442 206V282M650 162V279" fill="none" stroke="#f9c16d" stroke-width="6"/>
+ <path d="M386 240v27m15-27v27m60-43v25m59-48v26m168-35v30m14-30v30m115-17v26" stroke="#abd9f6" stroke-width="5"/>
+ <!-- high contrast championship logotype -->
+ <path d="M143 330 1058 330 1004 557 226 557Z" fill="#000a23" stroke="#144b8d" stroke-width="16" stroke-linejoin="round"/>
+ <path d="M170 338 1030 338 987 543 246 543Z" fill="url(#blue)" stroke="#ff9b36" stroke-width="6"/>
+ <text x="610" y="520" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-style="italic" font-weight="1000" letter-spacing="-11" font-size="266" stroke="#00102e" stroke-width="24" paint-order="stroke fill" fill="url(#metal)" filter="url(#inner)">TLC</text>
+ <path d="M258 546 951 546 912 580 290 580Z" fill="url(#orange)" stroke="#e5f1ff" stroke-width="4"/>
+ <path d="M600 585 563 647 601 626 570 713 656 606 610 618 638 583Z" fill="url(#orange)" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>
+ <path d="M418 626 529 654 517 674 397 643Z M672 654 783 626 805 643 683 674Z" fill="#2b83c7" stroke="#c0eaff" stroke-width="4"/>
+</g>
+</svg>
