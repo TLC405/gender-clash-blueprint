@@ -54,5 +54,27 @@ for(const scenario of scenarios){
     await page.screenshot({path:"/tmp/tlc-smoke-"+scenario.name.replace(/ /g,"-")+".png"}).catch(()=>{});
   }finally{await ctx.close();}
 }
+// End-to-end cache recovery: must work with no React and no loaded game JS.
+{
+  const ctx=await browser.newContext({viewport:{width:390,height:840},isMobile:true,hasTouch:true});
+  const page=await ctx.newPage();
+  const errors=[];
+  page.on("pageerror",err=>errors.push(err.message));
+  try{
+    await page.goto(new URL("recover.html",app).href,{waitUntil:"domcontentloaded",timeout:25000});
+    await page.locator("#repair").waitFor({state:"visible"});
+    await page.evaluate(async()=>{const cache=await caches.open("tlc-battle-shell-v2");await cache.put("/old-shell",new Response("obsolete"));});
+    await page.locator("#repair").click();
+    await page.waitForURL(/\\?safe=1&repair=/,{timeout:12000});
+    await page.locator(".tlc-cockpit-arena").waitFor({state:"visible",timeout:18000});
+    const remaining=await page.evaluate(async()=> (await caches.keys()).filter(k=>k.startsWith("tlc-battle-")));
+    if(remaining.length) throw new Error("Old app caches survived recovery: "+remaining.join(","));
+    if(errors.length) throw new Error(errors.join(" | "));
+    console.log("PASS zero-dependency recovery clears stale cache and opens safe game");
+  }catch(error){
+    failed=true;console.error("FAIL recovery page",String(error),errors);
+    await page.screenshot({path:"/tmp/tlc-recover-failed.png"}).catch(()=>{});
+  }finally{await ctx.close();}
+}
 await browser.close();
 if(failed)process.exit(1);
