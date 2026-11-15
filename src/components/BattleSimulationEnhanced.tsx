@@ -13,7 +13,7 @@ import { createParticlePool, updateParticles, renderParticles, spawnConfetti, sp
 import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, setInitialCounts, type BattlePhase } from "@/lib/battlePhysicsV4";
 import { renderUnits } from "@/lib/spriteRenderer";
 import type { StickFigure3DLayer } from "@/lib/stickFigure3DRenderer";
-import { playKills, playBell, playClash, playMeteor, playVictory } from "@/lib/battleAudio";
+import { playKills, playImpacts, playBell, playClash, playMeteor, playVictory } from "@/lib/battleAudio";
 
 type BattleSimulationProps = {
   menArmySize: number;
