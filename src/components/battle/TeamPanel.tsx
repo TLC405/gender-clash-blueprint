@@ -201,7 +201,7 @@ export const TeamPanel = ({
             value={[speed]}
             onValueChange={(v) => onSpeedChange(v[0])}
             min={0.5}
-            max={3}
+            max={4}
             step={0.5}
             disabled={disabled}
           />
