@@ -8,7 +8,7 @@
  */
 import { Howl } from "howler";
 import {
-  ELEVEN_VOICES, getReadyAudioFiles, type ElevenCue,
+  ELEVEN_SFX, ELEVEN_VOICES, getReadyAudioFiles, type ElevenCue,
   type ElevenSfx, type ElevenVoice,
 } from "./elevenAudioPack";
 
@@ -60,7 +60,8 @@ export function primeElevenLabsAudio(): Promise<boolean> {
       const response = await fetch(import.meta.env.BASE_URL + "audio/elevenlabs/manifest.json");
       if (!response.ok) return false;
       const files = getReadyAudioFiles(await response.json());
-      if (Object.keys(files).length === 0) return false;
+      // Never mix partially generated packs with the temporary stock bank.
+      if (Object.keys(files).length !== ELEVEN_SFX.length + ELEVEN_VOICES.length) return false;
       for (const [cue, filename] of Object.entries(files) as [ElevenCue, string][]) {
         custom.set(cue, createCue(cue, filename));
       }
@@ -141,7 +142,8 @@ export function playVoiceCue(cue: ElevenVoice): boolean {
   if (!sound) return false;
   const now = performance.now();
   const isFinal = cue === "men_win" || cue === "women_win";
-  if (!isFinal && now - lastVoiceAt < 7500) return false;
+  // A throttled premium cue must not accidentally trigger the old TTS fallback.
+  if (!isFinal && now - lastVoiceAt < 7500) return true;
   lastVoiceAt = now;
   if (currentVoice) currentVoice.stop();
   currentVoice = sound;
