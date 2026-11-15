@@ -391,7 +391,7 @@ export function updatePhysics(
         soa.attackTimer[i] = STRIKE_DURATION;
         soa.attackKind[i] = (i + r.tick) % 4 === 0 ? STRIKE_SHOVE : STRIKE_JAB;
         soa.guardTimer[i]=0;
-        r.impactCooldown[i] = 0.4 + noise(i, r.tick) * 0.17;
+        r.impactCooldown[i] = 0.58 + noise(i, r.tick) * 0.12;
         if ((i + r.tick) % 7 === 0) effects(pool, (x + tx) / 2, (y + ty) / 2, team, i + r.tick, false);
       }
     }
