@@ -13,6 +13,7 @@ import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "@/lib/audio
 import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
 import { CROWD_PRESETS } from "@/lib/battleBalance";
+import { FORMATIONS, ARENA_SURFACES, isFormationPattern, isArenaSurface, type FormationPattern, type ArenaSurface } from "@/lib/arenaOptions";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
 import AtomicScoreboard from "@/components/battle/AtomicScoreboard";
 import "./Index.css";
@@ -21,6 +22,7 @@ import "./OneScreen.css";
 import "./AtomicUpgrade.css";
 import "./AtomicSweep.css";
 import "./AudioArena.css";
+import "./ArenaOptions.css";
 
 type Team = "men" | "women";
 type Outcome = Team | "draw";
@@ -43,6 +45,14 @@ const clock = (seconds: number) => Math.floor(seconds / 60) + ":" + String(Math.
 
 const Index = () => {
   const [presetId, setPresetId] = useState("classic");
+  const [formationPattern, setFormationPattern] = useState<FormationPattern>(()=>{
+    try { const saved=localStorage.getItem("tlc-battle-formation");return isFormationPattern(saved)?saved:"battle-lines"; }
+    catch { return "battle-lines"; }
+  });
+  const [arenaSurface, setArenaSurface] = useState<ArenaSurface>(()=>{
+    try { const saved=localStorage.getItem("tlc-battle-surface");return isArenaSurface(saved)?saved:"championship"; }
+    catch { return "championship"; }
+  });
   const [menArmySize, setMenArmySize] = useState<number>(CROWD_PRESETS[0].men);
   const [womenArmySize, setWomenArmySize] = useState<number>(CROWD_PRESETS[0].women);
   const [battleSpeed, setBattleSpeed] = useState(0.5);
@@ -139,6 +149,10 @@ const Index = () => {
   }, [activePanel]);
 
   useEffect(() => { setSoundEnabled(soundEnabled); }, [soundEnabled]);
+  useEffect(() => {
+    try { localStorage.setItem("tlc-battle-formation",formationPattern);localStorage.setItem("tlc-battle-surface",arenaSurface); }
+    catch {/* Storage optional for private browsers. */}
+  },[formationPattern,arenaSurface]);
   useEffect(() => {
     setAudioMix(audioMix);
     try{localStorage.setItem("tlc-atomic-audio-mix",JSON.stringify(audioMix));}
@@ -385,7 +399,7 @@ const Index = () => {
     <div ref={viewportRef} className="tlc-app tlc-one-screen tlc-atomic">
       <header className="tlc-cockpit-header">
         <div className="tlc-cockpit-brand">
-          <span className="tlc-cockpit-monogram">TLC</span>
+          <span className="tlc-cockpit-monogram tlc-cockpit-crest"><img src={import.meta.env.BASE_URL+"branding/tlc-championship-crest.svg"} alt="TLC Championship crest" /></span>
           <div className="tlc-cockpit-brandcopy"><strong>BATTLE<span>CAST</span></strong><small>THE ATOMIC EDITION / 2026</small></div>
         </div>
         <div className="tlc-cockpit-header-center">
@@ -414,6 +428,7 @@ const Index = () => {
               <BattleSimulation
                 key={battleKey}
                 menArmySize={menArmySize} womenArmySize={womenArmySize}
+                formationPattern={formationPattern} arenaSurface={arenaSurface}
                 battleSpeed={battleSpeed} menRageEnabled={menRage} womenRageEnabled={womenRage}
                 isRunning={isRunning} narratorEnabled={narratorEnabled}
                 meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion}
@@ -461,7 +476,39 @@ const Index = () => {
         {activePanel && <><button className="tlc-atomic-shade" type="button" aria-label="Close controls panel" onClick={() => setActivePanel(null)} /><div className="tlc-cockpit-panel" role="dialog" aria-modal="true" aria-label={activePanel + " controls"}>
           <div className="tlc-cockpit-panel-head"><div><span>TLC / CONTROL ROOM</span><strong>{activePanel === "modes" ? "CHOOSE A MATCH" : activePanel === "powers" ? "BATTLE POWER-UPS" : activePanel === "stats" ? "MATCH CENTER" : activePanel === "share" ? "SHARE THE MATCH" : "GAME SETTINGS"}</strong></div><button ref={panelCloseRef} type="button" aria-label="Close panel" onClick={() => setActivePanel(null)}>✕</button></div>
           <div className="tlc-cockpit-panel-body">
-            {activePanel === "modes" && <><div className="tlc-balance-disclosure"><strong>POWER VS NUMBERS</strong><span>Women outnumber men in every mode. Men are tougher and hit harder; women field larger armies. All strength differences here are fictional game rules.</span></div><div className="tlc-cockpit-mode-list">{PRESETS.map(p => <button key={p.id} className={presetId === p.id ? "selected" : ""} onClick={() => { if(isRunning){toast.info("Pause the match before switching modes.");return;} applyPreset(p);setActivePanel(null); }}><span className="tlc-cockpit-mode-emoji">{p.icon}</span><span><strong>{p.name}</strong><small>{p.men.toLocaleString()} vs {p.women.toLocaleString()} · {p.tagline}</small></span><span className="tlc-cockpit-mode-select">{presetId === p.id ? "ACTIVE" : "SELECT"}</span></button>)}</div></>}
+            {activePanel === "modes" && <>
+              <div className="tlc-balance-disclosure"><strong>POWER VS NUMBERS</strong><span>Women outnumber men. Male units are stronger per fighter; both use fictional arcade attributes.</span></div>
+              <div className="tlc-arena-section-title"><strong>MATCH SIZE</strong><small>Pick your army counts</small></div>
+              <div className="tlc-cockpit-mode-list">{PRESETS.map(p=><button key={p.id} className={presetId===p.id?"selected":""} onClick={()=>{
+                if(isRunning){toast.info("Pause the match before switching modes.");return;}
+                applyPreset(p);
+              }}><span className="tlc-cockpit-mode-emoji">{p.icon}</span><span><strong>{p.name}</strong><small>{p.men.toLocaleString()} vs {p.women.toLocaleString()} · {p.tagline}</small></span><span className="tlc-cockpit-mode-select">{presetId===p.id?"ACTIVE":"SELECT"}</span></button>)}</div>
+              <div className="tlc-arena-section-title"><strong>FORMATION PLAYBOOK</strong><small>8 strategies · real movement changes</small></div>
+              <div className="tlc-formation-grid" role="group" aria-label="Choose battle formation">
+                {FORMATIONS.map(f=><button type="button" key={f.id} className={"tlc-formation-card"+(formationPattern===f.id?" selected":"")}
+                  aria-pressed={formationPattern===f.id} onClick={()=>{
+                    if(isRunning){toast.info("Pause the battle to deploy a new formation.");return;}
+                    playUiClick();setFormationPattern(f.id);resetBattle(menArmySize,womenArmySize);
+                  }}>
+                  <span className="tlc-formation-preview" aria-hidden="true">
+                    <span className="tlc-formation-axis"/>
+                    {f.preview.map(([px,py],i)=><i key={i} style={{left:px+"%",top:py+"%"}} />)}
+                  </span>
+                  <span className="tlc-formation-card-copy"><strong>{f.name}</strong><small>{f.tagline}</small></span>
+                  <span className="tlc-formation-indicator">{formationPattern===f.id?"ACTIVE":"DEPLOY"}</span>
+                </button>)}
+              </div>
+              <div className="tlc-arena-section-title"><strong>ARENA SURFACE</strong><small>4 premium floors · switch live</small></div>
+              <div className="tlc-arena-surfaces" role="group" aria-label="Choose arena surface">
+                {ARENA_SURFACES.map(a=><button type="button" key={a.id}
+                  className={"tlc-arena-surface"+(arenaSurface===a.id?" selected":"")}
+                  aria-pressed={arenaSurface===a.id} onClick={()=>{playUiClick();setArenaSurface(a.id);}}>
+                  <span className="tlc-arena-surface-color" style={{background:a.swatch}}><b>TLC</b></span>
+                  <span><strong>{a.name}</strong><small>{a.tagline}</small></span>
+                </button>)}
+              </div>
+              <div className="tlc-arena-crest-note">ORIGINAL TLC CHAMPIONSHIP CREST · SCALABLE VECTOR FIELD ART</div>
+            </>}
             {activePanel === "powers" && <div className="tlc-cockpit-power-grid">
               <button className={menRage ? "active men" : "men"} onClick={() => { setMenRage(v => !v);recordMoment(menRage ? "BRO MODE OFF" : "BRO MODE ON",menRage ? "Men return to normal speed." : "Team Men gets a combat boost.","⚡","men"); }}><Flame size={19}/><strong>{menRage ? "BRO MODE ON" : "BRO MODE"}</strong><small>Boost Team Men</small></button>
               <button className={womenRage ? "active women" : "women"} onClick={() => { setWomenRage(v => !v);recordMoment(womenRage ? "QUEEN MODE OFF" : "QUEEN MODE ON",womenRage ? "Women return to normal speed." : "Team Women gets a combat boost.","👑","women"); }}><Crown size={19}/><strong>{womenRage ? "QUEEN MODE ON" : "QUEEN MODE"}</strong><small>Boost Team Women</small></button>
