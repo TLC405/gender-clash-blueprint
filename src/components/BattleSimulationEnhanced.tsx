@@ -61,6 +61,11 @@ const BattleSimulation = ({
   const lastStatsRef = useRef<{ menAlive: number; womenAlive: number } | null>(null);
   const lastUiPushRef = useRef(0);
   const arenaCacheRef = useRef<HTMLCanvasElement | null>(null);
+  const failedArenaRef = useRef(false);
+  // ?safe=1 is a reliable low-resource entrypoint if the Android GPU stalls.
+  const gpuDisabledRef = useRef(typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('safe') === '1');
+  const lastPaintRef = useRef(0);
+  const hasPaintedRef = useRef(false);
   const centerCrestRef = useRef<HTMLImageElement | null>(null);
   const stick3DRef = useRef<StickFigure3DLayer | null>(null);
   const stick3DOpsRef = useRef<typeof import("@/lib/stickFigure3DRenderer") | null>(null);
@@ -99,7 +104,9 @@ const BattleSimulation = ({
   const initCanvas = useCallback(() => {
     const container = containerRef.current;
     if (!container) return { width: 800, height: 600 };
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Three fullscreen canvases at high DPI can exhaust Fold/in-app browser GPU memory.
+    const screenSize = Math.min(window.innerWidth,window.innerHeight);
+    const dpr = gpuDisabledRef.current ? 1 : Math.min(window.devicePixelRatio || 1, screenSize <= 500 ? 1.3 : 1.75);
     dprRef.current = dpr;
     const rect = container.getBoundingClientRect();
     const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
@@ -275,7 +282,7 @@ const BattleSimulation = ({
       ctx.fillStyle = `rgba(255, 255, 255, ${clashFlashRef.current})`;
       ctx.fillRect(0, 0, width, height);
     }
-  }, [menArmySize, womenArmySize]);
+  }, [menArmySize, womenArmySize, isRunning]);
 
   // Persistent scuff marks where fights happened (drawn into cached arena)
   const addScuff = useCallback((x: number, y: number) => {
@@ -301,7 +308,20 @@ const BattleSimulation = ({
     c.height = Math.floor(height * dpr);
     const g = c.getContext('2d')!;
     g.scale(dpr, dpr);
-    renderArena(g, width, height);
+    try {
+      renderArena(g, width, height);
+      failedArenaRef.current = false;
+    } catch (error) {
+      // Fail open if any SVG/Canvas operation fails: keep play controls usable.
+      if (!failedArenaRef.current) console.error('[TLC Arena] Advanced floor failed; fallback active',error);
+      failedArenaRef.current = true;
+      g.fillStyle = '#10273d';
+      g.fillRect(0,0,width,height);
+      g.strokeStyle = '#718da6';
+      g.lineWidth = 2;
+      g.strokeRect(8,8,Math.max(0,width-16),Math.max(0,height-16));
+      g.beginPath();g.moveTo(width/2,8);g.lineTo(width/2,height-8);g.stroke();
+    }
     arenaCacheRef.current = c;
     return c;
   }, [renderArena]);
@@ -455,14 +475,23 @@ const BattleSimulation = ({
     ctx.save(); applyCam(ctx); ctx.drawImage(arena, 0, 0, width, height); ctx.restore();
 
     // Layer 2: genuine 3D instanced human rigs; 2D human stick fallback.
-    if (stick3DRef.current && stick3DOpsRef.current) {
-      stick3DOpsRef.current.renderStickFigure3DLayer(
-        stick3DRef.current, soaRef.current,
-        { x: camX, y: camY, zoom: cam.zoom, w: width, h: height },
-        reducedMotionRef.current, performance.now() / 1000
-      );
-    } else {
-      ctx.save(); applyCam(ctx); renderUnits(ctx, soaRef.current, false, 0, false, phase); ctx.restore();
+    if (stick3DRef.current && stick3DOpsRef.current && !gpuDisabledRef.current) {
+      try {
+        stick3DOpsRef.current.renderStickFigure3DLayer(
+          stick3DRef.current, soaRef.current,
+          { x: camX, y: camY, zoom: cam.zoom, w: width, h: height },
+          reducedMotionRef.current, performance.now() / 1000
+        );
+      } catch (error) {
+        console.warn('[TLC Arena] 3D rendering failed; switching to safe 2D mode',error);
+        gpuDisabledRef.current = true;
+        if(unitCanvasRef.current)unitCanvasRef.current.style.display='none';
+      }
+    }
+    if (!stick3DRef.current || !stick3DOpsRef.current || gpuDisabledRef.current) {
+      ctx.save(); applyCam(ctx);
+      try { renderUnits(ctx, soaRef.current, false, 0, false, phase); }
+      finally { ctx.restore(); }
     }
 
     // Layer 3: particles + lighting
@@ -504,7 +533,16 @@ const BattleSimulation = ({
         acc = 0;
         updateParticles(poolRef.current, frame);
       }
-      renderFnRef.current();
+      // Do not run 2,000-person rig animation at 60FPS on the unopened screen.
+      // A stable static preview is enough until the user taps Start.
+      const running=propsRef.current.isRunning && phaseRef.current!=='victory';
+      const frameInterval=running?16:250;
+      if (!hasPaintedRef.current || t-lastPaintRef.current>=frameInterval){
+        hasPaintedRef.current=true;
+        lastPaintRef.current=t;
+        try {renderFnRef.current();}
+        catch(error){console.error('[TLC Arena] Frame paint recovered',error);gpuDisabledRef.current=true;if(unitCanvasRef.current)unitCanvasRef.current.style.display='none';}
+      }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -517,9 +555,19 @@ const BattleSimulation = ({
   // Lazily load real 3D fighter meshes. Keep the battlefield playable on
   // older devices by drawing human stick figures on Canvas 2D if WebGL fails.
   useEffect(() => {
+    // Delay WebGL allocation until the player explicitly starts a match.
+    // Avoids an expensive GPU context/mesh initialization when merely opening.
+    if (!isRunning || gpuDisabledRef.current) return;
     const canvas = unitCanvasRef.current;
     if (!canvas) return;
     let cancelled = false;
+    const onContextLost=(event:Event)=>{
+      event.preventDefault();
+      gpuDisabledRef.current=true;
+      canvas.style.display='none';
+      console.warn('[TLC Arena] WebGL context lost; 2D fallback active');
+    };
+    canvas.addEventListener('webglcontextlost',onContextLost);
     let ownedLayer: StickFigure3DLayer | null = null;
     import("@/lib/stickFigure3DRenderer")
       .then(ops => {
@@ -533,13 +581,18 @@ const BattleSimulation = ({
           }
           stick3DOpsRef.current = ops;
           stick3DRef.current = ownedLayer;
+          canvas.style.display='block';
         } catch (error) {
+          gpuDisabledRef.current = true;
+          canvas.style.display='none';
           console.warn("3D fighters unavailable; using 2D human stick figures", error);
         }
       })
       .catch(error => console.warn("3D fighter renderer could not load; using 2D fallback", error));
     return () => {
       cancelled = true;
+      canvas.removeEventListener('webglcontextlost',onContextLost);
+      canvas.style.display='none'; // Never leave a stale WebGL frame over the 2D fallback on Pause.
       if (ownedLayer && stick3DOpsRef.current) {
         stick3DOpsRef.current.destroyStickFigure3DLayer(ownedLayer);
       }
@@ -562,7 +615,7 @@ const BattleSimulation = ({
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0 block" />
-      <canvas ref={unitCanvasRef} className="absolute inset-0 block pointer-events-none" />
+      <canvas ref={unitCanvasRef} className="absolute inset-0 block pointer-events-none" style={{display:gpuDisabledRef.current?"none":undefined}} />
       <canvas
         ref={fxCanvasRef}
         className="absolute inset-0 block cursor-crosshair"
