@@ -60,7 +60,7 @@ const Index = () => {
   });
   const [menArmySize, setMenArmySize] = useState<number>(CROWD_PRESETS[0].men);
   const [womenArmySize, setWomenArmySize] = useState<number>(CROWD_PRESETS[0].women);
-  const [battleSpeed, setBattleSpeed] = useState(0.5);
+  const [battleSpeed, setBattleSpeed] = useState(1);
   const [menRage, setMenRage] = useState(false);
   const [womenRage, setWomenRage] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -467,7 +467,7 @@ const Index = () => {
             <button type="button" className="tlc-cockpit-reset" onClick={() => { playUiClick(); setActivePanel(null); resetBattle(menArmySize, womenArmySize); }} title="Reset match" aria-label="Reset match"><RotateCcw size={17} /><span>RESET</span></button>
             <div className="tlc-cockpit-speed" role="group" aria-label="Match playback pace">
               <span>PACE</span>
-              {[0.25, 0.5, 1].map(speed => <button key={speed} className={battleSpeed === speed ? "selected" : ""} aria-pressed={battleSpeed === speed} onClick={() => { playUiClick(); setBattleSpeed(speed); }}>{speed}×</button>)}
+              {[0.5, 1, 2].map(speed => <button key={speed} className={battleSpeed === speed ? "selected" : ""} aria-pressed={battleSpeed === speed} onClick={() => { playUiClick(); setBattleSpeed(speed); }}>{speed}×</button>)}
             </div>
           </div>
           <div className="tlc-cockpit-shortcuts">
@@ -549,7 +549,7 @@ const Index = () => {
                 </div>)}
               </div>
               <label><span><Shield size={18}/> REDUCED FLASH & SHAKE</span><input type="checkbox" checked={reducedMotion} onChange={e => setReducedMotion(e.target.checked)}/></label>
-              <div className="tlc-cockpit-settings-row"><span>PLAYBACK PACE</span><div>{[0.25,0.5,0.75,1,1.5].map(speed => <button className={battleSpeed===speed?"active":""} key={speed} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}</div></div>
+              <div className="tlc-cockpit-settings-row"><span>PLAYBACK PACE</span><div>{[0.25,0.5,1,1.5,2].map(speed => <button className={battleSpeed===speed?"active":""} key={speed} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}</div></div>
               <button className="tlc-cockpit-settings-action" onClick={() => setSpectatorMode(v=>!v)}>{spectatorMode ? <Eye size={17}/> : <EyeOff size={17}/>} {spectatorMode?"SHOW BROADCAST GRAPHICS":"FOCUS ON THE ARENA"}</button>
               <button className="tlc-cockpit-settings-action" onClick={toggleFullscreen}>{fullscreen?<Minimize2 size={17}/>:<Maximize2 size={17}/>} {fullscreen?"EXIT FULLSCREEN":"ENTER FULLSCREEN"}</button>
               <small>All matches run locally. No account, real online audience, or multiplayer connection is implied.</small>

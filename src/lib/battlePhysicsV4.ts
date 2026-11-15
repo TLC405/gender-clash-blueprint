@@ -47,8 +47,8 @@ export interface PhysicsConfig {
 }
 
 export const DEFAULT_CONFIG: PhysicsConfig = {
-  moveSpeed: 95,
-  chargeSpeed: 157,
+  moveSpeed: 150,
+  chargeSpeed: 320,
   attackRange: 11.5,
   baseDamage: 10,
   separationRadius: 12.5,
@@ -57,7 +57,7 @@ export const DEFAULT_CONFIG: PhysicsConfig = {
   cohesionStrength: 0.05,
   alignmentStrength: 0.035,
   attractionStrength: 3.2,
-  maxSpeed: 165,
+  maxSpeed: 270,
   rageSpeedMultiplier: 1.3,
   incomingDamageCap: 28,
   enemySightCells: 3,

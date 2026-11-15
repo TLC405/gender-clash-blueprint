@@ -83,7 +83,7 @@ const BattleSimulation = ({
   const phaseTimeRef = useRef<number>(0);
   const killStatsRef = useRef({ menKills: 0, womenKills: 0 });
   // A bounded, temporary 2D aftermath trail adds readable knockdowns without 3D ragdolls.
-  const fallenRef = useRef<Array<{ x: number; y: number; dx: number; dy: number; angle: number; age: number; color: string }>>([]);
+  const fallenRef = useRef<Array<{ x: number; y: number; dx: number; dy: number; angle: number; age: number; color: string; z: number; vz: number; spin: number; word: string }>>([]);
   const initializedRef = useRef(false);
   const dprRef = useRef<number>(1);
   const logicalSizeRef = useRef({ width: 800, height: 600 });
@@ -327,7 +327,7 @@ const BattleSimulation = ({
   }, [renderArena]);
 
   const FIXED_DT = 1 / 60;
-  const STAND_SECONDS = 3.25;
+  const STAND_SECONDS = 0.8;
 
   // One physics step — reads/writes refs only (no React re-render per frame)
   const stepBattle = useCallback((dt: number) => {
@@ -371,11 +371,19 @@ const BattleSimulation = ({
       const body = fallen[j];
       body.age += dt;
       if (body.age >= 2.25) continue;
-      const friction = Math.exp(-2.8 * dt);
+      // Cartoon ragdoll: launched into the air, spins, bounces, then slides to a stop.
+      body.vz -= 900 * dt;
+      body.z += body.vz * dt;
+      if (body.z <= 0) {
+        body.z = 0;
+        if (body.vz < -120) { body.vz = -body.vz * 0.35; body.spin *= 0.5; }
+        else { body.vz = 0; body.spin *= Math.exp(-6 * dt); }
+        const friction = Math.exp(-4 * dt);
+        body.dx *= friction; body.dy *= friction;
+      }
       body.x += body.dx * dt;
       body.y += body.dy * dt;
-      body.dx *= friction;
-      body.dy *= friction;
+      body.angle += body.spin * dt;
       fallen[livingMarkers++] = body;
     }
     fallen.length = livingMarkers;
@@ -387,8 +395,20 @@ const BattleSimulation = ({
       playKills(newKills);
       for (const k of result.kills) {
         const forward = k.killerTeam === TEAM_MEN ? 1 : -1;
-        const drift = (fallen.length % 7 - 3) * 8;
-        fallen.push({ x: k.x, y: k.y, dx: forward * 46, dy: drift, angle: drift * 0.017, age: 0, color: k.killerTeam === TEAM_MEN ? "#ff8ebd" : "#7ac5ff" });
+        const calm = reducedMotionRef.current;
+        const power = calm ? 0.3 : 0.6 + Math.random() * 0.9;
+        const words = ["BONK!", "YEET!", "OOF!", "POW!", "WHEEE!", "SPLAT!", "BOING!"];
+        fallen.push({
+          x: k.x, y: k.y,
+          dx: forward * (110 + Math.random() * 170) * power,
+          dy: (Math.random() - 0.5) * 220 * power,
+          z: 0, vz: (220 + Math.random() * 260) * power,
+          angle: Math.random() * Math.PI * 2,
+          spin: (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 14) * power,
+          age: 0,
+          word: !calm && Math.random() < 0.18 ? words[Math.floor(Math.random() * words.length)] : "",
+          color: k.killerTeam === TEAM_MEN ? "#ff8ebd" : "#7ac5ff",
+        });
         addScuff(k.x, k.y);
         clashPointRef.current.x += (k.x - clashPointRef.current.x) * 0.05;
         clashPointRef.current.y += (k.y - clashPointRef.current.y) * 0.05;
@@ -500,15 +520,37 @@ const BattleSimulation = ({
     fx.save(); applyCam(fx);
     // Impact aftermath: brief horizontal trails, not a fake 3D ragdoll claim.
     for (const body of fallenRef.current) {
-      fx.globalAlpha = 0.47 * (1 - body.age / 2.25);
-      fx.fillStyle = body.color;
+      const fade = Math.min(1, (2.25 - body.age) / 0.6);
+      // ground shadow shrinks as they fly higher
+      const sh = Math.max(0.3, 1 - body.z / 160);
+      fx.globalAlpha = 0.3 * fade * sh;
+      fx.fillStyle = "#000";
+      fx.beginPath(); fx.ellipse(body.x, body.y + 6, 7 * sh, 2.5 * sh, 0, 0, Math.PI * 2); fx.fill();
+      // flailing stick figure
+      fx.globalAlpha = fade;
       fx.save();
-      fx.translate(body.x, body.y);
+      fx.translate(body.x, body.y - body.z);
       fx.rotate(body.angle);
+      fx.strokeStyle = body.color; fx.fillStyle = body.color;
+      fx.lineWidth = 2; fx.lineCap = "round";
+      const flail = Math.sin(body.age * 30) * 0.9;
       fx.beginPath();
-      fx.ellipse(0, 0, 7.3, 3.5, 0, 0, Math.PI * 2);
-      fx.fill();
+      fx.moveTo(0, -4); fx.lineTo(0, 5);                       // torso
+      fx.moveTo(0, -2); fx.lineTo(-6, -2 - 5 * flail);         // arms
+      fx.moveTo(0, -2); fx.lineTo(6, -2 + 5 * flail);
+      fx.moveTo(0, 5); fx.lineTo(-4, 11 + 2 * flail);          // legs
+      fx.moveTo(0, 5); fx.lineTo(4, 11 - 2 * flail);
+      fx.stroke();
+      fx.beginPath(); fx.arc(0, -7.5, 3.2, 0, Math.PI * 2); fx.fill();
       fx.restore();
+      if (body.word && body.age < 0.9) {
+        fx.globalAlpha = 1 - body.age / 0.9;
+        fx.font = "900 13px system-ui, sans-serif";
+        fx.textAlign = "center";
+        fx.lineWidth = 3; fx.strokeStyle = "#111"; fx.fillStyle = "#ffe14d";
+        const ty = body.y - body.z - 22 - body.age * 30;
+        fx.strokeText(body.word, body.x, ty); fx.fillText(body.word, body.x, ty);
+      }
     }
     fx.globalAlpha = 1;
     renderParticles(fx, poolRef.current); fx.restore();
