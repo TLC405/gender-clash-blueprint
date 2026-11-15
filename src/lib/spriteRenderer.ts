@@ -5,6 +5,7 @@
  * No health bars, HP indicators or unit-circle sprites are rendered.
  */
 import { TEAM_MEN, FLAG_ALIVE, FLAG_LEADER, type BattleSoA } from './battleSoA';
+import { attackEnvelope, guardEnvelope, STRIKE_JAB, STRIKE_SHOVE } from './combatChoreography';
 import { getStickFigureVariant, getStickMotion, STICK_FIGHTER_PALETTES } from './stickFigureVariants';
 
 export function initSprites(): void {}
@@ -30,7 +31,12 @@ export function renderUnits(
     const motion = getStickMotion(style, now, still ? 0 : Math.hypot(soa.velX[i], soa.velY[i]), soa.stagger[i], still);
     const scale = style.height * (men ? 1.03 : 0.98);
     const stride = motion.stride * 2.4 * scale;
-    const lean = motion.lean * scale;
+    const strike = still ? 0 : attackEnvelope(soa.attackTimer[i]);
+    const jab = soa.attackKind[i] === STRIKE_JAB ? strike : 0;
+    const shove = soa.attackKind[i] === STRIKE_SHOVE ? strike : 0;
+    const guard = still ? 0 : guardEnvelope(soa.guardTimer[i], soa.attackTimer[i]);
+    const front = men ? 1 : -1;
+    const lean = (motion.lean + front * (jab*0.8 + shove*1.2)) * scale;
     const hip = 2 * style.hips * scale;
     const shoulder = 3 * style.shoulders * scale;
     const shades = men ? STICK_FIGHTER_PALETTES.men : STICK_FIGHTER_PALETTES.women;
@@ -64,13 +70,18 @@ export function renderUnits(
     line(hipR,pelvisY,kneeR,-4.3*scale,1.9*scale);
     line(kneeR,-4.3*scale,footR,0,1.45*scale);
     line(pelvisX,pelvisY,neckX,neckY,2.1*scale);
-    const elbowLY=neckY+4*scale,elbowRY=neckY+4*scale;
-    const elbowLX=neckX-shoulder-1.6*scale-stride*.4;
-    const elbowRX=neckX+shoulder+1.6*scale-stride*.4;
+    const elbowLY=neckY+(4-guard*2.2-shove*2)*scale;
+    const elbowRY=neckY+(4-guard*2.2-jab*2.3-shove*2)*scale;
+    const elbowLX=neckX-shoulder-1.6*scale-stride*.4+front*shove*3.2*scale;
+    const elbowRX=neckX+shoulder+1.6*scale-stride*.4+front*(jab*3.5+shove*3.2)*scale;
     line(neckX-shoulder,neckY,elbowLX,elbowLY,1.5*scale);
-    line(elbowLX,elbowLY,elbowLX-1.1*scale,elbowLY+3*scale,1.1*scale);
+    line(elbowLX,elbowLY,
+      elbowLX-1.1*scale+front*(shove*5.1+guard*.6)*scale,
+      elbowLY+(3-guard*5-shove*3)*scale,1.1*scale);
     line(neckX+shoulder,neckY,elbowRX,elbowRY,1.5*scale);
-    line(elbowRX,elbowRY,elbowRX+1.1*scale,elbowRY+3*scale,1.1*scale);
+    line(elbowRX,elbowRY,
+      elbowRX+1.1*scale+front*(jab*6.3+shove*5.1+guard*.6)*scale,
+      elbowRY+(3-guard*5-jab*4.1-shove*3)*scale,1.1*scale);
     ctx.beginPath();
     ctx.arc(neckX+.4*scale,neckY-3.6*scale,2.55*scale,0,Math.PI*2);
     ctx.fillStyle=skin;ctx.fill();
