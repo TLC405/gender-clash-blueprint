@@ -62,7 +62,8 @@ const BattleSimulation = ({
   const lastUiPushRef = useRef(0);
   const arenaCacheRef = useRef<HTMLCanvasElement | null>(null);
   const failedArenaRef = useRef(false);
-  const gpuDisabledRef = useRef(false);
+  // ?safe=1 is a reliable low-resource entrypoint if the Android GPU stalls.
+  const gpuDisabledRef = useRef(typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('safe') === '1');
   const lastPaintRef = useRef(0);
   const hasPaintedRef = useRef(false);
   const centerCrestRef = useRef<HTMLImageElement | null>(null);
@@ -105,7 +106,7 @@ const BattleSimulation = ({
     if (!container) return { width: 800, height: 600 };
     // Three fullscreen canvases at high DPI can exhaust Fold/in-app browser GPU memory.
     const screenSize = Math.min(window.innerWidth,window.innerHeight);
-    const dpr = Math.min(window.devicePixelRatio || 1, screenSize <= 500 ? 1.3 : 1.75);
+    const dpr = gpuDisabledRef.current ? 1 : Math.min(window.devicePixelRatio || 1, screenSize <= 500 ? 1.3 : 1.75);
     dprRef.current = dpr;
     const rect = container.getBoundingClientRect();
     const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
@@ -591,6 +592,7 @@ const BattleSimulation = ({
     return () => {
       cancelled = true;
       canvas.removeEventListener('webglcontextlost',onContextLost);
+      canvas.style.display='none'; // Never leave a stale WebGL frame over the 2D fallback on Pause.
       if (ownedLayer && stick3DOpsRef.current) {
         stick3DOpsRef.current.destroyStickFigure3DLayer(ownedLayer);
       }
