@@ -7,6 +7,8 @@
  * This is authored 2D arcade choreography, NOT reciprocal velocity
  * obstacle physics, biomechanical combat or full rigid-body ragdolls.
  */
+import type { FormationPattern } from './arenaOptions';
+
 export const MAX_SQUADS = 8;
 export const STRIKE_DURATION = 0.36;
 export const STRIKE_JAB = 1;
@@ -34,7 +36,7 @@ export interface FormationSlot {
 /** A readable layered battalion layout with small deterministic visual variation. */
 export function formationSlot(
   index:number, count:number, maxArmySize:number, team:number,
-  width:number, height:number,
+  width:number, height:number, pattern:FormationPattern='battle-lines',
 ):FormationSlot {
   const lanes=getSquadCount(maxArmySize);
   const perLane=Math.ceil(count/lanes);
@@ -53,8 +55,37 @@ export function formationSlot(
   const originX=team===0?Math.max(24,width*0.10):Math.min(width-24,width*0.90);
   // Stable, small offsets prevent a rigid block of perfectly matching people.
   const wobble=((Math.imul(index+1,1103515245)>>>16)%17-8)/8;
-  const x=clamp(originX+direction*col*gapX+wobble*0.85,24,width-24);
-  const y=clamp(centerY+(row-(rows-1)/2)*gapY+wobble*0.4,24,height-24);
+  const relLane=lanes<=1?0:(lane/(lanes-1)*2-1);
+  const middle=1-Math.abs(relLane);
+  let along=0;
+  let across=0;
+  const phase=(withinLane/inThisLane)*Math.PI*2;
+  switch(pattern){
+    case 'thunder-wedge':
+      along=width*0.070*middle; across=-relLane*laneSpace*0.10; break;
+    case 'pincer':
+      along=width*(0.085*Math.abs(relLane)-0.018); across=Math.sign(relLane)*laneSpace*0.09; break;
+    case 'shield-wall':
+      along=-width*0.055 + (col%3)*width*0.004; across=-(row-(rows-1)/2)*gapY*.1; break;
+    case 'storm-spiral':
+      along=Math.sin(phase*1.15+lane*1.06)*width*.06;
+      across=Math.cos(phase+lane*1.5)*Math.min(12,laneSpace*.20); break;
+    case 'blitz':
+      along=(lane%2===0?0.075:0.015)*width;
+      across=Math.sin(phase)*Math.min(5,laneSpace*.07); break;
+    case 'scatter':
+      along=(((Math.imul(index+1,190197)>>>9)%101)/100-.5)*width*.105;
+      across=(((Math.imul(index+5,362129)>>>10)%101)/100-.5)*laneSpace*.65;break;
+    case 'citadel':
+      along=width*(0.045*middle-0.047*Math.abs(relLane));
+      across=-relLane*laneSpace*.20;break;
+    default: break;
+  }
+  // Both opponents retain breathing room at the opening bell on narrow Fold screens.
+  const safeFront=team===0?width*.465:width*.535;
+  const rawX=originX+direction*(col*gapX+along)+wobble*.85;
+  const x=clamp(team===0?Math.min(safeFront,rawX):Math.max(safeFront,rawX),24,width-24);
+  const y=clamp(centerY+(row-(rows-1)/2)*gapY+wobble*.4+across,24,height-24);
   return {lane,row,col,x,y,laneCenterY:centerY};
 }
 

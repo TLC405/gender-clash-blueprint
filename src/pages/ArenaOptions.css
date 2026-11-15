@@ -1,0 +1,148 @@
+/* TLC BATTLECAST / Championship court & formation tactical playbook.
+   Editorial sports-product quality, no neon or fake gradients. */
+.tlc-atomic .tlc-cockpit-crest {
+  width:50px;height:39px;min-width:50px;min-height:39px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;border:0;background:transparent;box-shadow:none;overflow:visible;
+}
+.tlc-atomic .tlc-cockpit-crest img {
+  width:100%;height:100%;object-fit:contain;
+  filter:drop-shadow(0 2px 2px #020612aa);
+}
+.tlc-atomic .tlc-arena-section-title {
+  display:flex;gap:10px;align-items:baseline;justify-content:space-between;
+  margin:14px 0 8px;padding:8px 0 7px;
+  border-top:1px solid #62748980;border-bottom:1px solid #6274894d;
+}
+.tlc-atomic .tlc-arena-section-title strong {
+  font-size:11px;letter-spacing:1.35px;font-weight:950;color:#f6f8fb;
+}
+.tlc-atomic .tlc-arena-section-title small {
+  font-size:9px;color:#9fb3c7;font-weight:700;letter-spacing:.1px;
+}
+.tlc-atomic .tlc-formation-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+.tlc-atomic .tlc-formation-card {
+  cursor:pointer;min-width:0;display:grid;
+  grid-template-columns:80px minmax(0,1fr);
+  grid-template-rows:1fr auto;
+  column-gap:9px;row-gap:4px;
+  padding:9px;
+  border:1px solid #425b76;border-radius:5px;
+  background:#19283b;
+  color:#e1ebf6;
+  text-align:left;
+  box-shadow:inset 0 1px #ffffff12,0 2px 6px #01091460;
+  transition:border-color .16s ease,background .16s ease,transform .16s ease;
+}
+.tlc-atomic .tlc-formation-card:active {transform:scale(.985);}
+.tlc-atomic .tlc-formation-card:hover {background:#20344c;border-color:#8ba9c6;}
+.tlc-atomic .tlc-formation-card.selected {
+  border-color:#f4a26a;background:#203851;
+  box-shadow:inset 0 0 0 1px #f4a26a66,0 2px 9px #0007;
+}
+.tlc-atomic .tlc-formation-preview {
+  position:relative;display:block;grid-row:1 / 3;
+  min-width:0;width:80px;height:68px;
+  background:repeating-linear-gradient(90deg,#263f57 0,#263f57 1px,transparent 1px,transparent 20px),#0a1828;
+  border:1px solid #597b9980;border-radius:3px;
+  overflow:hidden;
+}
+.tlc-atomic .tlc-formation-preview::before,
+.tlc-atomic .tlc-formation-preview::after {
+  content:"";position:absolute;top:0;bottom:0;width:3px;
+}
+.tlc-atomic .tlc-formation-preview::before {left:0;background:#328fda;}
+.tlc-atomic .tlc-formation-preview::after {right:0;background:#d864a6;}
+.tlc-atomic .tlc-formation-axis {
+  position:absolute;left:50%;top:0;bottom:0;width:1px;background:#819ab450;
+}
+.tlc-atomic .tlc-formation-preview i {
+  display:block;position:absolute;width:5px;height:5px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#78bfff;border:1px solid #c6e9ff;
+  box-shadow:0 0 0 1px #124f8e;
+}
+.tlc-atomic .tlc-formation-card-copy {
+  min-width:0;display:flex;flex-direction:column;gap:3px;
+}
+.tlc-atomic .tlc-formation-card-copy strong {
+  font-size:10px;line-height:1.2;font-weight:950;
+  color:#f8f9fc;letter-spacing:.2px;
+}
+.tlc-atomic .tlc-formation-card-copy small {
+  font-size:9px;line-height:1.3;color:#a5bacf;
+  font-weight:650;
+}
+.tlc-atomic .tlc-formation-indicator {
+  font-size:8px;letter-spacing:.5px;font-weight:950;
+  justify-self:end;color:#9fb8ce;
+}
+.tlc-atomic .tlc-formation-card.selected .tlc-formation-indicator {color:#ffba7e;}
+.tlc-atomic .tlc-arena-surfaces {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+.tlc-atomic .tlc-arena-surface {
+  min-width:0;padding:7px;display:flex;gap:8px;align-items:center;
+  text-align:left;background:#19283b;border:1px solid #425b76;
+  border-radius:5px;color:#e7eef6;cursor:pointer;
+}
+.tlc-atomic .tlc-arena-surface.selected {background:#273650;border-color:#f4a26a;box-shadow:inset 0 0 0 1px #f4a26a40;}
+.tlc-atomic .tlc-arena-surface-color {
+  position:relative;width:50px;height:44px;flex:0 0 50px;
+  display:grid;place-items:center;border:2px solid #d1dae5b0;border-radius:3px;
+  box-shadow:inset 0 0 0 3px #071b35a8,inset 0 0 0 4px #ffffff42;
+}
+.tlc-atomic .tlc-arena-surface-color b {
+  font-size:13px;letter-spacing:-1px;color:#f2f6ff;
+  font-style:italic;text-shadow:1px 2px 0 #091930,0 0 4px #000a;
+}
+.tlc-atomic .tlc-arena-surface>span:last-child {
+  min-width:0;display:flex;flex-direction:column;gap:3px;
+}
+.tlc-atomic .tlc-arena-surface strong {font-size:10px;line-height:1.16;color:#f5f8fb;}
+.tlc-atomic .tlc-arena-surface small {font-size:9px;line-height:1.3;color:#a3b8cb;}
+.tlc-atomic .tlc-arena-crest-note {
+  margin-top:10px;font-size:8px;letter-spacing:.55px;
+  font-weight:800;color:#9daec4;text-align:center;
+}
+@media(max-width:750px) {
+  .tlc-atomic .tlc-cockpit-crest {width:42px;min-width:42px;height:33px;min-height:33px;}
+  .tlc-atomic .tlc-formation-grid {grid-template-columns:1fr;}
+  .tlc-atomic .tlc-formation-card {grid-template-columns:76px minmax(0,1fr);}
+  .tlc-atomic .tlc-formation-preview {width:76px;}
+}
+@media(max-width:400px){
+  .tlc-atomic .tlc-arena-surfaces {grid-template-columns:1fr;}
+  .tlc-atomic .tlc-arena-section-title small {max-width:51%;text-align:right;}
+}
+@media(prefers-reduced-motion:reduce){
+  .tlc-atomic .tlc-formation-card {transition:none;}
+}
+
+.tlc-atomic .tlc-formation-team-picker {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:3px 0 8px;
+  background:#0e1c2d;padding:4px;border:1px solid #394e64;border-radius:5px;
+}
+.tlc-atomic .tlc-formation-team-picker button {
+  min-width:0;min-height:34px;padding:5px 3px;
+  font-size:8px;letter-spacing:.35px;font-weight:950;
+  border:1px solid transparent;border-radius:3px;
+  background:#1f3044;color:#b0c3d5;cursor:pointer;
+}
+.tlc-atomic .tlc-formation-team-picker button.selected {
+  color:#fff;border-color:#cf895d;
+  background:#35506d;box-shadow:inset 0 1px #ffffff25;
+}
+.tlc-atomic .tlc-formation-vs {
+  display:grid;grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr);
+  align-items:center;gap:4px;margin-bottom:9px;padding:6px 8px;
+  border:1px solid #3d5066;background:#101e2f;color:#dae6f1;
+  border-radius:3px;
+}
+.tlc-atomic .tlc-formation-vs span {min-width:0;font-size:9px;font-weight:800;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;}
+.tlc-atomic .tlc-formation-vs span:last-child {text-align:right;}
+.tlc-atomic .tlc-formation-vs b {color:#79baff;font-size:8px;margin-right:4px;}
+.tlc-atomic .tlc-formation-vs span:last-child b {color:#f0a3cb;}
+.tlc-atomic .tlc-formation-vs .tlc-formation-vs-divider {color:#eaa971;font-size:9px;text-align:center;}
