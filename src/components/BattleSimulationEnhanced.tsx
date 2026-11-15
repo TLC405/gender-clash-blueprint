@@ -21,6 +21,7 @@ type BattleSimulationProps = {
   menArmySize: number;
   womenArmySize: number;
   formationPattern?: FormationPattern;
+  womenFormationPattern?: FormationPattern;
   arenaSurface?: ArenaSurface;
   battleSpeed: number;
   menRageEnabled: boolean;
@@ -45,7 +46,7 @@ type BattleSimulationProps = {
 
 const BattleSimulation = ({
   menArmySize, womenArmySize, battleSpeed,
-  formationPattern = "battle-lines", arenaSurface = "championship",
+  formationPattern = "battle-lines", womenFormationPattern = formationPattern, arenaSurface = "championship",
   menRageEnabled, womenRageEnabled, isRunning,
   onStatsUpdate, onPhaseChange, onTimeUpdate, onQuipChange, onVictory,
   narratorEnabled, meteorTrigger = 0, meteorCharges = 0, onMeteorUsed, reducedMotion = false
@@ -116,7 +117,7 @@ const BattleSimulation = ({
 
   const initializeBattle = useCallback(() => {
     const { width, height } = initCanvas();
-    initializeUnits(soaRef.current, menArmySize, width, height, womenArmySize, formationPattern);
+    initializeUnits(soaRef.current, menArmySize, width, height, womenArmySize, formationPattern, womenFormationPattern);
 
     if (!gridRef.current) {
       gridRef.current = createSpatialHashGrid(width, height, 50);
@@ -147,7 +148,7 @@ const BattleSimulation = ({
     phaseTimeRef.current = 0;
     speakNarration("standPhase");
     initializedRef.current = true;
-  }, [menArmySize, womenArmySize, formationPattern, initCanvas, speakNarration, onStatsUpdate, onPhaseChange, onTimeUpdate]);
+  }, [menArmySize, womenArmySize, formationPattern, womenFormationPattern, initCanvas, speakNarration, onStatsUpdate, onPhaseChange, onTimeUpdate]);
 
   useEffect(() => {
     const handleResize = () => {
