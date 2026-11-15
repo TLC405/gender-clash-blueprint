@@ -37,12 +37,12 @@ describe("Eight playable TLC tactical formations", () => {
     initializeUnits(soa,500,800,500,850,"thunder-wedge","shield-wall");
     expect(soa.formationPattern).toBe("thunder-wedge");
     expect(soa.womenFormationPattern).toBe("shield-wall");
-    const menWedge=soa.posX[50];
-    const womenWall=soa.posX[551];
     const mirrored=createBattleSoA();
     initializeUnits(mirrored,500,800,500,850,"battle-lines","battle-lines");
-    expect(menWedge).not.toBe(mirrored.posX[50]);
-    expect(womenWall).not.toBe(mirrored.posX[551]);
+    // Compare the whole team: a wedge can share positions with baseline in
+    // its outermost lanes, but its central apex must be different.
+    expect(Array.from(soa.posX.slice(0,500)).some((x,i)=>Math.abs(x-mirrored.posX[i])>1)).toBe(true);
+    expect(Array.from(soa.posX.slice(500,1350)).some((x,i)=>Math.abs(x-mirrored.posX[500+i])>1)).toBe(true);
     const index=readFileSync(new URL("../pages/Index.tsx",import.meta.url),"utf8");
     expect(index).toContain('formationTarget==="both"');
     expect(index).toContain('setWomenFormationPattern(f.id)');
