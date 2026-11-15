@@ -319,17 +319,7 @@ const BattleSimulation = ({
     ctx.fillStyle = menZoneGrad;
     ctx.fillRect(fieldX, fieldY, endZoneW * 2.5, fieldH);
 
-    // "MEN" label
-    ctx.save();
-    ctx.globalAlpha = 0.12;
-    ctx.fillStyle = '#3B82F6';
-    ctx.font = `bold ${Math.min(fieldH * 0.12, 36)}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.translate(fieldX + endZoneW * 0.8, height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('MEN', 0, 0);
-    ctx.restore();
+    // Team identification now lives exclusively in the external score header.
 
     // Women end zone (right) - pink with label
     const womenZoneGrad = ctx.createLinearGradient(fieldX + fieldW, 0, fieldX + fieldW - endZoneW * 2.5, 0);
@@ -338,18 +328,6 @@ const BattleSimulation = ({
     womenZoneGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = womenZoneGrad;
     ctx.fillRect(fieldX + fieldW - endZoneW * 2.5, fieldY, endZoneW * 2.5, fieldH);
-
-    // "WOMEN" label
-    ctx.save();
-    ctx.globalAlpha = 0.12;
-    ctx.fillStyle = '#EC4899';
-    ctx.font = `bold ${Math.min(fieldH * 0.12, 36)}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.translate(fieldX + fieldW - endZoneW * 0.8, height / 2);
-    ctx.rotate(Math.PI / 2);
-    ctx.fillText('WOMEN', 0, 0);
-    ctx.restore();
 
     // Crowd silhouette strips (top and bottom)
     const crowdH = margin * 0.8;
