@@ -14,10 +14,14 @@ import { updatePhysics, applyMeteorImpact, DEFAULT_CONFIG, resetChargeState, set
 import { renderUnits } from "@/lib/spriteRenderer";
 import type { StickFigure3DLayer } from "@/lib/stickFigure3DRenderer";
 import { playKills, playImpacts, playBell, playClash, playMeteor, playVictory } from "@/lib/battleAudio";
+import { renderPremiumArena } from "@/lib/arenaRenderer";
+import type { ArenaSurface, FormationPattern } from "@/lib/arenaOptions";
 
 type BattleSimulationProps = {
   menArmySize: number;
   womenArmySize: number;
+  formationPattern?: FormationPattern;
+  arenaSurface?: ArenaSurface;
   battleSpeed: number;
   menRageEnabled: boolean;
   womenRageEnabled: boolean;
@@ -41,6 +45,7 @@ type BattleSimulationProps = {
 
 const BattleSimulation = ({
   menArmySize, womenArmySize, battleSpeed,
+  formationPattern = "battle-lines", arenaSurface = "championship",
   menRageEnabled, womenRageEnabled, isRunning,
   onStatsUpdate, onPhaseChange, onTimeUpdate, onQuipChange, onVictory,
   narratorEnabled, meteorTrigger = 0, meteorCharges = 0, onMeteorUsed, reducedMotion = false
@@ -55,6 +60,7 @@ const BattleSimulation = ({
   const lastStatsRef = useRef<{ menAlive: number; womenAlive: number } | null>(null);
   const lastUiPushRef = useRef(0);
   const arenaCacheRef = useRef<HTMLCanvasElement | null>(null);
+  const centerCrestRef = useRef<HTMLImageElement | null>(null);
   const stick3DRef = useRef<StickFigure3DLayer | null>(null);
   const stick3DOpsRef = useRef<typeof import("@/lib/stickFigure3DRenderer") | null>(null);
   const camRef = useRef({ x: 0, y: 0, zoom: 1 });
@@ -110,7 +116,7 @@ const BattleSimulation = ({
 
   const initializeBattle = useCallback(() => {
     const { width, height } = initCanvas();
-    initializeUnits(soaRef.current, menArmySize, width, height, womenArmySize);
+    initializeUnits(soaRef.current, menArmySize, width, height, womenArmySize, formationPattern);
 
     if (!gridRef.current) {
       gridRef.current = createSpatialHashGrid(width, height, 50);
@@ -141,7 +147,7 @@ const BattleSimulation = ({
     phaseTimeRef.current = 0;
     speakNarration("standPhase");
     initializedRef.current = true;
-  }, [menArmySize, womenArmySize, initCanvas, speakNarration, onStatsUpdate, onPhaseChange, onTimeUpdate]);
+  }, [menArmySize, womenArmySize, formationPattern, initCanvas, speakNarration, onStatsUpdate, onPhaseChange, onTimeUpdate]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -227,167 +233,28 @@ const BattleSimulation = ({
     strikeMeteor(x, y);
   }, [meteorTrigger, isRunning, strikeMeteor]);
 
-  // ═══════════════════════════════════════════════
-  // PREMIUM ARENA RENDERER - Broadcast Stadium
-  // ═══════════════════════════════════════════════
-  const renderArena = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    // Rich dark background
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#0a1510');
-    bgGrad.addColorStop(0.3, '#0e1e16');
-    bgGrad.addColorStop(0.7, '#0e1e16');
-    bgGrad.addColorStop(1, '#0a1510');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    const margin = Math.min(width, height) * 0.04;
-    const fieldX = margin;
-    const fieldY = margin;
-    const fieldW = width - margin * 2;
-    const fieldH = height - margin * 2;
-
-    // Turf - dark green gradient
-    const fieldGrad = ctx.createLinearGradient(0, fieldY, 0, fieldY + fieldH);
-    fieldGrad.addColorStop(0, '#1a3328');
-    fieldGrad.addColorStop(0.5, '#1e3d30');
-    fieldGrad.addColorStop(1, '#1a3328');
-    ctx.fillStyle = fieldGrad;
-    ctx.fillRect(fieldX, fieldY, fieldW, fieldH);
-
-    // Alternating turf stripes (brighter, visible)
-    const stripeCount = 16;
-    const stripeW = fieldW / stripeCount;
-    for (let i = 0; i < stripeCount; i += 2) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
-      ctx.fillRect(fieldX + i * stripeW, fieldY, stripeW, fieldH);
-    }
-
-    // Yard lines (visible!)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 0.8;
-    for (let i = 1; i < 10; i++) {
-      const lx = fieldX + (fieldW * i) / 10;
-      ctx.beginPath();
-      ctx.moveTo(lx, fieldY);
-      ctx.lineTo(lx, fieldY + fieldH);
-      ctx.stroke();
-    }
-
-    // Hash marks
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    const hashLen = 5;
-    for (let i = 1; i < 10; i++) {
-      const lx = fieldX + (fieldW * i) / 10;
-      for (let j = 1; j < 8; j++) {
-        const hy = fieldY + (fieldH * j) / 8;
-        ctx.beginPath();
-        ctx.moveTo(lx - hashLen, hy);
-        ctx.lineTo(lx + hashLen, hy);
-        ctx.stroke();
-      }
-    }
-
-    // Center line (bold)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(width / 2, fieldY);
-    ctx.lineTo(width / 2, fieldY + fieldH);
-    ctx.stroke();
-
-    // Center circle
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, Math.min(fieldW, fieldH) * 0.09, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Center emblem
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, Math.min(fieldW, fieldH) * 0.09, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Team end zones
-    const endZoneW = fieldW * 0.08;
-
-    // Men end zone (left) - blue with label
-    const menZoneGrad = ctx.createLinearGradient(fieldX, 0, fieldX + endZoneW * 2.5, 0);
-    menZoneGrad.addColorStop(0, 'rgba(59, 130, 246, 0.22)');
-    menZoneGrad.addColorStop(0.5, 'rgba(59, 130, 246, 0.08)');
-    menZoneGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = menZoneGrad;
-    ctx.fillRect(fieldX, fieldY, endZoneW * 2.5, fieldH);
-
-    // Team identification now lives exclusively in the external score header.
-
-    // Women end zone (right) - pink with label
-    const womenZoneGrad = ctx.createLinearGradient(fieldX + fieldW, 0, fieldX + fieldW - endZoneW * 2.5, 0);
-    womenZoneGrad.addColorStop(0, 'rgba(236, 72, 153, 0.22)');
-    womenZoneGrad.addColorStop(0.5, 'rgba(236, 72, 153, 0.08)');
-    womenZoneGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = womenZoneGrad;
-    ctx.fillRect(fieldX + fieldW - endZoneW * 2.5, fieldY, endZoneW * 2.5, fieldH);
-
-    // Crowd silhouette strips (top and bottom)
-    const crowdH = margin * 0.8;
-    const crowdGradTop = ctx.createLinearGradient(0, 0, 0, crowdH);
-    crowdGradTop.addColorStop(0, 'rgba(20, 15, 25, 0.9)');
-    crowdGradTop.addColorStop(1, 'rgba(20, 15, 25, 0.3)');
-    ctx.fillStyle = crowdGradTop;
-    ctx.fillRect(0, 0, width, crowdH);
-
-    // Crowd dots (static silhouettes)
-    ctx.fillStyle = 'rgba(80, 70, 90, 0.3)';
-    const dotSpacing = 8;
-    for (let cx = dotSpacing; cx < width; cx += dotSpacing) {
-      const yOff = Math.sin(cx * 0.15) * 2;
-      ctx.beginPath();
-      ctx.arc(cx, crowdH * 0.5 + yOff, 2, 0, Math.PI * 2);
-      ctx.fill();
-      // Bottom crowd
-      ctx.beginPath();
-      ctx.arc(cx, height - crowdH * 0.5 - yOff, 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    const crowdGradBottom = ctx.createLinearGradient(0, height, 0, height - crowdH);
-    crowdGradBottom.addColorStop(0, 'rgba(20, 15, 25, 0.9)');
-    crowdGradBottom.addColorStop(1, 'rgba(20, 15, 25, 0.3)');
-    ctx.fillStyle = crowdGradBottom;
-    ctx.fillRect(0, height - crowdH, width, crowdH);
-
-    // Spotlight cones from corners
-    const spotR = Math.max(width, height) * 0.6;
-    ctx.globalAlpha = 1;
-    const spots = [
-      { x: 0, y: 0 },
-      { x: width, y: 0 },
-    ];
-    for (const s of spots) {
-      const spotGrad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, spotR);
-      spotGrad.addColorStop(0, 'rgba(255, 255, 240, 0.06)');
-      spotGrad.addColorStop(0.5, 'rgba(255, 255, 240, 0.02)');
-      spotGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = spotGrad;
-      ctx.fillRect(0, 0, width, height);
-    }
-
-    // Field border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(fieldX, fieldY, fieldW, fieldH);
-
-    // Lighter vignette (reduced intensity)
-    const vignette = ctx.createRadialGradient(
-      width / 2, height / 2, Math.min(width, height) * 0.3,
-      width / 2, height / 2, Math.max(width, height) * 0.75
-    );
-    vignette.addColorStop(0, 'transparent');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, width, height);
+  // Premium scalable center-court graphics: SVG decodes once and the entire
+  // floor is cached as a device-pixel-ratio-aware Canvas bitmap.
+  useEffect(() => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => {
+      centerCrestRef.current = image;
+      arenaCacheRef.current = null;
+    };
+    image.onerror = () => { centerCrestRef.current = null; };
+    image.src = import.meta.env.BASE_URL + "branding/tlc-championship-crest.svg";
+    return () => {
+      image.onload = null;
+      image.onerror = null;
+    };
   }, []);
+
+  useEffect(() => { arenaCacheRef.current = null; }, [arenaSurface]);
+
+  const renderArena = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    renderPremiumArena(ctx, width, height, arenaSurface, centerCrestRef.current);
+  }, [arenaSurface]);
 
   // Phase-based lighting + battle intensity
   const renderLighting = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number, currentPhase: BattlePhase) => {
