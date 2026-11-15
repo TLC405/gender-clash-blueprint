@@ -100,6 +100,16 @@ function customSound(cue: ElevenSfx): boolean {
   return true;
 }
 
+let lastContactAt=0;
+/** Rate-limited sounds follow actual contact pulses, not random screen activity. */
+export function playImpacts(count:number):void {
+  if(count<=0||!effectsEnabled)return;
+  const now=performance.now();
+  if(now-lastContactAt<185)return;
+  lastContactAt=now;
+  playKills(count>=6?4:1);
+}
+
 export function playKills(count: number): void {
   if (!effectsEnabled || count <= 0) return;
   void primeElevenLabsAudio();
