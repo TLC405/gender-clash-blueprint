@@ -3,8 +3,9 @@
  * Supports the pre-generated, reviewed ElevenLabs audio bank without exposing
  * ElevenLabs credentials to browsers or generating during gameplay.
  *
- * While the ElevenLabs flow is awaiting its assets, the original CC0 Kenney
- * impacts remain the explicit, temporary fallback (NOT labeled ElevenLabs).
+ * Original TLC synthesized WAV sounds are packaged offline and become the
+ * production game SFX. Approved ElevenLabs voice assets remain optional.
+ * A stock CC0 fallback exists only for load/network failures.
  */
 import { Howl } from "howler";
 import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "./audioMix";
@@ -24,6 +25,36 @@ let lastVoiceAt = 0;
 let lastNamedCueAt = 0;
 let currentVoice: Howl | null = null;
 const custom = new Map<ElevenCue, Howl>();
+const original = new Map<ElevenSfx, Howl>();
+let originalPromise: Promise<boolean> | null = null;
+let originalReady = false;
+
+/** Load the original TLC soundtrack only after a player action. No startup GPU/CPU work. */
+export function primeOriginalGameAudio(): Promise<boolean> {
+  if (originalPromise) return originalPromise;
+  originalPromise = (async () => {
+    const base = import.meta.env.BASE_URL + "audio/tlc/";
+    const decoded = await Promise.all(ELEVEN_SFX.map(cue =>
+      new Promise<readonly [ElevenSfx, Howl | null]>(resolve => {
+        const sound = new Howl({
+          src: [base + cue + ".wav"],
+          html5: false, preload: true,
+          onload: () => resolve([cue, sound] as const),
+          onloaderror: () => { sound.unload(); resolve([cue, null] as const); },
+        });
+      })
+    ));
+    for (const [cue, sound] of decoded) if (sound) original.set(cue, sound);
+    originalReady = decoded.every(([,sound]) => sound !== null);
+    return originalReady;
+  })().catch(error => {
+    console.warn("[TLC Audio] Original game SFX unavailable; using emergency fallback", error);
+    return false;
+  });
+  return originalPromise;
+}
+
+export function isOriginalGameAudioReady(): boolean { return originalReady; }
 let packPromise: Promise<boolean> | null = null;
 let packReady = false;
 
@@ -96,11 +127,11 @@ export function isElevenLabsPackReady(): boolean { return packReady; }
 export function setSoundEnabled(on: boolean): void {
   // Mute effects independently; voice remains governed by commentary setting.
   effectsEnabled = on;
-  void primeElevenLabsAudio();
+  // Clip download is deferred until Start or another direct sound interaction.
 }
 
 function customSound(cue: ElevenSfx): boolean {
-  const sound = custom.get(cue);
+  const sound = custom.get(cue) ?? original.get(cue);
   if (!effectsEnabled || !sound) return false;
   const channel = cue === "ui_click" ? mix.ui : mix.effects;
   if(channel<=0)return true;
@@ -124,7 +155,7 @@ export function playImpacts(count:number):void {
 
 export function playKills(count: number): void {
   if (!effectsEnabled || count <= 0) return;
-  void primeElevenLabsAudio();
+  void primeOriginalGameAudio();
   const now = performance.now();
   if (now - lastImpactAt < 105) return;
   lastImpactAt = now;
@@ -138,31 +169,31 @@ export function playKills(count: number): void {
 }
 export function playBell(): void {
   if (!effectsEnabled) return;
-  void primeElevenLabsAudio();
+  void primeOriginalGameAudio();
   if (customSound("arena_bell")) return;
   legacy();
   if (legacyBell){const id=legacyBell.play();legacyBell.volume(0.5*mix.effects*(voiceDucking?0.38:1),id);}
 }
 export function playClash(): void {
   if (!effectsEnabled) return;
-  void primeElevenLabsAudio();
+  void primeOriginalGameAudio();
   customSound("crowd_clash");
 }
 export function playMeteor(): void {
   if (!effectsEnabled) return;
-  void primeElevenLabsAudio();
+  void primeOriginalGameAudio();
   if (performance.now() - lastNamedCueAt < 700) return;
   lastNamedCueAt = performance.now();
   customSound("meteor");
 }
 export function playVictory(): void {
   if (!effectsEnabled) return;
-  void primeElevenLabsAudio();
+  void primeOriginalGameAudio();
   customSound("victory_sting");
 }
 export function playUiClick(): void {
   if (!effectsEnabled) return;
-  void primeElevenLabsAudio();
+  void primeOriginalGameAudio();
   const now = performance.now();
   if (now - lastUIClickAt < 100) return;
   lastUIClickAt = now;
