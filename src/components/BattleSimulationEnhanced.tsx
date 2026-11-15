@@ -615,7 +615,7 @@ const BattleSimulation = ({
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0 block" />
-      <canvas ref={unitCanvasRef} className="absolute inset-0 block pointer-events-none" />
+      <canvas ref={unitCanvasRef} className="absolute inset-0 block pointer-events-none" style={{display:gpuDisabledRef.current?"none":undefined}} />
       <canvas
         ref={fxCanvasRef}
         className="absolute inset-0 block cursor-crosshair"
