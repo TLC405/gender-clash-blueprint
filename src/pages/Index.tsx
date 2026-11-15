@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
-import { setSoundEnabled, setAudioMix, playUiClick, primeElevenLabsAudio } from "@/lib/battleAudio";
+import { setSoundEnabled, setAudioMix, playUiClick, playBell, primeOriginalGameAudio, primeElevenLabsAudio } from "@/lib/battleAudio";
 import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "@/lib/audioMix";
 import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
@@ -280,6 +280,7 @@ const Index = () => {
 
   const handleStart = () => {
     if (winner) return;
+    void primeOriginalGameAudio();
     playUiClick();
     if (!isRunning) {
       startedRef.current = true;
@@ -536,7 +537,7 @@ const Index = () => {
             {activePanel === "stats" && <BroadcastCenter stats={stats} menStart={menArmySize} womenStart={womenArmySize} moments={moments} history={history} timeRemaining={timeRemaining} matchDuration={MATCH_DURATION} phase={phase} isRunning={isRunning} winner={winner} battleSpeed={battleSpeed} hype={hype} />}
             {activePanel === "settings" && <div className="tlc-cockpit-settings">
               <label><span><Volume2 size={18}/> SOUND EFFECTS</span><input type="checkbox" checked={soundEnabled} onChange={e => setAudioEnabled(e.target.checked)}/></label>
-              <div className="tlc-atomic-audio-pack"><strong>ELEVENLABS ORIGINAL AUDIO PACK</strong><small>{elevenAudioReady ? "All approved ElevenLabs voices and effects are loaded." : "Original clips are still being prepared. Temporary arcade impact sounds remain, but no phone-generated announcer is used."}</small></div>
+              <div className="tlc-atomic-audio-pack"><strong>TLC ORIGINAL SOUND ENGINE — 7 EFFECTS</strong><small>Original arcade impacts, arena bell, battle rush, meteor, victory and buttons. Built into the game, available offline after first load. ElevenLabs voice narration remains optional and pending.</small><button className="tlc-atomic-sound-preview" type="button" disabled={!soundEnabled} onClick={() => { playUiClick(); void primeOriginalGameAudio().then(() => playBell()); }}>TEST CHAMPIONSHIP BELL</button></div>
               <label><span><Radio size={18}/> ELEVENLABS ANNOUNCER {elevenAudioReady ? "" : "(PENDING)"}</span><input type="checkbox" disabled={!elevenAudioReady} checked={elevenAudioReady && narratorEnabled} onChange={e => setNarratorEnabled(e.target.checked)}/></label>
               <div className="tlc-atomic-mixer" role="group" aria-label="Separate game audio levels">
                 {(["effects","voice","ui"] as const).map(channel=><div className="tlc-atomic-mix-row" key={channel}>
