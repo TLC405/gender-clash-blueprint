@@ -13,6 +13,7 @@ const browser=await chromium.launch({
 let failed=false;
 const scenarios=[
  {name:"Fold closed Android", width:390,height:840,isMobile:true,deviceScaleFactor:2},
+ {name:"Fold safe mode", width:390,height:840,isMobile:true,deviceScaleFactor:1,safe:true},
  {name:"Fold open tablet",width:840,height:790,isMobile:true,deviceScaleFactor:2},
  {name:"Desktop",width:1280,height:800,isMobile:false,deviceScaleFactor:1},
 ];
@@ -28,7 +29,7 @@ for(const scenario of scenarios){
   const errors=[];
   page.on("pageerror",err=>errors.push(err.message));
   try{
-    const response=await page.goto(app,{waitUntil:"domcontentloaded",timeout:25000});
+    const response=await page.goto(scenario.safe?app+"?safe=1":app,{waitUntil:"domcontentloaded",timeout:25000});
     if(response?.status()!==200)throw new Error("HTTP "+response?.status());
     await page.locator(".tlc-cockpit-arena").waitFor({state:"visible",timeout:15000});
     await page.waitForTimeout(1300);
@@ -44,6 +45,7 @@ for(const scenario of scenarios){
     await page.locator(".tlc-cockpit-panel-head button").click();
     await page.locator(".tlc-cockpit-play").click();
     await page.waitForTimeout(1600);
+    if(scenario.safe){const noGpu=await page.evaluate(()=>{const e=document.querySelector(".tlc-cockpit-field canvas:nth-child(2)");return !e||getComputedStyle(e).display==="none"});if(!noGpu)throw new Error("Safe mode failed to disable WebGL");}
     if(errors.length)throw new Error("Browser JS errors: "+errors.join(" | "));
     console.log("PASS",scenario.name,{canvases,field:initial.width+"x"+initial.height});
   }catch(error){
