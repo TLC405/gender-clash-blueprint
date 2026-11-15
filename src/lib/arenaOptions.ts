@@ -39,7 +39,7 @@ export function getTacticSpeed(pattern: FormationPattern, lane: number, lanes = 
   if (pattern === "shield-wall") return 0.76;
   if (pattern === "citadel") return lane % 2 === 0 ? 0.89 : 0.95;
   if (pattern === "thunder-wedge") return 1.05;
-  if (pattern === "pincer") return lane === 0 || lane >= 4 ? 1.12 : 0.97;
+  if (pattern === "pincer") return lane === 0 || lane === lanes-1 ? 1.12 : 0.97;
   return 1;
 }
 
