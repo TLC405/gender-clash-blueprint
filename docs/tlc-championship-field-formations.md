@@ -39,15 +39,15 @@ All surfaces share the TLC center crest, balanced blue and pink team ends, legib
 
 Every pattern changes typed-array spawn coordinates via \`formationSlot(..., pattern)\`; the active \`soa.formationPattern\` also determines squad-specific charge speed and lane pursuit. Unlike a filter or appearance setting, these choices affect combat trajectories and collision timing.
 
-**Match fairness:** Existing Men/Women fictional attributes are unchanged. The choice applies to BOTH teams, avoiding hidden strength-biased formation advantages. Initial deployment clamps the opposing fronts to either side of the center line with breathing room, including closed Fold widths.
+**Match fairness:** Existing Men/Women fictional attributes are unchanged. The default applies to BOTH teams, but the player may independently assign different strategies to Blue/Men and Pink/Women. Formation choice never alters the teams' underlying strength/durability attributes. Initial deployment clamps the opposing fronts to either side of the center line with breathing room, including closed Fold widths.
 
 ## UI interaction contract
 
 - Main game remains single-screen.
 - Open existing **MODES** bottom-dock panel.
-- Select match size (same four presets), tactical formation (eight illustrated diagram cards), and one of four visual arena styles. No new persistent tab bar or field overlays.
+- Select match size (same four presets), assign tactical formations (eight illustrated cards) to Both Teams, Blue or Pink independently, and choose one of four visual arena styles. No new persistent tab bar or field overlays.
 - Selecting a new formation while the simulation is running is blocked with a pause instruction; when paused it safely resets the round and initializes the new pattern. Changing a court surface switches live, invalidating only the cached background.
-- Current formation and floor choice persist with \`localStorage\`; private browsers gracefully fall back to defaults. The navy/orange championship crest replaces the text-only header monogram.
+- Separate Blue/Pink formation choices and the floor style persist with \`localStorage\`; private browsers gracefully fall back to defaults. The navy/orange championship crest replaces the text-only header monogram.
 - The panel already scrolls independently above the fixed Fold-safe control dock.
 
 ## External references and safeguards
