@@ -1,0 +1,113 @@
+/*
+  TLC BATTLECAST / CLEAN PLAYFIELD
+  All in-game prose is in its own rail BELOW the arena, never above fighters.
+  The 3D canvas is a pure interaction and visualization surface.
+*/
+.tlc-atomic .tlc-cockpit-field {
+  position:relative;
+  min-height:0;
+  overflow:hidden;
+}
+.tlc-atomic .tlc-cockpit-field .tlc-cockpit-field-top,
+.tlc-atomic .tlc-cockpit-field .tlc-cockpit-lower-third,
+.tlc-atomic .tlc-cockpit-field .tlc-cockpit-spotlight,
+.tlc-atomic .tlc-cockpit-field .tlc-cockpit-idle {
+  display:none!important;
+}
+.tlc-atomic .tlc-atomic-commentary-rail {
+  flex:0 0 39px;
+  min-height:0;
+  min-width:0;
+  display:grid;
+  grid-template-columns:68px minmax(0,1fr) 65px;
+  gap:0;
+  align-items:stretch;
+  background:#121d2b;
+  border-top:1px solid #60748b;
+  box-shadow:inset 0 1px #ffffff0d, 0 -3px 13px #0007;
+}
+.tlc-atomic .tlc-atomic-rail-status {
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:9px;letter-spacing:1px;font-weight:900;
+  color:#a8c0cf;background:#1c2b3d;
+  border-right:1px solid #42536b;white-space:nowrap;
+}
+.tlc-atomic .tlc-atomic-rail-status.is-live {
+  background:#6f2a3a;
+  color:#ffe0e7;
+}
+.tlc-atomic .tlc-atomic-live-dot {
+  display:inline-block;width:6px;height:6px;
+  flex-shrink:0;border-radius:50%;background:#a6b4c7;
+}
+.tlc-atomic .tlc-atomic-rail-status.is-live .tlc-atomic-live-dot {
+  background:#ff8197;box-shadow:0 0 6px #ef536b;
+}
+.tlc-atomic .tlc-atomic-rail-message {
+  min-width:0;
+  display:flex;align-items:center;gap:7px;
+  padding:0 13px;
+  color:#e9eef5;
+  font-size:11px;line-height:1.25;white-space:nowrap;
+  overflow:hidden;
+}
+.tlc-atomic .tlc-atomic-rail-message strong {
+  font-weight:900;font-size:10px;letter-spacing:.15px;color:#ffb5bb;
+  flex-shrink:0;max-width:40%;overflow:hidden;text-overflow:ellipsis;
+}
+.tlc-atomic .tlc-atomic-rail-message span {
+  min-width:0;overflow:hidden;text-overflow:ellipsis;
+  font-weight:650;
+}
+.tlc-atomic .tlc-atomic-rail-hype {
+  display:flex;justify-content:center;align-items:center;gap:6px;
+  background:#332732;color:#ffc8ac;border-left:1px solid #76515b;
+  font-size:10px;letter-spacing:.2px;font-weight:900;white-space:nowrap;
+}
+.tlc-atomic .tlc-cockpit-arena {background:#0b1720;}
+.tlc-atomic .tlc-cockpit-field canvas {touch-action:manipulation;}
+/* Balanced one-screen rails: no tall text banners or hidden dock. */
+@media(max-width:1050px) {
+  .tlc-atomic .tlc-atomic-commentary-rail {
+    flex-basis:34px;
+    grid-template-columns:58px minmax(0,1fr) 53px;
+  }
+  .tlc-atomic .tlc-atomic-rail-status {font-size:8px;letter-spacing:.5px;}
+  .tlc-atomic .tlc-atomic-rail-message {font-size:10px;padding:0 8px;}
+  .tlc-atomic .tlc-atomic-rail-message strong {font-size:9px;}
+  .tlc-atomic .tlc-atomic-rail-hype {font-size:9px;gap:4px;}
+  .tlc-atomic .tlc-atomic-rail-hype svg {width:11px;height:11px;}
+}
+@media(max-width:640px){
+  .tlc-atomic .tlc-atomic-commentary-rail {
+    flex-basis:31px;
+    grid-template-columns:47px minmax(0,1fr) 44px;
+  }
+  .tlc-atomic .tlc-atomic-rail-status {font-size:7px;gap:4px;}
+  .tlc-atomic .tlc-atomic-live-dot {width:5px;height:5px;}
+  .tlc-atomic .tlc-atomic-rail-message {font-size:9px;padding:0 5px;gap:5px;}
+  .tlc-atomic .tlc-atomic-rail-message strong {max-width:43%;font-size:8px;}
+  .tlc-atomic .tlc-atomic-rail-hype {font-size:8px;gap:3px;}
+  .tlc-atomic .tlc-atomic-rail-hype svg {width:10px;height:10px;}
+}
+@media(max-height:500px) {
+  .tlc-atomic .tlc-atomic-commentary-rail {flex-basis:27px;}
+  .tlc-atomic .tlc-atomic-rail-message {font-size:9px;}
+}
+@media(prefers-reduced-motion: reduce) {
+  .tlc-atomic .tlc-atomic-live-dot {box-shadow:none!important;}
+}
+
+/* Audio pack is available from Settings, not cluttering the arena. */
+.tlc-atomic .tlc-atomic-audio-pack {
+  display:flex;flex-direction:column;gap:6px;
+  border:1px solid #5b6273;border-left:3px solid #be637f;
+  background:#1a2938;
+  padding:11px 12px;
+}
+.tlc-atomic .tlc-atomic-audio-pack strong {
+  color:#f1cad9;font-size:10px;font-weight:900;letter-spacing:.7px;
+}
+.tlc-atomic .tlc-atomic-audio-pack small {
+  color:#afc0d3;font-size:10px;line-height:1.55;
+}

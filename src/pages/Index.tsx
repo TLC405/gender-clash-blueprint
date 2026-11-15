@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
-import { setSoundEnabled } from "@/lib/battleAudio";
+import { setSoundEnabled, playUiClick, primeElevenLabsAudio } from "@/lib/battleAudio";
 import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
 import { CROWD_PRESETS } from "@/lib/battleBalance";
@@ -19,6 +19,7 @@ import "./BroadcastOverhaul.css";
 import "./OneScreen.css";
 import "./AtomicUpgrade.css";
 import "./AtomicSweep.css";
+import "./AudioArena.css";
 
 type Team = "men" | "women";
 type Outcome = Team | "draw";
@@ -54,6 +55,7 @@ const Index = () => {
   const [winner, setWinner] = useState<Outcome | null>(null);
   const [narratorEnabled, setNarratorEnabled] = useState(() => savedBoolean("tlc-atomic-narrator", false));
   const [soundEnabled, setAudioEnabled] = useState(() => savedBoolean("tlc-atomic-sound", true));
+  const [elevenAudioReady, setElevenAudioReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(() => savedBoolean("tlc-atomic-reduced-motion", typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
   const [spectatorMode, setSpectatorMode] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -132,6 +134,11 @@ const Index = () => {
   }, [activePanel]);
 
   useEffect(() => { setSoundEnabled(soundEnabled); }, [soundEnabled]);
+  useEffect(() => {
+    let connected = true;
+    void primeElevenLabsAudio().then(ready => { if (connected) setElevenAudioReady(ready); });
+    return () => { connected = false; };
+  }, []);
   useEffect(() => {
     try {
       localStorage.setItem("tlc-atomic-sound", String(soundEnabled));
@@ -244,6 +251,7 @@ const Index = () => {
 
   const handleStart = () => {
     if (winner) return;
+    playUiClick();
     if (!isRunning) {
       startedRef.current = true;
       if (phase === "stand") recordMoment("LET THE CHAOS BEGIN", "The arena is officially open. May the best group chat win.", "🎬");
@@ -402,20 +410,16 @@ const Index = () => {
                 onStatsUpdate={handleStats} onPhaseChange={handlePhase}
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
-              <div className="tlc-cockpit-field-top"><span><Radio size={12} /> FIELD CAM / 3D</span><span>{battleSpeed}× PACE</span></div>
-              {spotlight && <div key={spotlight.id} className={"tlc-cockpit-spotlight " + (spotlight.team || "")} aria-live="polite"><span>{spotlight.icon}</span><div><strong>{spotlight.title}</strong><small>{spotlight.detail}</small></div></div>}
-              {!isRunning && !winner && <div className="tlc-cockpit-idle">
-                <div className="tlc-cockpit-idle-inner"><span>✦ TLC ATOMIC / MAIN EVENT</span><h1>{startedRef.current ? "MATCH PAUSED" : "LET THEM BATTLE."}</h1><p>{startedRef.current ? "Resume where you left off." : "Two teams. One arena. You control the chaos."}</p><button onClick={handleStart}><Play size={16} fill="currentColor" /> {startedRef.current ? "RESUME MATCH" : "START MATCH"}</button></div>
-              </div>}
-              <div className="tlc-cockpit-lower-third">
-                <div className="tlc-cockpit-ticker"><span>LIVE FEED</span><strong aria-live="polite">{quip}</strong></div>
-                <div className="tlc-cockpit-hype"><Flame size={12} /> {hype}%</div>
-              </div>
             </div>
-            <div className="tlc-cockpit-momentum">
-              <span>MEN <b>{momentum}%</b></span>
-              <div className="tlc-cockpit-momentum-track" role="meter" aria-label="Relative survival advantage for team men" aria-valuemin={0} aria-valuemax={100} aria-valuenow={momentum}><div style={{ width: momentum + "%" }} /></div>
-              <span>WOMEN <b>{100 - momentum}%</b></span>
+            <div className="tlc-atomic-commentary-rail" aria-label="Match status and play-by-play">
+              <span className={"tlc-atomic-rail-status" + (isLive ? " is-live" : "")}>
+                <span className="tlc-atomic-live-dot" aria-hidden="true" />
+                {winner ? "FINAL" : isLive ? "LIVE" : startedRef.current ? "PAUSED" : "READY"}
+              </span>
+              <div className="tlc-atomic-rail-message" aria-live="polite" aria-atomic="true">
+                {spotlight ? <><strong>{spotlight.title}</strong><span>{spotlight.detail}</span></> : <span>{!isRunning && !startedRef.current ? "Start the battle using the controls below." : quip}</span>}
+              </div>
+              <span className="tlc-atomic-rail-hype"><Flame size={13} aria-hidden="true" /> {hype}%</span>
             </div>
           </section>
           {!spectatorMode && <div className="tlc-cockpit-right">
@@ -429,18 +433,18 @@ const Index = () => {
               {isRunning ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
               <span>{isRunning ? "PAUSE" : startedRef.current ? "RESUME" : "START"}</span>
             </button>
-            <button type="button" className="tlc-cockpit-reset" onClick={() => { setActivePanel(null); resetBattle(menArmySize, womenArmySize); }} title="Reset match" aria-label="Reset match"><RotateCcw size={17} /><span>RESET</span></button>
+            <button type="button" className="tlc-cockpit-reset" onClick={() => { playUiClick(); setActivePanel(null); resetBattle(menArmySize, womenArmySize); }} title="Reset match" aria-label="Reset match"><RotateCcw size={17} /><span>RESET</span></button>
             <div className="tlc-cockpit-speed" role="group" aria-label="Match playback pace">
               <span>PACE</span>
-              {[0.25, 0.5, 1].map(speed => <button key={speed} className={battleSpeed === speed ? "selected" : ""} aria-pressed={battleSpeed === speed} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}
+              {[0.25, 0.5, 1].map(speed => <button key={speed} className={battleSpeed === speed ? "selected" : ""} aria-pressed={battleSpeed === speed} onClick={() => { playUiClick(); setBattleSpeed(speed); }}>{speed}×</button>)}
             </div>
           </div>
           <div className="tlc-cockpit-shortcuts">
-            <button className={activePanel === "modes" ? "active" : ""} aria-pressed={activePanel === "modes"} onClick={() => setActivePanel(p => p === "modes" ? null : "modes")}><Swords size={18}/><span>MODES</span></button>
-            <button title={menRage || womenRage ? "Boost active" : "Open power-ups"} className={(activePanel === "powers" ? "active " : "") + (menRage || womenRage ? "armed" : "")} aria-pressed={activePanel === "powers"} onClick={() => setActivePanel(p => p === "powers" ? null : "powers")}><Zap size={18}/><span>POWERS</span><i>{meteorCharges}</i></button>
-            <button className={activePanel === "stats" ? "active" : ""} aria-pressed={activePanel === "stats"} onClick={() => setActivePanel(p => p === "stats" ? null : "stats")}><Activity size={18}/><span>STATS</span></button>
-            <button className={activePanel === "share" ? "active" : ""} aria-pressed={activePanel === "share"} onClick={() => setActivePanel(p => p === "share" ? null : "share")}><Share2 size={18}/><span>SHARE</span></button>
-            <button className={activePanel === "settings" ? "active" : ""} aria-pressed={activePanel === "settings"} onClick={() => setActivePanel(p => p === "settings" ? null : "settings")}><Settings2 size={18}/><span>MORE</span></button>
+            <button className={activePanel === "modes" ? "active" : ""} aria-pressed={activePanel === "modes"} onClick={() => { playUiClick(); setActivePanel(p => p === "modes" ? null : "modes"); }}><Swords size={18}/><span>MODES</span></button>
+            <button title={menRage || womenRage ? "Boost active" : "Open power-ups"} className={(activePanel === "powers" ? "active " : "") + (menRage || womenRage ? "armed" : "")} aria-pressed={activePanel === "powers"} onClick={() => { playUiClick(); setActivePanel(p => p === "powers" ? null : "powers"); }}><Zap size={18}/><span>POWERS</span><i>{meteorCharges}</i></button>
+            <button className={activePanel === "stats" ? "active" : ""} aria-pressed={activePanel === "stats"} onClick={() => { playUiClick(); setActivePanel(p => p === "stats" ? null : "stats"); }}><Activity size={18}/><span>STATS</span></button>
+            <button className={activePanel === "share" ? "active" : ""} aria-pressed={activePanel === "share"} onClick={() => { playUiClick(); setActivePanel(p => p === "share" ? null : "share"); }}><Share2 size={18}/><span>SHARE</span></button>
+            <button className={activePanel === "settings" ? "active" : ""} aria-pressed={activePanel === "settings"} onClick={() => { playUiClick(); setActivePanel(p => p === "settings" ? null : "settings"); }}><Settings2 size={18}/><span>MORE</span></button>
           </div>
         </footer>
 
@@ -457,6 +461,7 @@ const Index = () => {
             {activePanel === "stats" && <BroadcastCenter stats={stats} menStart={menArmySize} womenStart={womenArmySize} moments={moments} history={history} timeRemaining={timeRemaining} matchDuration={MATCH_DURATION} phase={phase} isRunning={isRunning} winner={winner} battleSpeed={battleSpeed} hype={hype} />}
             {activePanel === "settings" && <div className="tlc-cockpit-settings">
               <label><span><Volume2 size={18}/> SOUND EFFECTS</span><input type="checkbox" checked={soundEnabled} onChange={e => setAudioEnabled(e.target.checked)}/></label>
+              <div className="tlc-atomic-audio-pack"><strong>ELEVENLABS ORIGINAL AUDIO PACK</strong><small>{elevenAudioReady ? "Pre-rendered original game audio active." : "Custom voice and sound clips are awaiting generation. Existing sounds remain temporarily available."}</small></div>
               <label><span><Radio size={18}/> VOICE COMMENTARY</span><input type="checkbox" checked={narratorEnabled} onChange={e => setNarratorEnabled(e.target.checked)}/></label>
               <label><span><Shield size={18}/> REDUCED FLASH & SHAKE</span><input type="checkbox" checked={reducedMotion} onChange={e => setReducedMotion(e.target.checked)}/></label>
               <div className="tlc-cockpit-settings-row"><span>PLAYBACK PACE</span><div>{[0.25,0.5,0.75,1,1.5].map(speed => <button className={battleSpeed===speed?"active":""} key={speed} onClick={() => setBattleSpeed(speed)}>{speed}×</button>)}</div></div>

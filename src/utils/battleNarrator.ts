@@ -1,5 +1,7 @@
 // TLC Battle Narrator - Premium AI voice system with fallback
 import { speakPremium, speakPremiumImmediate, stopPremiumNarration, isPremiumAvailable } from './premiumNarrator';
+import { playVoiceCue, stopVoiceCue } from '@/lib/battleAudio';
+import { ELEVEN_VOICE_SCRIPT, type ElevenVoice } from '@/lib/elevenAudioPack';
 
 export type NarratorContext = 
   | "menLead" 
@@ -14,6 +16,13 @@ export type NarratorContext =
   | "standPhase"
   | "meleePhase"
   | "suddenDeath";
+
+const elevenCueForContext: Record<NarratorContext, ElevenVoice> = {
+  menLead: "men_surge", womenLead: "women_surge", tie: "clash",
+  clash: "clash", phalanxForm: "opening", phalanxBreak: "clash",
+  powerupSpawn: "clash", victoryMen: "men_win", victoryWomen: "women_win",
+  standPhase: "opening", meleePhase: "clash", suddenDeath: "overtime",
+};
 
 const quips: Record<NarratorContext, string[]> = {
   menLead: [
@@ -101,7 +110,12 @@ if (typeof window !== 'undefined') {
  */
 export const speak = (context: NarratorContext, enabled: boolean = true): string | undefined => {
   if (!enabled || isSpeaking) return;
-  
+
+  // Pre-rendered ElevenLabs clips take priority. They require no runtime
+  // paid API calls, no client-side API key and no phone-generated narrator.
+  const curated = elevenCueForContext[context];
+  if (playVoiceCue(curated)) return ELEVEN_VOICE_SCRIPT[curated];
+
   const contextQuips = quips[context];
   const quip = contextQuips[Math.floor(Math.random() * contextQuips.length)];
   
@@ -157,6 +171,7 @@ export const speak = (context: NarratorContext, enabled: boolean = true): string
  * Stop all speaking
  */
 export const stopSpeaking = () => {
+  stopVoiceCue();
   if (usePremium) {
     stopPremiumNarration();
   }

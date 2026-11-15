@@ -1,0 +1,26 @@
+{
+  "status": "awaiting_generation",
+  "provider": "ElevenLabs",
+  "model_sound": "eleven_text_to_sound_v2",
+  "model_voice": "eleven_v4",
+  "description": "Original TLC Battlecast Audio Pack. Generated clips must be imported and reviewed before marking status ready. Until then the existing sounds and narration remain active.",
+  "sound_effects": [
+    "ui_click",
+    "arena_bell",
+    "light_hit",
+    "heavy_hit",
+    "crowd_clash",
+    "meteor",
+    "victory_sting"
+  ],
+  "voice_lines": [
+    "opening",
+    "clash",
+    "men_surge",
+    "women_surge",
+    "overtime",
+    "men_win",
+    "women_win"
+  ],
+  "assets": {}
+}
