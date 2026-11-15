@@ -286,7 +286,8 @@ export function updatePhysics(
     for (let i = 0; i < soa.unitCount; i++) {
       if (!(soa.stateFlags[i] & FLAG_ALIVE)) continue;
       const side = soa.teamID[i] === TEAM_MEN ? 1 : -1;
-      soa.velX[i] = side * Math.min(config.chargeSpeed * (0.65 + noise(i, 71) * 0.4) * getTacticSpeed(soa.formationPattern,soa.squadLane[i],getSquadCount(Math.max(runtime.menInitial,runtime.womenInitial))), config.maxSpeed);
+      const tactic=soa.teamID[i]===TEAM_MEN?soa.formationPattern:soa.womenFormationPattern;
+      soa.velX[i] = side * Math.min(config.chargeSpeed * (0.65 + noise(i, 71) * 0.4) * getTacticSpeed(tactic,soa.squadLane[i],getSquadCount(Math.max(runtime.menInitial,runtime.womenInitial))), config.maxSpeed);
       // Preserve battalion lanes during the opening charge. No random
       // sideways velocity that immediately fragments the front line.
       soa.velY[i] = (noise(i, 73) - 0.5) * config.chargeSpeed * 0.025;
@@ -348,6 +349,7 @@ export function updatePhysics(
     const inCombat = enemy.index >= 0 && enemy.distSq < 55 * 55;
     const closeEnemy = enemy.index >= 0 && enemy.distSq < 85 * 85;
     const lane = Math.min(laneCount-1,soa.squadLane[i]);
+    const tactic=team===TEAM_MEN?soa.formationPattern:soa.womenFormationPattern;
     const enemyLaneCount = team === TEAM_MEN ? r.womenLaneCount[lane] : r.menLaneCount[lane];
     const enemyLaneX = team === TEAM_MEN ? r.womenLaneX[lane] : r.menLaneX[lane];
     const enemyLaneY = team === TEAM_MEN ? r.womenLaneY[lane] : r.menLaneY[lane];
@@ -359,7 +361,7 @@ export function updatePhysics(
     // Far from an enemy, seek the opposing squad while holding a readable
     // vertical front. Only inside contact range pursue an individual.
     const tx = closeEnemy ? soa.posX[enemy.index] : aimX;
-    const ty = closeEnemy ? soa.posY[enemy.index] : Math.max(24, Math.min(canvasHeight-24,laneY*0.68 + aimY*0.32 + getTacticLaneBias(soa.formationPattern,lane,laneCount,canvasHeight,team,r.tick)));
+    const ty = closeEnemy ? soa.posY[enemy.index] : Math.max(24, Math.min(canvasHeight-24,laneY*0.68 + aimY*0.32 + getTacticLaneBias(tactic,lane,laneCount,canvasHeight,team,r.tick)));
     soa.formationState[i]=inCombat?FORMATION_BROKEN:FORMATION_CHARGING;
     setFormationLocked(soa,i,!inCombat);
     if(!inCombat){
@@ -402,7 +404,7 @@ export function updatePhysics(
     const approach = inCombat && distance < config.attackRange ? 0.15 : 0.74;
     const crowdSlowdown = 1 / (1 + Math.max(0, local.crowd - 5) * 0.055);
     const staggerSlowdown = soa.stagger[i] > 0 ? 0.4 : 1;
-    const tacticalSpeed = inCombat ? 1 : getTacticSpeed(soa.formationPattern,lane,laneCount);
+    const tacticalSpeed = inCombat ? 1 : getTacticSpeed(tactic,lane,laneCount);
     const intendedSpeed = shouldMove ? maxSpeed * approach * crowdSlowdown * staggerSlowdown * tacticalSpeed : 0;
     const response = Math.min(1, config.attractionStrength * step);
     let vx = soa.velX[i] + ((nx * intendedSpeed - soa.velX[i]) * response);
