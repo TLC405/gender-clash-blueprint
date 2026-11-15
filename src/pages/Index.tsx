@@ -471,8 +471,8 @@ const Index = () => {
             {activePanel === "stats" && <BroadcastCenter stats={stats} menStart={menArmySize} womenStart={womenArmySize} moments={moments} history={history} timeRemaining={timeRemaining} matchDuration={MATCH_DURATION} phase={phase} isRunning={isRunning} winner={winner} battleSpeed={battleSpeed} hype={hype} />}
             {activePanel === "settings" && <div className="tlc-cockpit-settings">
               <label><span><Volume2 size={18}/> SOUND EFFECTS</span><input type="checkbox" checked={soundEnabled} onChange={e => setAudioEnabled(e.target.checked)}/></label>
-              <div className="tlc-atomic-audio-pack"><strong>ELEVENLABS ORIGINAL AUDIO PACK</strong><small>{elevenAudioReady ? "Pre-rendered original game audio active." : "Custom voice and sound clips are awaiting generation. Existing sounds remain temporarily available."}</small></div>
-              <label><span><Radio size={18}/> VOICE COMMENTARY</span><input type="checkbox" checked={narratorEnabled} onChange={e => setNarratorEnabled(e.target.checked)}/></label>
+              <div className="tlc-atomic-audio-pack"><strong>ELEVENLABS ORIGINAL AUDIO PACK</strong><small>{elevenAudioReady ? "All approved ElevenLabs voices and effects are loaded." : "Original clips are still being prepared. Temporary arcade impact sounds remain, but no phone-generated announcer is used."}</small></div>
+              <label><span><Radio size={18}/> ELEVENLABS ANNOUNCER {elevenAudioReady ? "" : "(PENDING)"}</span><input type="checkbox" disabled={!elevenAudioReady} checked={elevenAudioReady && narratorEnabled} onChange={e => setNarratorEnabled(e.target.checked)}/></label>
               <div className="tlc-atomic-mixer" role="group" aria-label="Separate game audio levels">
                 {(["effects","voice","ui"] as const).map(channel=><div className="tlc-atomic-mix-row" key={channel}>
                   <label htmlFor={"tlc-mix-"+channel}>{channel==="effects"?"BATTLE IMPACTS":channel==="voice"?"ANNOUNCER":"BUTTON SOUNDS"}</label>
