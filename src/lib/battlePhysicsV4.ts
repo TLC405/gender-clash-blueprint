@@ -11,6 +11,7 @@
  * - van den Berg et al., ORCA (principles only; this is NOT ORCA)
  */
 import { teamBalance } from './battleBalance';
+import { getTacticLaneBias, getTacticSpeed } from './arenaOptions';
 import { getSquadCount, laneTargetY, MAX_SQUADS, STRIKE_DURATION, STRIKE_JAB, STRIKE_SHOVE } from './combatChoreography';
 import {
   type BattleSoA,
