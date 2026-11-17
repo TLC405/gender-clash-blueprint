@@ -42,6 +42,7 @@ type BattleSimulationProps = {
   meteorCharges?: number;
   onMeteorUsed?: () => void;
   reducedMotion?: boolean;
+  menPower?: number;
 };
 
 const BattleSimulation = ({
@@ -49,7 +50,7 @@ const BattleSimulation = ({
   formationPattern = "battle-lines", womenFormationPattern = formationPattern, arenaSurface = "championship",
   menRageEnabled, womenRageEnabled, isRunning,
   onStatsUpdate, onPhaseChange, onTimeUpdate, onQuipChange, onVictory,
-  narratorEnabled, meteorTrigger = 0, meteorCharges = 0, onMeteorUsed, reducedMotion = false
+  narratorEnabled, meteorTrigger = 0, meteorCharges = 0, onMeteorUsed, reducedMotion = false, menPower = 1
 }: BattleSimulationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -73,8 +74,8 @@ const BattleSimulation = ({
   const clashPointRef = useRef({ x: 0, y: 0 });
   const stepFnRef = useRef<(dt: number) => void>(() => {});
   const renderFnRef = useRef<() => void>(() => {});
-  const propsRef = useRef({ battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory });
-  propsRef.current = { battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory };
+  const propsRef = useRef({ menPower, battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory });
+  propsRef.current = { menPower, battleSpeed, menRageEnabled, womenRageEnabled, isRunning, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory };
 
   const soaRef = useRef<BattleSoA>(createBattleSoA());
   const gridRef = useRef<SpatialHashGrid | null>(null);
@@ -357,7 +358,7 @@ const BattleSimulation = ({
     const result = updatePhysics(
       soaRef.current, gridRef.current, poolRef.current,
       DEFAULT_CONFIG, phaseRef.current, dt,
-      width, height, p.battleSpeed, { men: p.menRageEnabled, women: p.womenRageEnabled }
+      width, height, p.battleSpeed, { men: p.menRageEnabled, women: p.womenRageEnabled }, p.menPower
     );
 
     killStatsRef.current.menKills += result.stats.menKills;

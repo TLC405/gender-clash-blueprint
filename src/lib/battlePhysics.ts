@@ -235,7 +235,8 @@ export function updatePhysics(
   canvasWidth: number,
   canvasHeight: number,
   battleSpeed: number = 1,
-  rageActive: boolean | { men: boolean; women: boolean } = false
+  rageActive: boolean | { men: boolean; women: boolean } = false,
+  menPower: number = 1
 ): PhysicsResult {
   const dt = deltaTime * battleSpeed;
   const kills: Array<{ x: number; y: number; killerTeam: number }> = [];
@@ -314,7 +315,7 @@ export function updatePhysics(
 
       // ATTACK: In range
       if (enemy.distSq < attackRangeSq) {
-        const damage = config.baseDamage * fury * dt * (boosted ? 1.25 : 1) * (phase === 'sudden_death' ? 1.5 : 1);
+        const damage = config.baseDamage * fury * dt * (boosted ? 1.25 : 1) * (phase === 'sudden_death' ? 1.5 : 1) * (team === TEAM_MEN ? menPower : 1);
         soa.health[enemy.index] -= damage;
 
         // Team-colored hit sparks

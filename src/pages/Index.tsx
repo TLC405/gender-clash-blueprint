@@ -1,3 +1,4 @@
+import { Slider } from "@/components/ui/slider";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -59,6 +60,7 @@ const Index = () => {
     catch { return "championship"; }
   });
   const [menArmySize, setMenArmySize] = useState<number>(CROWD_PRESETS[0].men);
+  const [menPer10Women, setMenPer10Women] = useState<number>(6);
   const [womenArmySize, setWomenArmySize] = useState<number>(CROWD_PRESETS[0].women);
   const [battleSpeed, setBattleSpeed] = useState(1);
   const [menRage, setMenRage] = useState(false);
@@ -437,7 +439,7 @@ const Index = () => {
                 formationPattern={formationPattern} womenFormationPattern={womenFormationPattern} arenaSurface={arenaSurface}
                 battleSpeed={battleSpeed} menRageEnabled={menRage} womenRageEnabled={womenRage}
                 isRunning={isRunning} narratorEnabled={narratorEnabled}
-                meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion}
+                meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion} menPower={10 / menPer10Women}
                 onStatsUpdate={handleStats} onPhaseChange={handlePhase}
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
@@ -484,6 +486,9 @@ const Index = () => {
           <div className="tlc-cockpit-panel-body">
             {activePanel === "modes" && <>
               <div className="tlc-balance-disclosure"><strong>POWER VS NUMBERS</strong><span>Women outnumber men. Male units are stronger per fighter; both use fictional arcade attributes.</span></div>
+              <div className="tlc-balance-disclosure"><strong>STRENGTH RATIO · {menPer10Women} MEN = 10 WOMEN</strong><span>Each man hits {(10 / menPer10Women).toFixed(2)}× as hard as each woman.</span>
+                <Slider aria-label="Men equal to 10 women" value={[menPer10Women]} onValueChange={v=>setMenPer10Women(v[0])} min={1} max={20} step={1} className="mt-3" />
+              </div>
               <div className="tlc-arena-section-title"><strong>MATCH SIZE</strong><small>Pick your army counts</small></div>
               <div className="tlc-cockpit-mode-list">{PRESETS.map(p=><button key={p.id} className={presetId===p.id?"selected":""} onClick={()=>{
                 if(isRunning){toast.info("Pause the match before switching modes.");return;}
