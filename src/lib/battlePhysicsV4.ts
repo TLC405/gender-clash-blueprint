@@ -517,3 +517,21 @@ export function applyMeteorImpact(
   }
   return result;
 }
+
+/** Cartoon arcade blast with an optional target team. Environmental losses never award fake KOs. */
+export function applyArcadeBlast(soa:BattleSoA,x:number,y:number,radius:number,damage:number,push:number,targetTeam:number|null=null):number {
+ const safe=Math.max(1,radius);let affected=0;
+ for(let i=0;i<soa.unitCount;i++){
+  if(!(soa.stateFlags[i]&FLAG_ALIVE)||(targetTeam!==null&&soa.teamID[i]!==targetTeam))continue;
+  const dx=soa.posX[i]-x,dy=soa.posY[i]-y,dist=Math.hypot(dx,dy);
+  if(dist>=safe)continue;
+  const strength=1-dist/safe;
+  soa.health[i]-=damage*strength;
+  soa.stagger[i]=Math.max(soa.stagger[i],.25);
+  soa.velX[i]+=(dist>0.001?dx/dist:1)*push*strength;
+  soa.velY[i]+=(dist>0.001?dy/dist:0)*push*strength;
+  if(soa.health[i]<=0)killUnit(soa,i);
+  affected++;
+ }
+ return affected;
+}
