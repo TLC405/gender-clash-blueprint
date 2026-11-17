@@ -269,7 +269,8 @@ export function updatePhysics(
   canvasWidth: number,
   canvasHeight: number,
   battleSpeed = 1,
-  rageActive: boolean | { men: boolean; women: boolean } = false
+  rageActive: boolean | { men: boolean; women: boolean } = false,
+  menPower = 1
 ): PhysicsResult {
   const runtime = getRuntime(soa);
   const kills: PhysicsResult['kills'] = [];
@@ -377,7 +378,7 @@ export function updatePhysics(
     if (enemy.index >= 0 && enemy.distSq <= config.attackRange ** 2) {
       // Long-form attrition with occasional discrete physical impacts.
       // Men have heavier individual hits; women have more fighters.
-      const damage = config.baseDamage * profile.damageMultiplier * strength * step
+      const damage = config.baseDamage * profile.damageMultiplier * strength * step * (team === TEAM_MEN ? menPower : 1)
         * (boosted ? 1.22 : 1) * (phase === 'sudden_death' ? 1.25 : 1);
       r.pendingDamage[enemy.index] += damage;
 

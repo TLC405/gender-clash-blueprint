@@ -13,7 +13,7 @@ import { setSoundEnabled, setAudioMix, playUiClick, playBell, primeOriginalGameA
 import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "@/lib/audioMix";
 import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
-import { CROWD_PRESETS } from "@/lib/battleBalance";
+import { CROWD_PRESETS, TEAM_BALANCE } from "@/lib/battleBalance";
 import { FORMATIONS, ARENA_SURFACES, isFormationPattern, isArenaSurface, type FormationPattern, type ArenaSurface } from "@/lib/arenaOptions";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
 import AtomicScoreboard from "@/components/battle/AtomicScoreboard";
@@ -439,7 +439,7 @@ const Index = () => {
                 formationPattern={formationPattern} womenFormationPattern={womenFormationPattern} arenaSurface={arenaSurface}
                 battleSpeed={battleSpeed} menRageEnabled={menRage} womenRageEnabled={womenRage}
                 isRunning={isRunning} narratorEnabled={narratorEnabled}
-                meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion} menPower={10 / menPer10Women}
+                meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion} menPower={(10 / menPer10Women) / ((TEAM_BALANCE.men.maxHealth * TEAM_BALANCE.men.damageMultiplier) / (TEAM_BALANCE.women.maxHealth * TEAM_BALANCE.women.damageMultiplier))}
                 onStatsUpdate={handleStats} onPhaseChange={handlePhase}
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
@@ -486,7 +486,7 @@ const Index = () => {
           <div className="tlc-cockpit-panel-body">
             {activePanel === "modes" && <>
               <div className="tlc-balance-disclosure"><strong>POWER VS NUMBERS</strong><span>Women outnumber men. Male units are stronger per fighter; both use fictional arcade attributes.</span></div>
-              <div className="tlc-balance-disclosure"><strong>STRENGTH RATIO · {menPer10Women} MEN = 10 WOMEN</strong><span>Each man hits {(10 / menPer10Women).toFixed(2)}× as hard as each woman.</span>
+              <div className="tlc-balance-disclosure"><strong>STRENGTH RATIO · {menPer10Women} MEN = 10 WOMEN</strong><span>One man is worth {(10 / menPer10Women).toFixed(2)} women in a fight (toughness × hit power).</span>
                 <Slider aria-label="Men equal to 10 women" value={[menPer10Women]} onValueChange={v=>setMenPer10Women(v[0])} min={1} max={20} step={1} className="mt-3" />
               </div>
               <div className="tlc-arena-section-title"><strong>MATCH SIZE</strong><small>Pick your army counts</small></div>
