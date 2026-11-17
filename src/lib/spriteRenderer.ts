@@ -5,6 +5,7 @@
  * No health bars, HP indicators or unit-circle sprites are rendered.
  */
 import { TEAM_MEN, FLAG_ALIVE, FLAG_LEADER, type BattleSoA } from './battleSoA';
+import type { CombatMode } from './combatModes';
 import { attackEnvelope, guardEnvelope, STRIKE_JAB, STRIKE_SHOVE } from './combatChoreography';
 import { getStickFigureVariant, getStickMotion, STICK_FIGHTER_PALETTES } from './stickFigureVariants';
 
@@ -16,7 +17,9 @@ export function renderUnits(
   _discoMode = false,
   _globalFrame = 0,
   _lighterBlend = false,
-  currentPhase = 'melee'
+  currentPhase = 'melee',
+  combatMode: CombatMode = 'brawl',
+  arenaRage = false
 ): void {
   const now = performance.now() / 1000;
   const still = currentPhase === 'stand' || currentPhase === 'victory';
@@ -29,7 +32,8 @@ export function renderUnits(
     const men = soa.teamID[i] === TEAM_MEN;
     const style = getStickFigureVariant(i, soa.teamID[i]);
     const motion = getStickMotion(style, now, still ? 0 : Math.hypot(soa.velX[i], soa.velY[i]), soa.stagger[i], still);
-    const scale = style.height * (men ? 1.03 : 0.98);
+    const furiosa = combatMode === 'furiosa' && !men;
+    const scale = style.height * (furiosa ? 1.42 : men ? 1.03 : 0.98);
     const stride = motion.stride * 2.4 * scale;
     const strike = still ? 0 : attackEnvelope(soa.attackTimer[i]);
     const jab = soa.attackKind[i] === STRIKE_JAB ? strike : 0;
@@ -40,7 +44,7 @@ export function renderUnits(
     const hip = 2 * style.hips * scale;
     const shoulder = 3 * style.shoulders * scale;
     const shades = men ? STICK_FIGHTER_PALETTES.men : STICK_FIGHTER_PALETTES.women;
-    const color = (soa.stateFlags[i] & FLAG_LEADER) !== 0 ? '#f7cc71' : '#' + shades[style.shade].toString(16).padStart(6,'0');
+    const color = furiosa ? '#ee799b' : arenaRage ? (men ? '#ffe273' : '#ff9e47') : (soa.stateFlags[i] & FLAG_LEADER) !== 0 ? '#f7cc71' : '#' + shades[style.shade].toString(16).padStart(6,'0');
     const skin = '#' + STICK_FIGHTER_PALETTES.skin[(style.shade + i) % STICK_FIGHTER_PALETTES.skin.length].toString(16).padStart(6,'0');
 
     ctx.fillStyle = 'rgba(4,11,22,.26)';
@@ -69,7 +73,7 @@ export function renderUnits(
     line(kneeL,-4.3*scale,footL,0,1.45*scale);
     line(hipR,pelvisY,kneeR,-4.3*scale,1.9*scale);
     line(kneeR,-4.3*scale,footR,0,1.45*scale);
-    line(pelvisX,pelvisY,neckX,neckY,2.1*scale);
+    line(pelvisX,pelvisY,neckX,neckY,(furiosa?3.6:2.1)*scale);
     const elbowLY=neckY+(4-guard*2.2-shove*2)*scale;
     const elbowRY=neckY+(4-guard*2.2-jab*2.3-shove*2)*scale;
     const elbowLX=neckX-shoulder-1.6*scale-stride*.4+front*shove*3.2*scale;
@@ -89,6 +93,24 @@ export function renderUnits(
     ctx.beginPath();
     ctx.arc(neckX-.2*scale,neckY-4.4*scale,0.5*scale,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,.6)';ctx.fill();
+    // Handheld cartoon equipment and transformed Furiosa muscle definition.
+    if(furiosa){
+      ctx.strokeStyle='#ffd2df';ctx.lineWidth=2.1*scale;
+      ctx.beginPath();ctx.arc(neckX-shoulder-2*scale,neckY+4*scale,2*scale,0,Math.PI*1.6);ctx.stroke();
+      ctx.beginPath();ctx.arc(neckX+shoulder+2*scale,neckY+4*scale,2*scale,0,Math.PI*1.6);ctx.stroke();
+      // Bald head: no hair mesh or accessory.
+    }
+    if(combatMode==='swords'||combatMode==='mayhem'){
+      ctx.strokeStyle=men?'#9fe8ff':'#ffd0e2';ctx.lineWidth=1.6*scale;
+      ctx.beginPath();ctx.moveTo(neckX+shoulder+4*scale,neckY+6*scale);ctx.lineTo(neckX+shoulder+13*scale,neckY-10*scale);ctx.stroke();
+    } else if((combatMode==='blasters'&&men)||(combatMode==='beauty'&&!men)||(combatMode==='water')){
+      ctx.lineWidth=3*scale;ctx.strokeStyle=combatMode==='water'?'#5df0ff':men?'#9db7ff':'#ff4a99';
+      ctx.beginPath();ctx.moveTo(neckX+shoulder+4*scale,neckY+5*scale);ctx.lineTo(neckX+shoulder+12*scale,neckY+5*scale);ctx.stroke();
+    }
+    if(arenaRage){
+      ctx.strokeStyle=men?'rgba(255,214,93,.8)':'rgba(255,112,135,.8)';
+      ctx.lineWidth=.7;ctx.beginPath();ctx.arc(0,-9*scale,11*scale,0,Math.PI*2);ctx.stroke();
+    }
     ctx.restore();
   }
   ctx.restore();

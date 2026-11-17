@@ -14,6 +14,7 @@ import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "@/lib/audio
 import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
 import { CROWD_PRESETS, TEAM_BALANCE } from "@/lib/battleBalance";
+import { combatMode, COMBAT_MODES, type CombatMode, type HeroWeapon } from "@/lib/combatModes";
 import { FORMATIONS, ARENA_SURFACES, isFormationPattern, isArenaSurface, type FormationPattern, type ArenaSurface } from "@/lib/arenaOptions";
 import { BroadcastCenter, type BroadcastSnapshot } from "@/components/battle/BroadcastCenter";
 import AtomicScoreboard from "@/components/battle/AtomicScoreboard";
@@ -24,6 +25,7 @@ import "./AtomicUpgrade.css";
 import "./AtomicSweep.css";
 import "./AudioArena.css";
 import "./ArenaOptions.css";
+import "./HeroControls.css";
 
 type Team = "men" | "women";
 type Outcome = Team | "draw";
@@ -46,6 +48,29 @@ const clock = (seconds: number) => Math.floor(seconds / 60) + ":" + String(Math.
 
 const Index = () => {
   const [presetId, setPresetId] = useState("classic");
+  const [combatModeId, setCombatModeId] = useState<CombatMode>("brawl");
+  const [heroEnabled,setHeroEnabled] = useState(false);
+  const [heroPhoto,setHeroPhoto] = useState<string|null>(null);
+  const [heroPosition,setHeroPosition] = useState({x:.25,y:.70});
+  const [heroAction,setHeroAction] = useState<{id:number;weapon:HeroWeapon;x:number;y:number}|undefined>();
+  const [heroAmmo,setHeroAmmo] = useState({nuke:2,makeup:4,lipstick:10});
+  const heroIdRef=useRef(0);
+  const uploadHeroPhoto=(file?:File)=>{
+    if(!file)return;
+    if(!file.type.startsWith("image/")||file.size>8_000_000){toast.error("Choose a JPG, PNG, or WebP photo under 8 MB.");return;}
+    const reader=new FileReader();
+    reader.onload=()=>{if(typeof reader.result==="string"){setHeroPhoto(reader.result);setHeroEnabled(true);}};
+    reader.readAsDataURL(file);
+  };
+  const moveHero=(dx:number,dy:number)=>setHeroPosition(p=>({x:Math.max(.05,Math.min(.95,p.x+dx)),y:Math.max(.12,Math.min(.90,p.y+dy))}));
+  const fireHero=(weapon:HeroWeapon)=>{
+    if(!heroEnabled||!isRunning){toast.info("Deploy TLC and start the match first.");return;}
+    if(weapon!=="water"&&heroAmmo[weapon]<=0){toast.info("Out of "+weapon+" charges.");return;}
+    if(weapon!=="water")setHeroAmmo(p=>({...p,[weapon]:p[weapon]-1}));
+    const target={x:Math.min(.91,heroPosition.x+.16),y:heroPosition.y};
+    setHeroAction({id:++heroIdRef.current,weapon,...target});
+    playArenaCue(weapon==="water"?"power_up":"crowd_roar");
+  };
   const [formationPattern, setFormationPattern] = useState<FormationPattern>(()=>{
     try { const saved=localStorage.getItem("tlc-battle-formation");return isFormationPattern(saved)?saved:"battle-lines"; }
     catch { return "battle-lines"; }
@@ -255,6 +280,8 @@ const Index = () => {
     setHype(9);
     setReactionCounts({});
     setMeteorCharges(3);
+    setHeroAmmo({nuke:2,makeup:4,lipstick:10});
+    setHeroAction(undefined);
     setMeteorTrigger(0);
     setMenRage(false);
     setWomenRage(false);
@@ -264,6 +291,7 @@ const Index = () => {
   const applyPreset = useCallback((preset: Preset) => {
     if (isRunning) { toast.info("Pause or finish the match before changing arenas."); return; }
     setPresetId(preset.id);
+    setCombatModeId(COMBAT_MODES.some(m=>m.id===preset.id)?preset.id as CombatMode:preset.id==="chaos"?"mayhem":"brawl");
     setMenArmySize(preset.men);
     setWomenArmySize(preset.women);
     setBattleSpeed(preset.speed);
@@ -438,7 +466,7 @@ const Index = () => {
               <BattleSimulation
                 key={battleKey}
                 menArmySize={menArmySize} womenArmySize={womenArmySize}
-                formationPattern={formationPattern} womenFormationPattern={womenFormationPattern} arenaSurface={arenaSurface}
+                formationPattern={formationPattern} womenFormationPattern={womenFormationPattern} arenaSurface={arenaSurface} combatModeId={combatModeId} heroAction={heroAction}
                 battleSpeed={battleSpeed} menRageEnabled={menRage} womenRageEnabled={womenRage}
                 isRunning={isRunning} narratorEnabled={narratorEnabled}
                 meteorTrigger={meteorTrigger} meteorCharges={meteorCharges} onMeteorUsed={useMeteorCharge} reducedMotion={reducedMotion} menPower={(10 / menPer10Women) / ((TEAM_BALANCE.men.maxHealth * TEAM_BALANCE.men.damageMultiplier) / (TEAM_BALANCE.women.maxHealth * TEAM_BALANCE.women.damageMultiplier))}
@@ -446,6 +474,24 @@ const Index = () => {
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
             </div>
+            {heroEnabled && <div className="tlc-hero-layer" aria-label="TLC hero controls">
+                <div className="tlc-hero-avatar" style={{left:(heroPosition.x*100)+"%",top:(heroPosition.y*100)+"%"}}>
+                  <div className="tlc-hero-portrait">{heroPhoto?<img src={heroPhoto} alt="Your TLC hero" />:<span>TLC</span>}</div>
+                  <span className="tlc-hero-name">TLC HERO</span>
+                </div>
+                <div className="tlc-hero-controls">
+                  <div className="tlc-hero-dpad" role="group" aria-label="Move TLC hero">
+                    <button aria-label="Move up" onClick={()=>moveHero(0,-.08)}>↑</button>
+                    <span><button aria-label="Move left" onClick={()=>moveHero(-.08,0)}>←</button><button aria-label="Move down" onClick={()=>moveHero(0,.08)}>↓</button><button aria-label="Move right" onClick={()=>moveHero(.08,0)}>→</button></span>
+                  </div>
+                  <div className="tlc-hero-weapons" role="group" aria-label="Fire TLC hero weapons">
+                    <button disabled={!isLive} onClick={()=>fireHero("water")}>💦 WATER</button>
+                    <button disabled={!isLive||heroAmmo.lipstick===0} onClick={()=>fireHero("lipstick")}>💄 {heroAmmo.lipstick}</button>
+                    <button disabled={!isLive||heroAmmo.makeup===0} onClick={()=>fireHero("makeup")}>💥 {heroAmmo.makeup}</button>
+                    <button disabled={!isLive||heroAmmo.nuke===0} onClick={()=>fireHero("nuke")}>☢ {heroAmmo.nuke}</button>
+                  </div>
+                </div>
+              </div>}
             <div className="tlc-atomic-commentary-rail" aria-label="Match status and play-by-play">
               <span className={"tlc-atomic-rail-status" + (isLive ? " is-live" : "")}>
                 <span className="tlc-atomic-live-dot" aria-hidden="true" />
@@ -491,7 +537,9 @@ const Index = () => {
               <div className="tlc-balance-disclosure"><strong>STRENGTH RATIO · {menPer10Women} MEN = 10 WOMEN</strong><span>One man is worth {(10 / menPer10Women).toFixed(2)} women in a fight (toughness × hit power).</span>
                 <Slider aria-label="Men equal to 10 women" value={[menPer10Women]} onValueChange={v=>setMenPer10Women(v[0])} min={1} max={20} step={1} className="mt-3" />
               </div>
-              <div className="tlc-arena-section-title"><strong>MATCH SIZE</strong><small>Pick your army counts</small></div>
+              <div className="tlc-arena-section-title"><strong>ARCADE COMBAT STYLE</strong><small>9 scenarios · maximum 100 total fighters</small></div>
+              <div className="tlc-cockpit-mode-list">{COMBAT_MODES.map(m=><button key={m.id} className={combatModeId===m.id?"selected":""} onClick={()=>{if(isRunning){toast.info("Pause first to change combat mode.");return;}setCombatModeId(m.id);resetBattle(menArmySize,womenArmySize);playUiClick();}}><span className="tlc-cockpit-mode-emoji">{m.icon}</span><span><strong>{m.name}</strong><small>{m.detail}</small></span><span className="tlc-cockpit-mode-select">{combatModeId===m.id?"ACTIVE":"SELECT"}</span></button>)}</div>
+              <div className="tlc-arena-section-title"><strong>MATCH SIZE</strong><small>Maximum 100 fighters combined</small></div>
               <div className="tlc-cockpit-mode-list">{PRESETS.map(p=><button key={p.id} className={presetId===p.id?"selected":""} onClick={()=>{
                 if(isRunning){toast.info("Pause the match before switching modes.");return;}
                 applyPreset(p);
@@ -536,6 +584,12 @@ const Index = () => {
               <div className="tlc-arena-crest-note">ORIGINAL TLC CHAMPIONSHIP CREST · SCALABLE VECTOR FIELD ART</div>
             </>}
             {activePanel === "powers" && <div className="tlc-cockpit-power-grid">
+              <div className="tlc-balance-disclosure" style={{gridColumn:"1 / -1"}}>
+                <strong>TLC HERO DROP</strong>
+                <span>Enter the arena with your own photo. Use the on-field arrows and water, lipstick, makeup, or nuke weapons. Photos stay in this browser session.</span>
+                <label className="tlc-hero-upload"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>uploadHeroPhoto(e.target.files?.[0])} />UPLOAD TLC PHOTO</label>
+                <button className="tlc-cockpit-settings-action" onClick={()=>setHeroEnabled(v=>!v)}>{heroEnabled?"REMOVE HERO":"DROP TLC HERO"}</button>
+              </div>
               <button className={menRage ? "active men" : "men"} onClick={() => { playArenaCue("power_up");setMenRage(v => !v);recordMoment(menRage ? "BRO MODE OFF" : "BRO MODE ON",menRage ? "Men return to normal speed." : "Team Men gets a combat boost.","⚡","men"); }}><Flame size={19}/><strong>{menRage ? "BRO MODE ON" : "BRO MODE"}</strong><small>Boost Team Men</small></button>
               <button className={womenRage ? "active women" : "women"} onClick={() => { playArenaCue("power_up");setWomenRage(v => !v);recordMoment(womenRage ? "QUEEN MODE OFF" : "QUEEN MODE ON",womenRage ? "Women return to normal speed." : "Team Women gets a combat boost.","👑","women"); }}><Crown size={19}/><strong>{womenRage ? "QUEEN MODE ON" : "QUEEN MODE"}</strong><small>Boost Team Women</small></button>
               <button className="tlc-cockpit-meteor" disabled={!isLive || meteorCharges <= 0} onClick={dropMeteor}><Target size={18}/><strong>METEOR DROP</strong><small>{meteorCharges} charges · Or tap the arena</small></button>
@@ -544,7 +598,7 @@ const Index = () => {
             {activePanel === "stats" && <BroadcastCenter stats={stats} menStart={menArmySize} womenStart={womenArmySize} moments={moments} history={history} timeRemaining={timeRemaining} matchDuration={MATCH_DURATION} phase={phase} isRunning={isRunning} winner={winner} battleSpeed={battleSpeed} hype={hype} />}
             {activePanel === "settings" && <div className="tlc-cockpit-settings">
               <label><span><Volume2 size={18}/> SOUND EFFECTS</span><input type="checkbox" checked={soundEnabled} onChange={e => setAudioEnabled(e.target.checked)}/></label>
-              <div className="tlc-atomic-audio-pack"><strong>TLC ORIGINAL SOUND ENGINE — 7 EFFECTS</strong><small>Original arcade impacts, arena bell, battle rush, meteor, victory and buttons. Built into the game, available offline after first load. Voice narration remains pending; no phone-generated announcer will interrupt gameplay.</small><button className="tlc-atomic-sound-preview" type="button" disabled={!soundEnabled} onClick={() => { playUiClick(); void primeOriginalGameAudio().then(() => playBell()); }}>TEST CHAMPIONSHIP BELL</button></div>
+              <div className="tlc-atomic-audio-pack"><strong>TLC ORIGINAL SOUND ENGINE — 10 EFFECTS</strong><small>Original arcade impacts, arena bell, battle rush, meteor, victory and buttons. Built into the game, available offline after first load. Voice narration remains pending; no phone-generated announcer will interrupt gameplay.</small><button className="tlc-atomic-sound-preview" type="button" disabled={!soundEnabled} onClick={() => { playUiClick(); void primeOriginalGameAudio().then(() => playBell()); }}>TEST CHAMPIONSHIP BELL</button></div>
               <label><span><Radio size={18}/> ELEVENLABS ANNOUNCER {elevenAudioReady ? "" : "(PENDING)"}</span><input type="checkbox" disabled={!elevenAudioReady} checked={elevenAudioReady && narratorEnabled} onChange={e => setNarratorEnabled(e.target.checked)}/></label>
               <div className="tlc-atomic-mixer" role="group" aria-label="Separate game audio levels">
                 {(["effects","voice","ui"] as const).map(channel=><div className="tlc-atomic-mix-row" key={channel}>

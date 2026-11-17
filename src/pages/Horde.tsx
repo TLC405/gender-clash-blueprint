@@ -6,10 +6,10 @@ import { CROWD_PRESETS } from "@/lib/battleBalance";
 
 const modes = CROWD_PRESETS.map((p, index) => ({
   ...p,
-  eyebrow: ["01 / POWER VS NUMBERS", "02 / MASSIVE FRONTLINE", "03 / THE ODDS", "04 / ENDURANCE"][index],
+  eyebrow: String(index+1).padStart(2,"0")+" / ARCADE BATTLE",
   size: p.men.toLocaleString() + " MEN VS " + p.women.toLocaleString() + " WOMEN",
   copy: p.tagline + ". Men hit harder individually; women field more fighters.",
-  theme: ["blue", "pink", "gold", "purple"][index],
+  theme: ["blue","pink","gold","purple"][index%4],
 }));
 
 const Horde = () => (
@@ -24,7 +24,7 @@ const Horde = () => (
     <main className="tlc-main tlc-mode-page">
       <div className="tlc-eyebrow"><Sparkles size={14} /> ATOMIC / MATCH SELECT</div>
       <h1>SELECT YOUR <span>BATTLE.</span></h1>
-      <p className="tlc-mode-description">Four ways to settle the world's most unnecessary debate. Every mode launches a real, playable battle simulation.</p>
+      <p className="tlc-mode-description">Nine ways to settle the world's most unnecessary debate. Every mode launches a real, playable battle simulation.</p>
       <div className="tlc-mode-grid">
         {modes.map(mode => <Link key={mode.id} to={"/?preset=" + mode.id} className={"tlc-mode-card " + mode.theme}>
           <div className="tlc-mode-card-top"><span>{mode.eyebrow}</span><ArrowUpRight size={19} /></div>
