@@ -25,7 +25,9 @@ let lastVoiceAt = 0;
 let lastNamedCueAt = 0;
 let currentVoice: Howl | null = null;
 const custom = new Map<ElevenCue, Howl>();
-const original = new Map<ElevenSfx, Howl>();
+type OriginalCue = ElevenSfx | "power_up" | "countdown" | "crowd_roar";
+const ORIGINAL_CUES: readonly OriginalCue[] = [...ELEVEN_SFX, "power_up", "countdown", "crowd_roar"];
+const original = new Map<OriginalCue, Howl>();
 let originalPromise: Promise<boolean> | null = null;
 let originalReady = false;
 
@@ -34,8 +36,8 @@ export function primeOriginalGameAudio(): Promise<boolean> {
   if (originalPromise) return originalPromise;
   originalPromise = (async () => {
     const base = import.meta.env.BASE_URL + "audio/tlc/";
-    const decoded = await Promise.all(ELEVEN_SFX.map(cue =>
-      new Promise<readonly [ElevenSfx, Howl | null]>(resolve => {
+    const decoded = await Promise.all(ORIGINAL_CUES.map(cue =>
+      new Promise<readonly [OriginalCue, Howl | null]>(resolve => {
         const sound = new Howl({
           src: [base + cue + ".wav"],
           html5: false, preload: true,
@@ -198,6 +200,21 @@ export function playUiClick(): void {
   if (now - lastUIClickAt < 100) return;
   lastUIClickAt = now;
   customSound("ui_click");
+}
+
+/** Additional original cues, deliberately triggered only after user interaction. */
+export function playArenaCue(cue: "power_up" | "countdown" | "crowd_roar"): void {
+  if (!effectsEnabled) return;
+  const sound = original.get(cue);
+  if (!sound) {
+    void primeOriginalGameAudio().then(ready => {
+      if (ready && effectsEnabled) playArenaCue(cue);
+    });
+    return;
+  }
+  if (mix.effects <= 0) return;
+  const id = sound.play();
+  sound.volume((cue === "crowd_roar" ? 0.22 : 0.36) * mix.effects * (voiceDucking ? .38 : 1), id);
 }
 
 export function playVoiceCue(cue: ElevenVoice): boolean {
