@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
-import { setSoundEnabled, setAudioMix, playUiClick, playBell, primeOriginalGameAudio, primeElevenLabsAudio } from "@/lib/battleAudio";
+import { setSoundEnabled, setAudioMix, playUiClick, playBell, playArenaCue, primeOriginalGameAudio, primeElevenLabsAudio } from "@/lib/battleAudio";
 import { DEFAULT_AUDIO_MIX, normalizeAudioMix, type AudioMix } from "@/lib/audioMix";
 import { fitArenaViewport } from "@/lib/arenaViewport";
 import type { BattlePhase } from "@/lib/battlePhysics";
@@ -284,6 +284,7 @@ const Index = () => {
     if (winner) return;
     void primeOriginalGameAudio();
     playUiClick();
+    if (!isRunning && !startedRef.current) playArenaCue("countdown");
     if (!isRunning) {
       startedRef.current = true;
       if (phase === "stand") recordMoment("LET THE CHAOS BEGIN", "The arena is officially open. May the best group chat win.", "🎬");
@@ -298,6 +299,7 @@ const Index = () => {
     setIsRunning(false);
     recordMoment(side === "draw" ? "IT ENDS IN A DRAW" : side === "men" ? "THE BROS TAKE THE CROWN" : "THE QUEENS OWN THE ARENA", side === "draw" ? "Both teams finished with the same surviving share." : "That was ridiculous. And yes, we are absolutely running it back.", side === "draw" ? "🤝" : "🏆", side === "draw" ? undefined : side);
     setHype(100);
+    playArenaCue("crowd_roar");
   }, [recordMoment]);
 
   const handlePhase = useCallback((next: BattlePhase) => {
@@ -534,8 +536,8 @@ const Index = () => {
               <div className="tlc-arena-crest-note">ORIGINAL TLC CHAMPIONSHIP CREST · SCALABLE VECTOR FIELD ART</div>
             </>}
             {activePanel === "powers" && <div className="tlc-cockpit-power-grid">
-              <button className={menRage ? "active men" : "men"} onClick={() => { setMenRage(v => !v);recordMoment(menRage ? "BRO MODE OFF" : "BRO MODE ON",menRage ? "Men return to normal speed." : "Team Men gets a combat boost.","⚡","men"); }}><Flame size={19}/><strong>{menRage ? "BRO MODE ON" : "BRO MODE"}</strong><small>Boost Team Men</small></button>
-              <button className={womenRage ? "active women" : "women"} onClick={() => { setWomenRage(v => !v);recordMoment(womenRage ? "QUEEN MODE OFF" : "QUEEN MODE ON",womenRage ? "Women return to normal speed." : "Team Women gets a combat boost.","👑","women"); }}><Crown size={19}/><strong>{womenRage ? "QUEEN MODE ON" : "QUEEN MODE"}</strong><small>Boost Team Women</small></button>
+              <button className={menRage ? "active men" : "men"} onClick={() => { playArenaCue("power_up");setMenRage(v => !v);recordMoment(menRage ? "BRO MODE OFF" : "BRO MODE ON",menRage ? "Men return to normal speed." : "Team Men gets a combat boost.","⚡","men"); }}><Flame size={19}/><strong>{menRage ? "BRO MODE ON" : "BRO MODE"}</strong><small>Boost Team Men</small></button>
+              <button className={womenRage ? "active women" : "women"} onClick={() => { playArenaCue("power_up");setWomenRage(v => !v);recordMoment(womenRage ? "QUEEN MODE OFF" : "QUEEN MODE ON",womenRage ? "Women return to normal speed." : "Team Women gets a combat boost.","👑","women"); }}><Crown size={19}/><strong>{womenRage ? "QUEEN MODE ON" : "QUEEN MODE"}</strong><small>Boost Team Women</small></button>
               <button className="tlc-cockpit-meteor" disabled={!isLive || meteorCharges <= 0} onClick={dropMeteor}><Target size={18}/><strong>METEOR DROP</strong><small>{meteorCharges} charges · Or tap the arena</small></button>
               <div className="tlc-cockpit-reactions"><span>YOUR REACTIONS</span><div>{REACTIONS.map(emoji => <button key={emoji} aria-label={"React " + emoji} onClick={() => react(emoji)}>{emoji}<small>{reactionCounts[emoji] || ""}</small></button>)}</div></div>
             </div>}
