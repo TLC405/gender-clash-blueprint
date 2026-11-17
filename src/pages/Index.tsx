@@ -477,7 +477,7 @@ const Index = () => {
             {heroEnabled && <div className="tlc-hero-layer" aria-label="TLC hero controls">
                 <div className="tlc-hero-avatar" style={{left:(heroPosition.x*100)+"%",top:(heroPosition.y*100)+"%"}}>
                   <div className="tlc-hero-portrait">{heroPhoto?<img src={heroPhoto} alt="Your TLC hero" />:<span>TLC</span>}</div>
-                  <strong>TLC HERO</strong>
+                  <span className="tlc-hero-name">TLC HERO</span>
                 </div>
                 <div className="tlc-hero-controls">
                   <div className="tlc-hero-dpad" role="group" aria-label="Move TLC hero">
