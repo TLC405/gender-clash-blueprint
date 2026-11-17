@@ -25,6 +25,7 @@ import "./AtomicUpgrade.css";
 import "./AtomicSweep.css";
 import "./AudioArena.css";
 import "./ArenaOptions.css";
+import "./HeroControls.css";
 
 type Team = "men" | "women";
 type Outcome = Team | "draw";
