@@ -473,7 +473,8 @@ const Index = () => {
                 onStatsUpdate={handleStats} onPhaseChange={handlePhase}
                 onTimeUpdate={handleTime} onQuipChange={handleQuip} onVictory={handleVictory}
               />
-              {heroEnabled && <div className="tlc-hero-layer" aria-label="TLC hero controls">
+            </div>
+            {heroEnabled && <div className="tlc-hero-layer" aria-label="TLC hero controls">
                 <div className="tlc-hero-avatar" style={{left:(heroPosition.x*100)+"%",top:(heroPosition.y*100)+"%"}}>
                   <div className="tlc-hero-portrait">{heroPhoto?<img src={heroPhoto} alt="Your TLC hero" />:<span>TLC</span>}</div>
                   <strong>TLC HERO</strong>
@@ -491,7 +492,6 @@ const Index = () => {
                   </div>
                 </div>
               </div>}
-            </div>
             <div className="tlc-atomic-commentary-rail" aria-label="Match status and play-by-play">
               <span className={"tlc-atomic-rail-status" + (isLive ? " is-live" : "")}>
                 <span className="tlc-atomic-live-dot" aria-hidden="true" />
