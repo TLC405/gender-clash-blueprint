@@ -1,0 +1,18 @@
+/* TLC HERO / discreet on-field gamepad, Fold-safe. */
+.tlc-hero-layer{position:absolute;inset:0;pointer-events:none;z-index:7}
+.tlc-hero-avatar{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;filter:drop-shadow(0 3px 4px #0009)}
+.tlc-hero-portrait{width:43px;height:43px;border:3px solid #e7b65a;outline:2px solid #142c42;border-radius:50%;overflow:hidden;background:#142c42;display:grid;place-items:center;color:#fff;font-weight:900;font-size:12px;box-shadow:0 0 0 5px #e7b65a33}
+.tlc-hero-portrait img{width:100%;height:100%;object-fit:cover}
+.tlc-hero-avatar strong{font:800 8px/1.2 system-ui,sans-serif;letter-spacing:1px;background:#071724e6;border:1px solid #e7b65a;padding:3px 5px;border-radius:4px;color:#f9de9e;white-space:nowrap}
+.tlc-hero-controls{position:absolute;bottom:7px;left:8px;right:8px;display:flex;align-items:flex-end;justify-content:space-between;gap:7px;pointer-events:none}
+.tlc-hero-controls button{pointer-events:auto;border-radius:7px;min-width:32px;min-height:31px;padding:4px 7px;background:#102335e8;border:1px solid #97b3c785;color:#fff;font-size:10px;font-weight:800;box-shadow:0 2px 6px #0009;touch-action:manipulation}
+.tlc-hero-controls button:active{transform:translateY(2px);background:#304c68}
+.tlc-hero-controls button:disabled{opacity:.4}
+.tlc-hero-dpad{display:grid;justify-items:center;gap:2px;pointer-events:none}
+.tlc-hero-dpad span{display:flex;gap:2px}
+.tlc-hero-weapons{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:min(66%,360px)}
+.tlc-hero-weapons button:last-child{border-color:#ffc96a;color:#ffdf93;background:#432b23e8}
+.tlc-hero-upload{position:relative;display:inline-flex;align-items:center;justify-content:center;border:1px solid #dcb76b;border-radius:9px;background:#292d35;color:#ffdf9b;font-size:11px;font-weight:800;min-height:40px;padding:10px;cursor:pointer;overflow:hidden}
+.tlc-hero-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+@media(max-width:430px){.tlc-hero-portrait{width:34px;height:34px}.tlc-hero-controls{bottom:4px;left:4px;right:4px}.tlc-hero-controls button{font-size:9px;min-height:28px;min-width:27px;padding:3px 4px}.tlc-hero-weapons{max-width:69%}}
+@media(max-height:600px){.tlc-hero-portrait{width:30px;height:30px}.tlc-hero-controls button{min-height:24px}}
