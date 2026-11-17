@@ -103,7 +103,7 @@ export function renderUnits(
     if(combatMode==='swords'||combatMode==='mayhem'){
       ctx.strokeStyle=men?'#9fe8ff':'#ffd0e2';ctx.lineWidth=1.6*scale;
       ctx.beginPath();ctx.moveTo(neckX+shoulder+4*scale,neckY+6*scale);ctx.lineTo(neckX+shoulder+13*scale,neckY-10*scale);ctx.stroke();
-    } else if((combatMode==='blasters'&&men)||(combatMode==='beauty'&&!men)||(combatMode==='water')||(combatMode==='mayhem'&&!men)){
+    } else if((combatMode==='blasters'&&men)||(combatMode==='beauty'&&!men)||(combatMode==='water')){
       ctx.lineWidth=3*scale;ctx.strokeStyle=combatMode==='water'?'#5df0ff':men?'#9db7ff':'#ff4a99';
       ctx.beginPath();ctx.moveTo(neckX+shoulder+4*scale,neckY+5*scale);ctx.lineTo(neckX+shoulder+12*scale,neckY+5*scale);ctx.stroke();
     }
