@@ -1,6 +1,6 @@
 /**
  * TLC Battlecast — original, sample-free game audio.
- * Generates 7 PCM WAV sound effects during npm run build (NOT on the phone).
+ * Generates 10 PCM WAV sound effects during npm run build (NOT on the phone).
  * No paid generation, no API key, no stock samples, no runtime network call.
  *
  * Each sound is synthesized from seeded noise, swept oscillators, envelopes,
@@ -167,8 +167,35 @@ function write(name, samples) {
   echo(x, .17, .23, 4);
   write("victory_sting", x);
 }
+// Additional cues for player-triggered actions and broadcast atmosphere.
+{
+  const x = create(1.1);
+  osc(x, 0, .82, 190, 650, .35, .32, .009);
+  osc(x, .08, .76, 380, 1200, .25, .26, .008);
+  hiss(x, .05, .5, .12, .22, .2, true);
+  echo(x, .09, .2, 3);
+  write("power_up", x);
+}
+{
+  const x = create(.9);
+  for (const at of [0, .26, .52]) {
+    osc(x, at, .25, 920, 680, .32, .075);
+    hiss(x, at, .05, .06, .014, .25, true);
+  }
+  write("countdown", x);
+}
+{
+  const x = create(2.8);
+  for (let i = 0; i < 110; i++) {
+    const at = random() * 2.3;
+    osc(x, at, .30, 110 + random() * 250, 95 + random() * 70, .014, .12);
+    hiss(x, at, .28, .028, .15, .11, true);
+  }
+  echo(x, .14, .13, 3);
+  write("crowd_roar", x);
+}
 const files = [
-  "ui_click", "arena_bell", "light_hit", "heavy_hit", "crowd_clash", "meteor", "victory_sting"
+  "ui_click", "arena_bell", "light_hit", "heavy_hit", "crowd_clash", "meteor", "victory_sting", "power_up", "countdown", "crowd_roar"
 ];
 fs.writeFileSync(path.join(OUT, "manifest.json"), JSON.stringify({
   status: "ready", provider: "TLC Original DSP", asset_type: "original-procedural",
