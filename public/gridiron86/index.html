@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b28">
+<title>TLC GRIDIRON '86 — Football Franchise</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+:root{--base:#0c1621;--navy:#142437;--panel:#192b3d;--panel2:#23394b;--ink:#f5efdb;--muted:#a5b6be;--edge:#385064;--gold:#ffbf57;--red:#e95847;--green:#2c6556}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--base);color:var(--ink);font-family:'DM Sans',Arial,sans-serif}
+body{background:radial-gradient(ellipse at 70% -10%,#34475a 0,transparent 40%),repeating-linear-gradient(90deg,transparent,transparent 23px,#ffffff04 24px),#0c1621}
+button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.44;cursor:not-allowed}
+.shell{max-width:1370px;margin:auto;padding:22px clamp(12px,2.2vw,32px) 38px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:5px 0 20px;border-bottom:1px solid #ffffff22}
+.brand{display:flex;align-items:center;gap:12px}.mark{width:53px;height:53px;display:grid;place-items:center;background:var(--gold);color:var(--base);border:3px solid #121e2d;outline:1px solid var(--gold);font:900 30px 'Barlow Condensed';box-shadow:5px 5px 0 #070f18;transform:skew(-5deg)}
+.brandline{font:900 clamp(25px,4vw,38px)/.88 'Barlow Condensed',Impact,sans-serif;letter-spacing:.07em}.brandline b{color:var(--gold)}
+.eyebrow{font:800 10px 'DM Sans';letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+.sub{font-size:11px;letter-spacing:.09em;color:var(--muted);margin-top:7px}.pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.pill{display:inline-flex;gap:8px;align-items:center;padding:9px 12px;background:#152839;border:1px solid #446077;border-radius:6px;font:800 12px 'DM Sans'}
+.pill strong{color:var(--gold)}.statusdot{width:7px;height:7px;border-radius:50%;background:#69d9a3;box-shadow:0 0 0 3px #69d9a322}
+.nav{display:flex;gap:7px;overflow:auto;padding:17px 0 18px;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}
+.nav button{white-space:nowrap;text-transform:uppercase;font:900 15px 'Barlow Condensed';letter-spacing:.06em;border:1px solid #3c5160;color:#a7b7c4;background:#182838;padding:11px 19px;border-radius:5px;box-shadow:inset 0 1px #ffffff12}
+.nav button.active{background:var(--gold);color:#13212e;border-color:#f5c479;box-shadow:inset 0 2px #ffe4a4,0 3px 0 #956b36}
+.screen{display:none}.screen.active{display:block}.grid2{display:grid;grid-template-columns:minmax(0,1.62fr) minmax(275px,.8fr);gap:16px}.stack{display:grid;gap:16px}
+.panel{background:linear-gradient(150deg,#23384c,#172839 70%);border:1px solid #476176;box-shadow:inset 0 1px #ffffff1c,0 12px 30px #03070b45;border-radius:9px;overflow:hidden}
+.panelpad{padding:clamp(15px,2.4vw,23px)}.sectiontop{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 21px;border-bottom:1px solid #ffffff1d}
+.kicker{font:800 11px 'DM Sans';text-transform:uppercase;letter-spacing:.16em;color:var(--gold)}
+h1,h2,h3,p{margin-top:0}h1,h2,h3{font-family:'Barlow Condensed',Impact,sans-serif;letter-spacing:.02em}
+h1{font-size:clamp(39px,6vw,76px);line-height:.91;margin:12px 0 13px;font-weight:900}h2{font-size:31px;margin:0;font-weight:900;text-transform:uppercase}h3{font-size:23px;margin:0 0 8px;font-weight:800}
+.lead{font-size:14px;line-height:1.7;color:#cad6d6;max-width:420px}
+.gold{color:var(--gold)}.muted{color:var(--muted)}
+.btn{background:var(--gold);color:#0c1a27;border:1px solid #ffe1a2;border-bottom:3px solid #b37f38;border-radius:5px;font:900 17px 'Barlow Condensed';padding:13px 19px;letter-spacing:.07em;text-transform:uppercase;transition:transform .08s ease,filter .13s ease}
+.btn:active{transform:translateY(2px)}.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:#294155;color:#f3ebd7;border-color:#668196;border-bottom-color:#112337}.btn.danger{background:#b83e3e;color:#fff;border-color:#e5766a;border-bottom-color:#632a2e}
+.btn.small{font-size:14px;padding:8px 13px}.btn.slim{padding:10px 12px}.btn.block{width:100%}
+.btnrow{display:flex;flex-wrap:wrap;gap:9px}.intro{position:relative;padding:clamp(22px,4vw,44px);min-height:345px;background:radial-gradient(circle at 85% 42%,#3a665b 0,transparent 35%),linear-gradient(120deg,#233750,#101e2d);overflow:hidden}
+.intro:after{content:'';position:absolute;width:210px;height:240px;right:-34px;bottom:-40px;border:13px solid #ddae67;border-radius:48%;transform:rotate(-30deg);opacity:.18;pointer-events:none}
+.heroRecord{font:900 46px 'Barlow Condensed';line-height:.9}.heroRecord span{color:var(--gold)}.recordtext{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.matchup{display:grid;grid-template-columns:1fr 36px 1fr;align-items:center;gap:7px;margin:15px 0}.teamtile{text-align:center;padding:17px 5px;background:#0d2031a8;border:1px solid #45586b;border-radius:7px}
+.crest{width:60px;height:60px;border-radius:11px;border:3px solid #e7e8dd;box-shadow:5px 5px 0 #09141e;margin:0 auto 9px;display:grid;place-items:center;font:900 25px 'Barlow Condensed';color:#f7f1de;text-shadow:1px 2px #0009}
+.teamtile b{font:900 20px 'Barlow Condensed';text-transform:uppercase}.teamtile small{display:block;color:var(--muted);font:700 10px 'DM Sans';margin-top:4px}
+.versus{text-align:center;color:var(--gold);font:900 23px 'Barlow Condensed'}
+.featuregrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.feature{padding:17px 12px;background:#142538;border:1px solid #456071;border-radius:6px;text-align:center}
+.feature strong{display:block;font:900 30px 'Barlow Condensed';color:var(--gold)}.feature span{font-size:10px;text-transform:uppercase;letter-spacing:.11em;color:#afbdc7}
+.timeline{display:flex;gap:6px;align-items:center;margin:15px 0}.week{flex:1;text-align:center;padding:10px 3px;border:1px solid #40586d;color:#9fb3c3;font:800 13px 'Barlow Condensed';border-radius:4px}.week.done{background:#285847;color:#d7f2de}.week.now{background:var(--gold);color:#102033}
+.footer{font:600 11px 'DM Sans';color:#78909e;padding:18px 1px;text-align:center}
+.gameTop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:11px 14px;background:#101e2c;border:1px solid #516577;border-radius:8px 8px 0 0}
+.scoreteams{display:flex;align-items:center;gap:13px}.scoreteam{display:flex;gap:8px;align-items:center;font:900 17px 'Barlow Condensed'}.scoreteam i{width:9px;height:18px;display:inline-block}
+.scoreNum{color:var(--gold);font:900 35px 'Barlow Condensed';min-width:28px;text-align:center}
+.scoremid{text-align:center;font:800 11px 'DM Sans';letter-spacing:.1em;color:#9cafb8}.scoremid b{color:#fff;display:block;font:900 18px 'Barlow Condensed';margin-top:3px}
+.fieldwrap{position:relative;border:4px solid #0a121b;background:#275a44;box-shadow:0 0 0 1px #4b7381;overflow:hidden}
+canvas{width:100%;aspect-ratio:960/520;display:block;image-rendering:pixelated;touch-action:none;user-select:none;cursor:crosshair}
+.fieldoverlay{position:absolute;top:10px;left:10px;padding:9px 12px;background:#081a25db;border:1px solid #d1c9aa80;border-radius:3px;font:900 18px 'Barlow Condensed';pointer-events:none;max-width:75%}
+.underfield{padding:13px 15px 15px;background:linear-gradient(#23394d,#162738);border:1px solid #465f71;border-radius:0 0 8px 8px}
+.controlinfo{font-size:12px;color:#b6c5cc;line-height:1.5;margin:8px 0}.playcontrols{display:flex;gap:9px;flex-wrap:wrap;align-items:stretch}.playcontrols .btn{flex:1;min-width:91px}.passbtn{background:#2f635b;color:#f0f8ed;border-color:#7ca69b;border-bottom-color:#193d36}
+.pwrrow{display:flex;justify-content:space-between;gap:8px;font:800 11px 'DM Sans';color:#b5cbd2;letter-spacing:.09em}.pwrrow strong{color:#f6ebd7}
+.rostergrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.playercard{padding:15px;background:#112335;border:1px solid #466174;border-radius:6px;display:flex;gap:13px;align-items:flex-start}
+.position{flex:0 0 48px;height:52px;background:#355b5b;color:#fff4da;border:2px solid #688e91;display:grid;place-items:center;font:900 21px 'Barlow Condensed';border-radius:4px}
+.playerinfo{flex:1;min-width:0}.playerinfo b{display:block;font:900 20px 'Barlow Condensed';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.playerinfo small{color:#90abb9;font-size:10px;letter-spacing:.08em}.bars{height:6px;background:#314859;overflow:hidden;border-radius:6px;margin:8px 0 5px}.bars>i{display:block;height:100%;background:var(--gold)}
+.statline{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:12px 0;border-bottom:1px solid #ffffff17;font-size:12px}.statline b{font-weight:800}.statsvalue{font:900 18px 'Barlow Condensed';color:var(--gold)}
+.upgrade{padding:15px;background:#122638;border:1px solid #486272;border-radius:6px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.upgrade p{font-size:12px;color:#9db3bd;margin:7px 0 0;line-height:1.6}
+.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:13px 12px;border-bottom:1px solid #3e5464}th{color:var(--gold);text-transform:uppercase;letter-spacing:.12em;font:800 11px 'DM Sans'}td{font-weight:600;color:#e4e7dd}
+.event{padding:13px 15px;background:#112537;border-left:3px solid var(--gold);font-size:12px;line-height:1.65;margin-top:10px}
+.input{width:100%;background:#0c1e2c;color:white;border:1px solid #57748a;padding:12px;border-radius:4px;margin:6px 0 12px}
+.label{font:800 11px 'DM Sans';letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.modal{position:fixed;inset:0;z-index:30;background:#020810db;display:none;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(4px)}.modal.show{display:flex}
+.dialog{max-width:470px;width:100%;background:#1b3142;border:1px solid #8ba1a9;box-shadow:0 25px 90px #000b;border-radius:10px;overflow:hidden}
+.dialog>.panelpad{padding:24px}.dialog h2{font-size:40px;line-height:1}
+.dialog p{font-size:13px;color:#b8c9d0;line-height:1.7}
+.badge{font:900 11px 'DM Sans';letter-spacing:.12em;background:#344e5d;color:var(--gold);padding:6px 9px;border-radius:4px;text-transform:uppercase}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}.top{align-items:flex-start}.pills{margin-top:5px}.rostergrid{grid-template-columns:1fr 1fr}.shell{padding-top:13px}}
+@media(max-width:550px){.top{flex-wrap:wrap}.brandline{font-size:29px}.pills{justify-content:flex-start}.nav button{padding:11px 13px;font-size:14px}.rostergrid{grid-template-columns:1fr}.intro{min-height:0;padding:23px}h1{font-size:50px}.gameTop{gap:4px}.scoreteams{gap:7px}.scoreNum{font-size:29px}.scoreteam{font-size:15px}.scoremid{font-size:9px}.underfield{padding:11px}.playcontrols{gap:6px}.playcontrols .btn{min-width:73px;padding:10px 7px;font-size:13px}.featuregrid{gap:6px}.feature strong{font-size:24px}.feature{padding:11px 5px}.fieldoverlay{font-size:14px}.panelpad{padding:15px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<div class="shell">
+<header class="top"><div class="brand"><div class="mark">86</div><div><div class="eyebrow">TLC SPORTS LABS / ORIGINAL FOOTBALL</div><div class="brandline">TLC <b>GRIDIRON</b> '86</div><div class="sub">THE FRANCHISE IS YOURS. EVERY YARD COUNTS.</div></div></div><div class="pills"><span class="pill"><span class="statusdot"></span> WEB PLAYTEST</span><span class="pill">GM CREDITS <strong id="creditsTop">25</strong></span></div></header>
+<nav class="nav"><button data-tab="dashboard" class="active">Clubhouse</button><button data-tab="match">Game Day</button><button data-tab="roster">Roster</button><button data-tab="office">Front Office</button><button data-tab="league">League</button><button data-tab="settings">Settings</button></nav>
+<main>
+<section id="dashboard" class="screen active">
+<div class="grid2">
+<div class="panel"><div class="intro"><div class="kicker">Season <span id="seasonHero">1</span> / Week <span id="weekHero">1</span></div><h1>BUILD A<br><span class="gold">DYNASTY.</span></h1><p class="lead">Classic arcade football with an original broadcast look. Call your plays, make the throws, manage your roster, and chase a championship.</p><div class="btnrow"><button class="btn" id="startBtn">Play Next Game &#9654;</button><button class="btn ghost" id="simBtn">Simulate Week</button></div></div><div class="panelpad"><div class="featuregrid"><div class="feature"><strong id="winStat">0</strong><span>Wins</span></div><div class="feature"><strong id="lossStat">0</strong><span>Losses</span></div><div class="feature"><strong id="teamStat">76</strong><span>Team OVR</span></div></div></div></div>
+<div class="stack">
+<div class="panel"><div class="sectiontop"><span class="kicker">Next matchup</span><span class="badge" id="wkBadge">Week 01</span></div><div class="panelpad"><div class="matchup"><div class="teamtile"><div id="homeCrest" class="crest">OK</div><b id="homeName">Oklahoma Outlaws</b><small>YOUR CLUB</small></div><div class="versus">VS</div><div class="teamtile"><div id="awayCrest" class="crest">AU</div><b id="awayName">Austin Comets</b><small>OPPOSITION</small></div></div><p class="lead" style="margin-bottom:0">Road to the Summit Cup. Complete the 12-week campaign to unlock postseason football.</p></div></div>
+<div class="panel"><div class="sectiontop"><span class="kicker">Club status</span></div><div class="panelpad"><div class="statline"><span>Fan confidence</span><b class="statsvalue" id="fansStat">61%</b></div><div class="statline"><span>Salary cap</span><b class="statsvalue" id="capStat">$0 / $200M</b></div><div class="statline"><span>Team morale</span><b class="statsvalue" id="moraleStat">76%</b></div><div class="event">TIP: Touch or click a receiver on the field to lead a pass. You can also use the A / B / C receiver buttons.</div></div></div></div></div>
+</section>
+<section id="match" class="screen"><div class="grid2"><div><div class="gameTop"><div class="scoreteams"><div class="scoreteam"><i id="colorHome"></i><span id="scoreHomeName">OKL</span></div><div class="scoreNum" id="scoreHome">0</div><div style="font:900 21px 'Barlow Condensed';color:#718798">–</div><div class="scoreNum" id="scoreAway">0</div><div class="scoreteam"><i id="colorAway"></i><span id="scoreAwayName">AUS</span></div></div><div class="scoremid">Q<span id="quarter">1</span><b id="clock">2:00</b></div><button class="btn ghost small" id="pauseBtn">PAUSE</button></div><div class="fieldwrap"><canvas id="field" width="960" height="520" aria-label="Football field. Tap a receiver to throw."></canvas><div class="fieldoverlay" id="fieldInfo">READY FOR KICKOFF</div></div><div class="underfield"><div class="pwrrow"><span id="downText">1ST & 10</span><span id="ballText">BALL ON 25</span><strong id="playState">CHOOSE A PLAY</strong></div><p class="controlinfo" id="hint">Choose RUN or PASS. Tap SNAP, then dodge with CUT or pass to a receiver.</p><div class="playcontrols" id="controls"></div></div></div>
+<div class="stack"><div class="panel"><div class="sectiontop"><span class="kicker">Playbook / controls</span></div><div class="panelpad"><div class="statline"><span>Offensive package</span><b id="packageText">WEST COAST</b></div><div class="statline"><span>Quarterback</span><b id="qbText">#12</b></div><div class="statline"><span>Drive progress</span><b id="driveText">25 YDS</b></div><div class="event" id="coachText">Call a play, then hit snap. Passing: select A / B / C or tap the field. Running: CUT LEFT / CUT RIGHT and HURDLE to escape tackles.</div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Scoring notes</span></div><div class="panelpad"><div class="statline"><span>Touchdown</span><b>6 + PAT = 7</b></div><div class="statline"><span>Field goal</span><b>3 PTS</b></div><div class="statline"><span>Four downs</span><b>GAIN 10 YDS</b></div><button class="btn ghost block" id="forfeitBtn" style="margin-top:17px">Leave Match</button></div></div></div></div></section>
+<section id="roster" class="screen"><div class="panel"><div class="sectiontop"><h2>THE LOCKER ROOM</h2><span class="badge" id="rosterCount">8 athletes</span></div><div class="panelpad"><p class="lead">Every athlete has a unique rating, salary and role. Upgrades and roster decisions shape your franchise.</p><div class="rostergrid" id="rosterCards"></div></div></div></section>
+<section id="office" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>FRONT OFFICE</h2><span class="badge">build the program</span></div><div class="panelpad"><p class="lead">Spend earned GM credits on facilities, morale or talent. All progress saves automatically on this device.</p><div id="upgradeCards"></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Financial report</span></div><div class="panelpad"><div class="statline"><span>GM credits</span><b class="statsvalue" id="officeCredits">25</b></div><div class="statline"><span>Current payroll</span><b class="statsvalue" id="officePayroll">0M</b></div><div class="statline"><span>Salary ceiling</span><b class="statsvalue">$200M</b></div><div class="event">Earn 5 credits for a win, 2 for a loss, and occasional bonus credits for decisive victories. Upgrades carry between seasons.</div></div></div></div></section>
+<section id="league" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>THE SEASON</h2><span class="badge" id="seasonLabel">Year 1</span></div><div class="panelpad"><div class="tablewrap"><table><thead><tr><th>Week</th><th>Opponent</th><th>Result</th><th>Status</th></tr></thead><tbody id="scheduleRows"></tbody></table></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Franchise history</span></div><div class="panelpad"><div class="featuregrid"><div class="feature"><strong id="champs">0</strong><span>Titles</span></div><div class="feature"><strong id="allwins">0</strong><span>Career W</span></div><div class="feature"><strong id="seasons">1</strong><span>Season</span></div></div><div class="event">The 12-week regular season feeds the postseason. Strong winning seasons give you the best chance to reach the Summit Cup.</div></div></div></div></section>
+<section id="settings" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>FRANCHISE SETTINGS</h2></div><div class="panelpad"><label class="label" for="customName">Your team name</label><input class="input" id="customName" maxlength="28" placeholder="Oklahoma Outlaws"><label class="label" for="difficulty">Opponent difficulty</label><select class="input" id="difficulty"><option value="rookie">Rookie</option><option value="pro">Pro</option><option value="legend">Legend</option></select><label class="label" for="soundChoice">Audio</label><select class="input" id="soundChoice"><option value="yes">On</option><option value="no">Muted</option></select><div class="btnrow"><button class="btn" id="saveSettings">Save changes</button><button class="btn danger" id="resetCareer">Reset career</button></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Release notes</span></div><div class="panelpad"><p class="lead">TLC Gridiron '86 browser-playtest v0.1. An original arcade football prototype inspired by classic pixel-era sports games. This is not Retro Bowl or affiliated with New Star Games.</p><div class="event">Current playtest: live passing and running, defender pursuit, downs, touchdowns, field goals, opponent simulation, roster, office upgrades, season progression and local saves. More advanced franchise logic, blocking, animations and special teams remain in development.</div></div></div></div></section>
+</main><div class="footer">TLC SPORTS LABS · ORIGINAL PLAYTEST BUILD 0.1 · SAVES LOCALLY IN THIS BROWSER</div></div>
+<div class="modal" id="modal"><div class="dialog"><div class="sectiontop"><span class="kicker" id="modalKicker">GRIDIRON UPDATE</span><span class="badge">TLC / 86</span></div><div class="panelpad"><h2 id="modalTitle">GAME DAY</h2><p id="modalBody"></p><div class="btnrow" id="modalActions"></div></div></div></div>
+<script>
+'use strict';
+(function(){
+const teams=[
+{name:'Oklahoma Outlaws',abbr:'OKL',color:'#214e86',accent:'#f2c274',ovr:78},
+{name:'Austin Comets',abbr:'AUS',color:'#a73f4b',accent:'#efca78',ovr:76},
+{name:'Denver Peaks',abbr:'DEN',color:'#315d85',accent:'#e4b059',ovr:82},
+{name:'Memphis Monarchs',abbr:'MEM',color:'#6b437d',accent:'#f0c377',ovr:77},
+{name:'Portland Wolves',abbr:'POR',color:'#305d56',accent:'#d0dfd0',ovr:80},
+{name:'Miami Surge',abbr:'MIA',color:'#277b7f',accent:'#f5a76c',ovr:74},
+{name:'Detroit Steel',abbr:'DET',color:'#546b86',accent:'#c8d6e6',ovr:78},
+{name:'Atlanta Fire',abbr:'ATL',color:'#a04436',accent:'#f0c15d',ovr:81},
+{name:'Phoenix Scorpions',abbr:'PHX',color:'#a16a2b',accent:'#d4b27a',ovr:72},
+{name:'Carolina Flight',abbr:'CAR',color:'#35548e',accent:'#d9d4bc',ovr:79},
+{name:'Salt Lake Stags',abbr:'SLC',color:'#596653',accent:'#efe0b6',ovr:77},
+{name:'Chicago Night',abbr:'CHI',color:'#323f63',accent:'#e8b657',ovr:83}
+];
+const starters=[
+['QB','J. Mercer',12,81,23],['RB','D. Knox',28,78,16],['WR','M. Reed',11,87,21],['WR','T. Vale',18,79,15],
+['TE','S. Cole',85,76,14],['OL','B. Stone',62,82,16],['DL','R. Hayes',94,81,18],['DB','C. Frost',21,77,15]
+];
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const rand=(a,b)=>a+Math.random()*(b-a);
+const opponentFor=w=>(w*7+3)%teams.length||1;
+const getTeam=()=>({ ...teams[0],name:save.teamName||teams[0].name });
+const getAway=()=>teams[opponentFor(save.week)];
+const defaultSave=()=>({version:1,season:1,week:1,wins:0,losses:0,allwins:0,champs:0,credits:25,fans:61,morale:76,
+teamName:'Oklahoma Outlaws',difficulty:'pro',sound:'yes',upgrades:{stadium:0,training:0,rehab:0},
+roster:starters.map((p,i)=>({pos:p[0],name:p[1],number:p[2],rating:p[3],salary:p[4],fatigue:0,id:i})),results:[]});
+let save;try{save=Object.assign(defaultSave(),JSON.parse(localStorage.getItem('tlc-gridiron-86-v1')||'{}'))}catch(e){save=defaultSave()}
+if(!Array.isArray(save.roster)||!save.roster.length)save.roster=defaultSave().roster;
+let active='dashboard',g=null,mode='PASS',play=null,held=null,aim=null,paused=false,lastTime=performance.now(),audioCtx=null,notice='';
+const cvs=$('field'),ctx=cvs.getContext('2d');
+function persist(){try{localStorage.setItem('tlc-gridiron-86-v1',JSON.stringify(save))}catch(e){}}
+function beep(hz=400,ms=75,type='square'){if(save.sound==='no')return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();let o=audioCtx.createOscillator(),gain=audioCtx.createGain();o.type=type;o.frequency.value=hz;gain.gain.setValueAtTime(.065,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+ms/1000);o.connect(gain);gain.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+ms/1000)}catch(e){}}
+function modal(title,body,buttons,kicker='GRIDIRON UPDATE'){ $('modalTitle').textContent=title;$('modalBody').textContent=body;$('modalKicker').textContent=kicker;let wrap=$('modalActions');wrap.innerHTML='';buttons.forEach(o=>{let b=document.createElement('button');b.className='btn'+(o.secondary?' ghost':'');b.textContent=o.label;b.onclick=()=>{if(!o.keep)$('modal').classList.remove('show');o.action()};wrap.appendChild(b)});$('modal').classList.add('show')}
+function tab(t){active=t;document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id===t));document.querySelectorAll('.nav button').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));refresh()}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
+function showName(){return save.teamName||teams[0].name}
+function record(score1,score2){let res={week:save.week,opp:getAway().name,ours:score1,theirs:score2};save.results.push(res);if(score1>score2){save.wins++;save.allwins++;save.fans=clamp(save.fans+5,0,100);save.morale=clamp(save.morale+3,0,100);save.credits+=5+(score1-score2>=21?2:0)}else{save.losses++;save.fans=clamp(save.fans-3,0,100);save.morale=clamp(save.morale-2,0,100);save.credits+=2}save.week++;let msg='';
+if(save.week>12){if(save.wins>=8){save.champs++;save.credits+=15;msg='A winning season! Your club wins the Summit Cup in this early playtest season model. +15 GM credits.'}else msg='Season finished. Rebuild and challenge for the Summit Cup again.';save.season++;save.week=1;save.wins=0;save.losses=0;save.results=[];save.roster.forEach(p=>{p.rating=clamp(p.rating+(Math.random()<.45?1:0),60,99);p.fatigue=0})}
+persist();refresh();return msg}
+function simWeek(){if(g&&!g.done){modal('FINISH MATCH','A game is already in progress.',[{label:'OK',action:()=>{}}]);return}let ours=Math.floor(rand(10,35)),theirs=Math.floor(rand(9,32));let opp=getAway().name;let msg=record(ours,theirs);beep(620);modal(ours>theirs?'SIM WIN':'SIM RESULT',showName()+' '+ours+' — '+theirs+' '+opp+'. '+msg,[{label:'Back to clubhouse',action:()=>tab('dashboard')}],'SIMULATED GAME')}
+function startGame(){g={home:0,away:0,quarter:1,time:120,ball:25,down:1,toGo:10,opp:getAway(),done:false};mode='PASS';play=null;paused=false;tab('match');setNote('Select a play, then tap SNAP. Touch a receiver to throw.');updateHud();updateControls()}
+function setNote(t){notice=t;$('hint').textContent=t;$('coachText').textContent=t}
+function numDown(n){return ['','1ST','2ND','3RD','4TH'][n]||'1ST'}
+function setStatus(){if(!g)return;$('fieldInfo').textContent=(play&&play.phase==='live'?'LIVE PLAY':play&&play.phase==='pass'?'BALL IN AIR':numDown(g.down)+' & '+Math.min(g.toGo,Math.ceil(100-g.ball)))+' · '+(play&&play.phase!=='setup'?'PLAY ACTIVE':'READY')}
+function updateHud(){if(!g){$('scoreHome').textContent='0';$('scoreAway').textContent='0';$('scoreHomeName').textContent='OKL';$('scoreAwayName').textContent='AUS';$('fieldInfo').textContent='SELECT PLAY NEXT GAME';return}
+$('scoreHome').textContent=g.home;$('scoreAway').textContent=g.away;$('scoreHomeName').textContent='OKL';$('scoreAwayName').textContent=g.opp.abbr;$('colorHome').style.background=teams[0].color;$('colorAway').style.background=g.opp.color;
+$('quarter').textContent=g.quarter;$('clock').textContent=Math.floor(g.time/60)+':'+String(Math.max(0,Math.floor(g.time%60))).padStart(2,'0');$('downText').textContent=numDown(g.down)+' & '+g.toGo;$('ballText').textContent='BALL ON '+Math.floor(g.ball);$('driveText').textContent=Math.floor(g.ball)+' YDS';$('playState').textContent=paused?'PAUSED':play?'LIVE':'CHOOSE PLAY';$('packageText').textContent=mode==='PASS'?'TRIPS / PASS':'POWER / RUN';$('qbText').textContent=save.roster[0].name+' #'+save.roster[0].number;setStatus()}
+function makeBtn(label,fn,style=''){const b=document.createElement('button');b.className='btn '+style;b.textContent=label;b.onclick=fn;return b}
+function updateControls(){let el=$('controls');el.innerHTML='';if(!g||g.done){el.appendChild(makeBtn('START NEW GAME',startGame));return}
+if(paused){el.appendChild(makeBtn('RESUME',()=>{paused=false;updateControls()}));return}
+if(!play){el.appendChild(makeBtn('PASS',()=>{mode='PASS';beep(360);updateControls();updateHud()},mode==='PASS'?'':'ghost'));el.appendChild(makeBtn('RUN',()=>{mode='RUN';beep(360);updateControls();updateHud()},mode==='RUN'?'':'ghost'));el.appendChild(makeBtn('SNAP / '+mode,beginPlay));if(g.ball>=61&&g.down===4)el.appendChild(makeBtn('KICK FG',kickFG,'ghost'));return}
+if(play.phase==='route'){['A','B','C'].forEach((letter,i)=>el.appendChild(makeBtn('THROW '+letter,()=>throwAt(i),'passbtn')));el.appendChild(makeBtn('QB SCRAMBLE',()=>{play.carrier=play.qb;play.phase='live';setNote('SCRAMBLE! Cut left or right to dodge defenders.')},'ghost'))}
+else if(play.phase==='live'){el.appendChild(makeBtn('CUT UP',()=>shiftCarrier(-8),'ghost'));el.appendChild(makeBtn('CUT DOWN',()=>shiftCarrier(8),'ghost'));el.appendChild(makeBtn('HURDLE',hurdle))}
+else el.appendChild(makeBtn('PLAY IN MOTION',()=>{},'ghost'))}
+function beginPlay(){if(!g||g.done||play||paused)return;beep(240,110);const b=g.ball;const qr={x:b-2,y:26.5,speed:7.5,id:'QB'};
+const recv=[{x:b+1,y:10.5,id:'A',speed:7.8+save.upgrades.training*.2,dx:0,route:0},
+{x:b+1,y:27,id:'B',speed:8.5+save.upgrades.training*.2,dx:0,route:1},
+{x:b+1,y:44,id:'C',speed:7.4+save.upgrades.training*.2,dx:0,route:2}];
+let defs=[];for(let i=0;i<6;i++)defs.push({x:b+9+i*2.8,y:7+i*8.2,speed:5.6+(g.opp.ovr-70)*.06+(save.difficulty==='legend'?1.2:save.difficulty==='rookie'?-.6:0),id:'D'+i});
+play={phase:mode==='PASS'?'route':'live',qb:qr,wr:recv,defs:defs,carrier:mode==='RUN'?qr:null,ball:null,started:performance.now(),dodge:0,dodgeT:0,mode:mode};
+setNote(mode==='PASS'?'TAP A RECEIVER OR USE THROW A / B / C. Aim ahead of their route.':'RUN THE BALL! Use CUT UP / CUT DOWN to escape tackles.');updateControls();updateHud()}
+function throwAt(i){if(!play||play.phase!=='route')return;let r=play.wr[i];startPass(r.x+clamp((r.speed*0.5),2,7),r.y)}
+function startPass(x,y){if(!play||play.phase!=='route'||paused)return;const q=play.qb;let tx=clamp(x,q.x+1,100),ty=clamp(y,3,50);let d=Math.hypot((tx-q.x),(.45*(ty-q.y)));play.ball={x:q.x,y:q.y,fromX:q.x,fromY:q.y,toX:tx,toY:ty,t:0,dur:clamp(d/30,.27,1.2)};play.phase='pass';beep(580,80);setNote('BALL IN THE AIR — timing and coverage determine the catch.');updateControls();updateHud()}
+function shiftCarrier(shift){if(!play||play.phase!=='live'||!play.carrier)return;play.carrier.y=clamp(play.carrier.y+shift,3,50);play.dodge=.65;beep(330,45)}
+function hurdle(){if(!play||play.phase!=='live')return;play.dodge=.5;play.dodgeT=1;beep(740,90);setNote('HURDLE! Brief tackle protection activated.')}
+function finishPlay(yards,msg,turnover=false){if(!g||g.done)return;let b=g.ball;g.ball=clamp(Math.round((b+yards)*10)/10,1,100);play=null;g.time=Math.max(0,g.time-rand(7,13));setNote(msg);beep(320,65);
+if(g.ball>=100){g.home+=7;g.ball=25;g.down=1;g.toGo=10;beep(850,240);modal('TOUCHDOWN +7',msg+' The crowd erupts. Now your defense takes the field.',[{label:'Continue',action:()=>opponentDrive()}],'SCORING DRIVE');updateHud();updateControls();return}
+if(turnover){g.ball=25;g.down=1;g.toGo=10;modal('TURNOVER',msg+' Your defense is up next.',[{label:'Continue',action:()=>opponentDrive()}]);updateHud();updateControls();return}
+if(yards>=g.toGo){g.down=1;g.toGo=Math.min(10,Math.ceil(100-g.ball));setNote(msg+' FIRST DOWN!')}else{g.down++;g.toGo=Math.max(1,Math.ceil(g.toGo-Math.max(0,yards)))}
+if(g.down>4){g.ball=25;g.down=1;g.toGo=10;modal('TURNOVER ON DOWNS',msg+' Fourth down failed; defense takes the field.',[{label:'Continue',action:()=>opponentDrive()}])}
+if(g.time<=0)nextQuarter();updateHud();updateControls()}
+function tackle(p){if(!play)return;let yards=Math.max(0,Math.round(p.x-g.ball));finishPlay(yards,yards>0?'TACKLED AFTER '+yards+' YARDS':'STOPPED AT THE LINE')}
+function opponentDrive(){if(!g||g.done)return;let roll=Math.random(),diff=save.difficulty==='legend'?.14:save.difficulty==='rookie'?-.1:0;let pts=roll<.43+diff?7:roll<.65+diff?3:0;g.away+=pts;g.time=Math.max(0,g.time-Math.floor(rand(12,29)));g.down=1;g.toGo=10;g.ball=25;let msg=pts===7?'Opposition drove for a touchdown.':pts===3?'Opposition connected on a field goal.':'Your defense forced a punt!';setNote(msg+' Your offense is back.');if(g.time<=0)nextQuarter();updateHud();updateControls()}
+function kickFG(){if(!g||g.done||play||g.ball<61)return;let success=Math.random()<clamp(.92-(100-g.ball)*.013-(save.difficulty==='legend'?.13:0),.4,.9);if(success){g.home+=3;beep(700,160);modal('FIELD GOAL +3','The kick is GOOD. Your defense takes the field.',[{label:'Continue',action:()=>opponentDrive()}])}else{modal('NO GOOD','The kick drifts wide. Defense takes the field.',[{label:'Continue',action:()=>opponentDrive()}])}g.ball=25;g.down=1;g.toGo=10;g.time=Math.max(0,g.time-6);updateHud();updateControls()}
+function nextQuarter(){if(!g||g.done)return;if(g.quarter>=4){endGame();return}g.quarter++;g.time=120;setNote('START OF QUARTER '+g.quarter+'. OFFENSE IS READY.');beep(480,140)}
+function endGame(){if(!g||g.done)return;g.done=true;play=null;let h=g.home,a=g.away;if(h===a){h+=Math.random()<.5?3:0;a+=h===a?3:0;g.home=h;g.away=a}let opp=g.opp.name;let extra=record(h,a);let win=h>a;beep(win?920:180,270);modal(win?'VICTORY!':'FINAL WHISTLE',showName()+' '+h+' — '+a+' '+opp+'. '+(win?'Your program is building momentum.':'Time to regroup and build stronger.')+' '+extra,[{label:'Return to clubhouse',action:()=>{g=null;tab('dashboard')}}],'FINAL SCORE');updateControls();updateHud()}
+function point(e){let b=cvs.getBoundingClientRect();return{x:((e.clientX-b.left)/b.width)*960,y:((e.clientY-b.top)/b.height)*520}}
+function fieldToWorld(p){return{x:clamp(camera()+p.x/960*44,0,100),y:clamp((p.y-64)/(520-128)*53.3,0,53.3)}}
+cvs.addEventListener('pointerdown',e=>{if(play&&play.phase==='route'&&!paused){cvs.setPointerCapture(e.pointerId);aim=point(e);beep(450,30)}else if(play&&play.phase==='live'){let p=fieldToWorld(point(e));play.carrier.y=clamp(p.y,3,50);play.dodge=.22}});
+cvs.addEventListener('pointermove',e=>{if(aim)aim=point(e)});
+cvs.addEventListener('pointerup',e=>{if(aim&&play&&play.phase==='route'){let w=fieldToWorld(point(e));aim=null;startPass(w.x,w.y)}else aim=null});
+cvs.addEventListener('pointercancel',()=>{aim=null});
+function camera(){if(!g)return 7;let x=play&&play.carrier?play.carrier.x:play&&play.phase==='route'?play.qb.x:g.ball;return clamp(x-13,0,63)}
+const sx=(x,cam)=>(x-cam)/44*960;const sy=y=>64+y/53.3*(520-128);
+function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
+function label(text,x,y,font,color,align='left'){ctx.font=font;ctx.textAlign=align;ctx.fillStyle=color;ctx.fillText(text,x,y)}
+function drawPlayer(x,y,color,number,highlight=false,flip=false){
+if(x<-35||x>995||y<45||y>500)return;
+ctx.fillStyle='#091b1bad';ctx.beginPath();ctx.ellipse(x,y+17,15,5,0,0,7);ctx.fill();
+if(highlight){ctx.strokeStyle='#ffd67a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,24,0,Math.PI*2);ctx.stroke()}
+rect(x-11,y-10,22,22,'#0b1c26');rect(x-9,y-11,18,20,color);rect(x-7,y-18,14,10,'#eee5d5');rect(x+2,y-15,7,5,'#1d2a32');
+rect(x-12,y+9,7,10,color);rect(x+5,y+9,7,10,color);rect(x-16,y-6,5,15,'#d4c8ad');rect(x+11,y-6,5,15,'#d4c8ad');
+label(number,x,y+5,'900 12px Barlow Condensed','#fffaf0','center');
+if(highlight)label('▼',x,y-25,'bold 14px Arial','#ffd67a','center')
+}
+function field(){
+ctx.clearRect(0,0,960,520);
+const cam=camera();rect(0,0,960,520,'#173d32');rect(0,0,960,64,'#11222c');rect(0,456,960,64,'#122a32');
+for(let i=0;i<120;i++){let x=i*8;let y=10+(i%5)*10;rect(x,y,5,4,['#bdc3bd','#bd715e','#d6ae6c','#6b8794'][i%4]);rect(x,467+(i%5)*8,5,4,['#9bafa8','#d2ad76','#c67764'][i%3])}
+rect(0,64,960,392,'#2b654c');for(let y=0;y<53.3;y+=6.5)rect(0,sy(y),960,Math.ceil(6.5/53.3*392),Math.round(y/6.5)%2?'#2b654c':'#317054');
+let zone=sx(100,cam);if(zone<960){rect(zone,64,960-zone,392,'#173e62');for(let py=0;py<5;py++)label('TLC',zone+35,120+py*75,'900 36px Barlow Condensed','#ffffff1a')}
+for(let n=Math.ceil(cam/5)*5;n<=Math.min(100,cam+44);n+=5){let x=sx(n,cam);rect(x,64,n%10===0?3:2,392,'#d8e2d05e');if(n%10===0&&n>0&&n<100){label(String(n<=50?n:100-n),x+7,108,'900 26px Barlow Condensed','#e1ead0bb');label(String(n<=50?n:100-n),x+7,431,'900 26px Barlow Condensed','#e1ead0bb')}}
+for(let y=0;y<=53.3;y+=53.3){rect(0,sy(y)-2,960,4,'#c6d3bc')}
+for(let n=Math.ceil(cam);n<cam+44;n++){let x=sx(n,cam);for(let y of [17,36])rect(x,sy(y),3,9,'#d2dfcd6a')}
+if(g){let line=sx(g.ball,cam),fd=sx(Math.min(100,g.ball+g.toGo),cam);rect(line,64,3,392,'#6cc5ed');rect(fd,64,4,392,'#ffce67');label('LOS',line+5,75,'900 11px DM Sans','#bde1ee');label('1ST DOWN',fd-6,75,'900 11px DM Sans','#ffe6ad','right')}
+if(play){let p=play;
+if(p.phase==='route'){p.wr.forEach((r,i)=>{const x=sx(r.x,cam),y=sy(r.y);ctx.strokeStyle=['#e3cd84','#c1edea','#f3bd9d'][i];ctx.lineWidth=3;ctx.setLineDash([9,6]);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+clamp(14+r.speed*6,35,130),y+(i-1)*10);ctx.stroke();ctx.setLineDash([])})}
+p.defs.forEach(d=>drawPlayer(sx(d.x,cam),sy(d.y),'#b54e43','D',false));
+p.wr.forEach((w,i)=>{drawPlayer(sx(w.x,cam),sy(w.y),'#2366aa',w.id,p.carrier===w);label(w.id,sx(w.x,cam),sy(w.y)-25,'900 21px Barlow Condensed','#fff2b6','center')});
+drawPlayer(sx(p.qb.x,cam),sy(p.qb.y),'#2366aa','12',p.carrier===p.qb);
+if(p.ball){let b=p.ball,t=b.t/b.dur,xx=b.fromX+(b.toX-b.fromX)*t,yy=b.fromY+(b.toY-b.fromY)*t;let px=sx(xx,cam),py=sy(yy)-Math.sin(t*Math.PI)*65;rect(px-5,py-3,11,6,'#80402f');rect(px+1,py-2,3,4,'#d9bb8e')}
+if(aim&&p.phase==='route'){let qp={x:sx(p.qb.x,cam),y:sy(p.qb.y)};ctx.beginPath();ctx.moveTo(qp.x,qp.y);ctx.lineTo(aim.x,aim.y);ctx.strokeStyle='#f7c75e';ctx.lineWidth=3;ctx.setLineDash([12,8]);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#fbe9b1';ctx.beginPath();ctx.arc(aim.x,aim.y,18,0,Math.PI*2);ctx.stroke()}
+}else{
+if(g){let bx=sx(g.ball,cam);drawPlayer(bx-35,sy(27),'#2366aa','12',true);label('CHOOSE PLAY',480,252,'900 48px Barlow Condensed','#f8edcf','center');label('PASS  /  RUN  /  SNAP',480,283,'800 20px DM Sans','#e4d8b3','center')}
+}
+rect(0,0,960,9,'#bfa67d');rect(0,511,960,9,'#bfa67d');
+}
+function update(dt){if(!g||g.done||!play||paused||$('modal').classList.contains('show'))return;let p=play;g.time=Math.max(0,g.time-dt*.75);if(p.dodge>0)p.dodge-=dt;if(p.dodgeT>0)p.dodgeT-=dt;
+p.wr.forEach(w=>{w.x=Math.min(101,w.x+w.speed*dt);if(w.route===0)w.y=clamp(w.y+dt*1.3,2,51);if(w.route===2)w.y=clamp(w.y-dt*1.3,2,51)});
+if(p.phase==='route'&&performance.now()-p.started>6500){p.phase='live';p.carrier=p.qb;setNote('PASS WINDOW EXPIRED — QB SCRAMBLE!');updateControls()}
+if(p.phase==='pass'&&p.ball){let b=p.ball;b.t+=dt;if(b.t>=b.dur){let near=p.wr.slice().sort((a,c)=>Math.hypot(a.x-b.toX,(a.y-b.toY)*.5)-Math.hypot(c.x-b.toX,(c.y-b.toY)*.5))[0];
+let dist=Math.hypot(near.x-b.toX,(near.y-b.toY)*.5);
+let covered=p.defs.some(d=>Math.hypot(d.x-near.x,(d.y-near.y)*.65)<3.2);
+if(dist<6.8&&Math.random()<(covered?.64:.97)){p.carrier=near;p.phase='live';p.ball=null;setNote('COMPLETE TO RECEIVER '+near.id+'! CUT TO FIND OPEN FIELD.');beep(680,75);updateControls()}
+else if(covered&&Math.random()<.19){finishPlay(0,'PASS INTERCEPTED BY THE DEFENSE.',true);return}else{finishPlay(0,'INCOMPLETE PASS. THE BALL HITS THE TURF.');return}}}
+if(p.phase==='live'){let r=p.carrier;r.x+=r.speed*dt*(p.dodgeT>0?1.34:1);if(r.x>=100){finishPlay(100-g.ball,'TOUCHDOWN! A BREAKAWAY SCORE.');return}}
+p.defs.forEach((d,i)=>{let focus=p.carrier||p.wr[i%3],dx=focus.x-d.x,dy=focus.y-d.y;let mag=Math.max(.01,Math.hypot(dx,dy*.55));let speed=d.speed*(p.phase==='route'?.6:p.phase==='pass'?.72:1);d.x+=dx/mag*speed*dt;d.y+=dy*.55/mag*speed*dt});
+if(p.carrier&&p.phase==='live'&&p.dodge<=0){let hit=p.defs.some(d=>Math.hypot((d.x-p.carrier.x)*1.1,(d.y-p.carrier.y)*.58)<2.25);if(hit){tackle(p.carrier);return}}
+if(g.time<=0&&(!play||p.phase!=='pass')){if(play){play=null;nextQuarter();updateControls();updateHud()}}
+updateHud()}
+function loop(now){const dt=Math.min((now-lastTime)/1000,.047);lastTime=now;update(dt);if(active==='match')field();requestAnimationFrame(loop)}
+function refresh(){
+$('creditsTop').textContent=save.credits;$('seasonHero').textContent=save.season;$('weekHero').textContent=save.week;$('winStat').textContent=save.wins;$('lossStat').textContent=save.losses;
+$('teamStat').textContent=Math.round(save.roster.reduce((s,p)=>s+p.rating,0)/save.roster.length);$('fansStat').textContent=save.fans+'%';$('moraleStat').textContent=save.morale+'%';$('capStat').textContent='$'+save.roster.reduce((s,p)=>s+p.salary,0)+'M / $200M';
+let ht=getTeam(),aw=getAway();$('homeCrest').textContent='OK';$('homeCrest').style.background=ht.color;$('awayCrest').textContent=aw.abbr.slice(0,2);$('awayCrest').style.background=aw.color;$('homeName').textContent=ht.name;$('awayName').textContent=aw.name;$('wkBadge').textContent='WEEK '+String(save.week).padStart(2,'0');
+$('officeCredits').textContent=save.credits;$('officePayroll').textContent='$'+save.roster.reduce((s,p)=>s+p.salary,0)+'M';
+$('rosterCount').textContent=save.roster.length+' ATHLETES';$('seasonLabel').textContent='YEAR '+save.season;$('champs').textContent=save.champs;$('allwins').textContent=save.allwins;$('seasons').textContent=save.season;
+if(active==='roster')renderRoster();if(active==='office')renderOffice();if(active==='league')renderLeague();if(active==='settings'){$('customName').value=save.teamName;$('difficulty').value=save.difficulty;$('soundChoice').value=save.sound}
+updateHud();updateControls()
+}
+function renderRoster(){let box=$('rosterCards');box.innerHTML='';save.roster.forEach(p=>{let e=document.createElement('div');e.className='playercard';let c=document.createElement('div');c.className='position';c.textContent=p.pos;let d=document.createElement('div');d.className='playerinfo';let title=document.createElement('b');title.textContent=p.name+'  #'+p.number;let desc=document.createElement('small');desc.textContent='OVR '+p.rating+' · SALARY $'+p.salary+'M';let bar=document.createElement('div');bar.className='bars';let f=document.createElement('i');f.style.width=p.rating+'%';bar.append(f);let actions=document.createElement('div');actions.style.display='flex';actions.style.justifyContent='space-between';actions.style.alignItems='center';let lvl=document.createElement('span');lvl.className='muted';lvl.style.fontSize='11px';lvl.textContent=p.rating>=85?'ELITE TALENT':p.rating>=77?'STARTER':'DEVELOPING';let b=makeBtn('+1 OVR / 8',()=>{if(save.credits<8){modal('NOT ENOUGH CREDITS','Play or simulate games to earn GM credits.',[{label:'Got it',action:()=>{}}]);return}save.credits-=8;p.rating=clamp(p.rating+1,60,99);persist();refresh();beep(640)},'small');b.disabled=p.rating>=99;actions.append(lvl,b);d.append(title,desc,bar,actions);e.append(c,d);box.appendChild(e)})}
+function renderOffice(){let rows=[{id:'stadium',name:'Stadium atmosphere',desc:'Improve fan confidence and raise the club profile.'},{id:'training',name:'Elite training room',desc:'Speed up route running and develop offensive execution.'},{id:'rehab',name:'Recovery center',desc:'Boost team morale and prepare athletes for the next game.'}];let wrap=$('upgradeCards');wrap.innerHTML='';rows.forEach(u=>{let e=document.createElement('div');e.className='upgrade';let left=document.createElement('div');let title=document.createElement('h3');title.textContent=u.name.toUpperCase()+'  · LVL '+save.upgrades[u.id];let p=document.createElement('p');p.textContent=u.desc;left.append(title,p);let b=makeBtn('UPGRADE / 10',()=>{if(save.credits<10){modal('NOT ENOUGH CREDITS','Earn GM credits in games before buying upgrades.',[{label:'OK',action:()=>{}}]);return}save.credits-=10;save.upgrades[u.id]++;if(u.id==='stadium')save.fans=clamp(save.fans+8,0,100);if(u.id==='rehab')save.morale=clamp(save.morale+8,0,100);persist();refresh();beep(630,140)},'small');b.disabled=save.upgrades[u.id]>=5;e.append(left,b);wrap.append(e)})}
+function renderLeague(){let tbody=$('scheduleRows');tbody.innerHTML='';for(let i=1;i<=12;i++){let result=save.results.find(r=>r.week===i);let t=teams[opponentFor(i)];let row=document.createElement('tr');[String(i).padStart(2,'0'),t.name,result?result.ours+'–'+result.theirs:'—',result?(result.ours>result.theirs?'WIN':'LOSS'):i===save.week?'NEXT':'UPCOMING'].forEach((v,j)=>{let td=document.createElement('td');td.textContent=v;if(j===3){td.style.color=result?(result.ours>result.theirs?'#84d6ac':'#e58c82'):(i===save.week?'#f9c869':'#a4b9c4')}row.append(td)});tbody.append(row)}}
+function leaveMatch(){if(!g||g.done){g=null;tab('dashboard');return}modal('LEAVE LIVE GAME?','Leaving discards only this in-progress match. Your saved franchise will remain intact.',[{label:'Keep playing',action:()=>{}},{label:'Discard match',secondary:true,action:()=>{g=null;play=null;tab('dashboard')}}])}
+$('startBtn').onclick=()=>startGame();$('simBtn').onclick=simWeek;$('pauseBtn').onclick=()=>{if(!g||g.done){startGame();return}paused=!paused;updateControls();$('pauseBtn').textContent=paused?'RESUME':'PAUSE';setNote(paused?'MATCH PAUSED.':'BACK ON THE FIELD.');updateHud()};$('forfeitBtn').onclick=leaveMatch;
+$('saveSettings').onclick=()=>{save.teamName=$('customName').value.trim().slice(0,28)||teams[0].name;save.difficulty=$('difficulty').value;save.sound=$('soundChoice').value;persist();refresh();beep(700);modal('SETTINGS SAVED','Your club identity and gameplay preferences have been updated.',[{label:'Clubhouse',action:()=>tab('dashboard')}])};
+$('resetCareer').onclick=()=>modal('RESET FRANCHISE?','This permanently erases career progress and restores the starter roster on this browser.',[{label:'Cancel',action:()=>{}},{label:'Erase career',secondary:true,action:()=>{save=defaultSave();g=null;play=null;persist();tab('dashboard')}}]));
+window.addEventListener('keydown',e=>{if(e.target&&['INPUT','SELECT'].includes(e.target.tagName))return;let k=e.key.toLowerCase();if(k==='escape'&&$('modal').classList.contains('show')){$('modal').classList.remove('show');return}if(active!=='match'||!g)return;if(k===' '){e.preventDefault();if(!play)beginPlay();else if(play.phase==='route')throwAt(1)}if(k==='a')throwAt(0);if(k==='s')throwAt(1);if(k==='d')throwAt(2);if(k==='arrowup')shiftCarrier(-8);if(k==='arrowdown')shiftCarrier(8)});
+refresh();requestAnimationFrame(loop);
+})();
+</script></body></html>
