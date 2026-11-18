@@ -1,0 +1,170 @@
+/* TLC BATTLECAST / premium command deck. Arena first, three direct-control surfaces.
+   Opaque tactile panels, machined details, no washed-out gradients or over-field text. */
+.tlc-atomic.tlc-premium-sandbox{
+  --tlc-men:#66baff;--tlc-women:#ff92be;--tlc-brass:#e5b478;
+  height:var(--premium-visible-height,100dvh)!important;
+  grid-template-rows:48px minmax(0,1fr)!important;
+  background:#080f19;color:#f3f6f8;overflow:hidden;
+}
+.tlc-premium-sandbox button,.tlc-premium-sandbox select,.tlc-premium-sandbox input {font-family:inherit;}
+.tlc-premium-sandbox button:focus-visible,.tlc-premium-sandbox select:focus-visible,.tlc-premium-sandbox input:focus-visible{outline:2px solid #f2c284;outline-offset:2px;}
+.tlc-premium-header{min-height:0;background:#111d2b;border-bottom:1px solid #4b5b6f;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;box-shadow:inset 0 1px #ffffff10;}
+.tlc-premium-brand{display:flex;align-items:center;gap:10px;min-width:0;}
+.tlc-premium-brand>img{width:55px;height:43px;object-fit:contain;filter:drop-shadow(0 1px 2px #03090c);}
+.tlc-premium-brand>span{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.tlc-premium-brand b{font:900 23px/.92 'Barlow Condensed',Impact,sans-serif;letter-spacing:.45px;white-space:nowrap;}
+.tlc-premium-brand b span{color:#f47d8d;}
+.tlc-premium-brand small{font-size:8px;color:#c1d0dd;font-weight:900;letter-spacing:1.2px;white-space:nowrap;}
+.tlc-premium-live{display:flex;align-items:center;gap:8px;border:1px solid #465973;background:#1b2d43;padding:7px 11px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bfd5e6;}
+.tlc-premium-live i{height:7px;width:7px;background:#859bb1;border-radius:50%;}
+.tlc-premium-live i.live{background:#ff6b78;box-shadow:0 0 0 4px #ff6b7824;}
+.tlc-premium-header-actions{display:flex;align-items:center;gap:6px;}
+.tlc-premium-header-actions button{width:32px;height:31px;display:grid;place-items:center;color:#e8eff6;border:1px solid #61758c;background:#26384d;border-radius:4px;}
+.tlc-premium-header-actions button:hover{background:#40536b;}
+.tlc-premium-sandbox .tlc-premium-stage{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;background:#090f19;}
+.tlc-atomic.tlc-premium-sandbox .tlc-premium-arena{flex:1 1 auto;min-height:160px;min-width:0;width:100%;display:flex;flex-direction:column;border:1px solid #52667e;background:#0d1b2a;margin:6px 8px 0;max-width:calc(100% - 16px);overflow:hidden;box-shadow:inset 0 1px #ffffff12,0 4px 16px #0008;}
+.tlc-premium-sandbox .tlc-premium-arena .tlc-cockpit-field{position:relative;flex:1 1 auto;min-height:80px;overflow:hidden;background:#0b243a;}
+.tlc-premium-sandbox .tlc-premium-arena .tlc-cockpit-field>div:first-child{height:100%;width:100%;}
+.tlc-premium-sandbox .tlc-premium-arena .tlc-atomic-commentary-rail{flex:0 0 28px;min-height:28px;margin:0;border-top:1px solid #465973;}
+.tlc-premium-sandbox .tlc-premium-rail .tlc-atomic-rail-message{font-size:10px;white-space:nowrap;}
+.tlc-premium-sandbox .tlc-premium-rail .tlc-atomic-rail-hype{font-size:10px;}
+.tlc-premium-deck{display:grid;flex:0 0 clamp(262px,37%,326px);height:clamp(262px,37%,326px);grid-template-columns:minmax(0,1fr) minmax(260px,1.12fr) minmax(0,1fr);grid-template-areas:"men command women";gap:7px;min-height:0;min-width:0;padding:7px 8px calc(8px + env(safe-area-inset-bottom,0px));overflow:hidden;}
+.tlc-premium-team,.tlc-premium-command{min-width:0;min-height:0;overflow:hidden;border:1px solid #52687f;border-radius:5px;background:#152339;box-shadow:inset 0 1px #ffffff16,inset 0 -2px #07121d,0 3px 8px #0008;}
+.tlc-premium-team{padding:8px 11px 10px;display:flex;flex-direction:column;gap:7px;}
+.tlc-premium-men{grid-area:men;border-top:3px solid #62b0ea;background:#152c44;}
+.tlc-premium-women{grid-area:women;border-top:3px solid #ed83b5;background:#36253b;border-color:#855476;}
+.tlc-premium-command{grid-area:command;border-top:3px solid #d9a56d;background:#1e2937;padding:9px 10px;display:flex;flex-direction:column;gap:7px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#62768b #172434;}
+.tlc-premium-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:5px;padding-bottom:5px;border-bottom:1px solid #ffffff25;}
+.tlc-premium-panel-heading small{display:block;font-size:8px;font-weight:900;letter-spacing:1.2px;color:#b6c7dc;}
+.tlc-premium-panel-heading h2{font:900 23px/1 'Barlow Condensed',Impact,sans-serif;letter-spacing:.8px;display:flex;gap:10px;align-items:baseline;margin:3px 0 0;}
+.tlc-premium-panel-heading h2 span{font-size:18px;color:#9bd0fa;font-variant-numeric:tabular-nums;}
+.tlc-premium-women .tlc-premium-panel-heading h2 span{color:#ffb1db;}
+.tlc-premium-panel-heading>svg{flex:0 0 auto;color:#a4c9e5;}
+.tlc-premium-women .tlc-premium-panel-heading>svg{color:#f5a8d4;}
+.tlc-premium-slider{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.tlc-premium-slider>span{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:9px;letter-spacing:.6px;font-weight:900;color:#c3d4e6;}
+.tlc-premium-slider>span b{color:#f7fbff;font:900 15px/1 'Barlow Condensed',Impact,sans-serif;letter-spacing:.5px;white-space:nowrap;}
+.tlc-premium-slider input[type=range]{display:block;min-width:0;width:100%;height:18px;accent-color:#63aeef;cursor:pointer;}
+.tlc-premium-women .tlc-premium-slider input[type=range]{accent-color:#f691c6;}
+.tlc-premium-slider input:disabled{opacity:.48;cursor:not-allowed;}
+.tlc-premium-weapons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;min-width:0;}
+.tlc-premium-action{display:inline-flex;justify-content:center;align-items:center;gap:5px;min-width:0;min-height:34px;padding:6px 7px;border:1px solid #647d95;border-radius:4px;background:#2a4057;color:#eaf2f9;font-size:10px;font-weight:900;line-height:1.1;cursor:pointer;box-shadow:inset 0 1px #ffffff18,inset 0 -2px #0005;transition:background .12s ease,transform .12s ease;}
+.tlc-premium-action:hover:not(:disabled){background:#3a5570;border-color:#a5c5df;}
+.tlc-premium-action:active:not(:disabled){transform:translateY(1px);}
+.tlc-premium-action:disabled{opacity:.43;cursor:not-allowed;}
+.tlc-premium-action.is-active{background:#476d92;color:#fff;border-color:#b2d9f9;box-shadow:inset 0 0 0 1px #d0ebff5c;}
+.tlc-premium-women .tlc-premium-action{background:#55364e;border-color:#98678a;}
+.tlc-premium-women .tlc-premium-action.is-active{background:#924f7a;border-color:#ffc4e4;}
+.tlc-premium-weapons .tlc-premium-action{display:flex;flex-direction:column;gap:3px;padding:6px 2px;min-height:46px;font-size:9px;}
+.tlc-premium-weapon-icon{font-size:17px;line-height:1.05;}
+.tlc-premium-team-bottom{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:end;margin-top:auto;}
+.tlc-premium-select-label{display:flex;flex-direction:column;position:relative;min-width:0;color:#c1d1dd;gap:4px;font-size:8px;letter-spacing:.9px;font-weight:900;}
+.tlc-premium-select-label>svg{position:absolute;right:8px;bottom:9px;pointer-events:none;color:#c7d7e5;}
+.tlc-premium-select-label>select{appearance:none;width:100%;min-height:34px;padding:7px 24px 7px 8px;border:1px solid #637993;background:#243950;color:#fff;border-radius:3px;font-size:10px;font-weight:750;}
+.tlc-premium-select-label>select:disabled{opacity:.5;}
+.tlc-premium-team-bottom>.tlc-premium-action{min-width:74px;}
+.tlc-premium-deploy,.tlc-premium-furiosa{min-height:36px;width:100%;font-size:10px;letter-spacing:.4px;}
+.tlc-premium-men .tlc-premium-deploy{background:#60462f;color:#f5d09c;border-color:#e1b675;}
+.tlc-premium-men .tlc-premium-deploy.is-active{background:#90623c;border-color:#f2d29d;}
+.tlc-premium-women .tlc-premium-furiosa{background:#674052;border-color:#ba7796;}
+.tlc-premium-women .tlc-premium-furiosa.is-active{background:#b14e64;border-color:#ffc6d5;}
+.tlc-premium-command-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid #ffffff2b;padding-bottom:7px;}
+.tlc-premium-command-title>b{font:900 19px/.95 'Barlow Condensed',Impact,sans-serif;letter-spacing:.7px;white-space:nowrap;}
+.tlc-premium-command-title>small{font-size:8px;font-weight:900;color:#ccaf8b;letter-spacing:.6px;}
+.tlc-premium-startbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;}
+.tlc-premium-startbar .tlc-premium-start{background:#d7515f;border-color:#f58e98;color:white;min-height:38px;font-size:12px;letter-spacing:.6px;}
+.tlc-premium-startbar .tlc-premium-start:hover{background:#e66a74;}
+.tlc-premium-control-lines{display:flex;flex-direction:column;gap:7px;}
+.tlc-premium-mini-line{display:flex;align-items:center;gap:4px;min-width:0;}
+.tlc-premium-mini-line>span{color:#c6d2dc;font-size:9px;letter-spacing:.7px;font-weight:900;flex:1;}
+.tlc-premium-mini-line>b{font-size:10px;min-width:39px;text-align:center;color:#e8f3fa;font-variant-numeric:tabular-nums;}
+.tlc-premium-mini-line>.tlc-premium-action{min-height:29px;padding:4px 9px;}
+.tlc-premium-control-lines>.tlc-premium-slider{padding:0 2px;}
+.tlc-premium-specials{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.tlc-premium-specials>.tlc-premium-action{min-height:34px;}
+.tlc-premium-specials>.tlc-premium-action:first-child{background:#654331;color:#ffe0a7;border-color:#ae7b52;}
+.tlc-premium-surface{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;align-items:center;color:#c6d0df;font-size:9px;font-weight:900;letter-spacing:.4px;}
+.tlc-premium-surface select{width:100%;padding:5px;min-width:0;border-radius:3px;background:#293b50;border:1px solid #61758b;color:#f0f7fd;font-size:10px;}
+.tlc-premium-hero-controls{display:grid;grid-template-columns:95px minmax(0,1fr);column-gap:7px;row-gap:5px;padding:8px;border:1px solid #c7a06c;background:#253545;border-radius:5px;}
+.tlc-premium-hero-head{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.tlc-premium-hero-head b{font-size:10px;color:#ffdb9e;letter-spacing:.6px;}
+.tlc-premium-hero-head span{font-size:8px;color:#b2c4d7;}
+.tlc-premium-hero-dpad{display:grid;gap:2px;justify-items:center;align-content:center;}
+.tlc-premium-hero-dpad button{width:29px;height:28px;border:1px solid #879fb3;border-radius:4px;background:#42566c;color:white;cursor:pointer;font-weight:900;}
+.tlc-premium-hero-dpad>div{display:flex;gap:2px;}
+.tlc-premium-hero-abilities{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;}
+.tlc-premium-hero-abilities .tlc-premium-action{min-height:27px;font-size:8px;padding:4px 2px;}
+.tlc-premium-hero-abilities .tlc-premium-action:last-child{grid-column:span 2;border-color:#e4b66d;color:#ffd6a1;background:#604a30;}
+.tlc-premium-results{position:absolute;inset:0;z-index:20;background:#010714c4;display:grid;place-items:center;padding:18px;}
+.tlc-premium-results>div{padding:28px;border:1px solid #cba36f;border-radius:8px;box-shadow:0 15px 65px #000c;background:#192a40;text-align:center;width:min(420px,100%);}
+.tlc-premium-results small{color:#f4c38a;letter-spacing:1.5px;font-weight:900;font-size:10px;}
+.tlc-premium-results h2{font:900 52px/1 'Barlow Condensed',Impact,sans-serif;margin:12px 0;color:#f5f9ff;}
+.tlc-premium-results p{color:#bfd1e0;font-size:13px;margin:8px 0 20px;}
+.tlc-premium-results .tlc-premium-action{width:100%;background:#b34455;padding:12px;}
+@media(max-width:890px){
+ .tlc-premium-deck{grid-template-columns:minmax(0,1fr) minmax(230px,.9fr) minmax(0,1fr);gap:5px;padding:5px;}
+ .tlc-premium-team{padding:7px;}
+ .tlc-premium-weapons .tlc-premium-action{font-size:8px;}
+ .tlc-premium-command{padding:8px;}
+ .tlc-premium-panel-heading h2{font-size:20px;}
+}
+@media(max-width:700px){
+ .tlc-atomic.tlc-premium-sandbox{grid-template-rows:43px minmax(0,1fr)!important;}
+ .tlc-premium-header{padding:0 8px;gap:6px;}
+ .tlc-premium-brand>img{width:41px;height:36px;}
+ .tlc-premium-brand b{font-size:19px;}
+ .tlc-premium-brand small{font-size:7px;letter-spacing:.5px;}
+ .tlc-premium-live{font-size:8px;padding:6px;letter-spacing:.5px;}
+ .tlc-premium-header-actions{gap:3px;}
+ .tlc-premium-header-actions button{width:28px;height:29px;}
+ .tlc-atomic.tlc-premium-sandbox .tlc-premium-arena{margin:4px 4px 0;max-width:calc(100% - 8px);min-height:155px;}
+ .tlc-premium-deck{height:clamp(335px,52%,450px);flex:0 0 clamp(335px,52%,450px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:145px minmax(0,1fr);grid-template-areas:"command command" "men women";gap:5px;padding:5px 4px calc(5px + env(safe-area-inset-bottom,0px));}
+ .tlc-premium-command{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:row;gap:4px 8px;align-content:start;padding:6px 8px;overflow:auto;}
+ .tlc-premium-command-title{grid-column:1/-1;padding-bottom:3px;}
+ .tlc-premium-command-title>b{font-size:15px;}
+ .tlc-premium-startbar{grid-column:1/2;}
+ .tlc-premium-control-lines{grid-column:2/3;grid-row:2/span 3;gap:4px;}
+ .tlc-premium-control-lines>.tlc-premium-slider{gap:1px;}
+ .tlc-premium-control-lines>.tlc-premium-slider input{height:11px;}
+ .tlc-premium-mini-line>.tlc-premium-action{min-height:23px;padding:2px 5px;}
+ .tlc-premium-startbar>.tlc-premium-action{min-height:32px;font-size:10px;}
+ .tlc-premium-specials{grid-column:1/2;gap:3px;}
+ .tlc-premium-specials>.tlc-premium-action{min-height:27px;font-size:8px;padding:4px;}
+ .tlc-premium-surface{grid-column:1/2;font-size:8px;}
+ .tlc-premium-surface select{padding:3px;}
+ .tlc-premium-hero-controls{grid-column:1/-1;grid-template-columns:95px minmax(0,1fr);padding:5px;gap:4px;}
+ .tlc-premium-hero-head{padding:1px 0;}
+ .tlc-premium-team{gap:4px;padding:6px;}
+ .tlc-premium-panel-heading{padding-bottom:3px;}
+ .tlc-premium-panel-heading small{font-size:7px;letter-spacing:.35px;}
+ .tlc-premium-panel-heading h2{font-size:21px;}
+ .tlc-premium-panel-heading h2 span{font-size:16px;}
+ .tlc-premium-slider{gap:2px;}
+ .tlc-premium-slider>span{font-size:8px;}
+ .tlc-premium-slider>span b{font-size:12px;}
+ .tlc-premium-slider input[type=range]{height:14px;}
+ .tlc-premium-weapons{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;}
+ .tlc-premium-weapons .tlc-premium-action{min-height:30px;flex-direction:row;gap:3px;font-size:9px;padding:2px;}
+ .tlc-premium-weapon-icon{font-size:12px;}
+ .tlc-premium-team-bottom{grid-template-columns:minmax(0,1fr) auto;gap:3px;}
+ .tlc-premium-select-label{font-size:7px;}
+ .tlc-premium-select-label select{min-height:29px;font-size:9px;padding:4px 16px 4px 5px;}
+ .tlc-premium-select-label>svg{right:4px;bottom:7px;}
+ .tlc-premium-team-bottom>.tlc-premium-action{min-width:52px;font-size:9px;min-height:29px;padding:4px;}
+ .tlc-premium-deploy,.tlc-premium-furiosa{min-height:33px;font-size:8px;padding:4px;}
+ .tlc-premium-sandbox .tlc-premium-rail .tlc-atomic-rail-message{font-size:8px;}
+}
+@media(max-width:410px){
+ .tlc-premium-header-actions button:nth-child(2){display:none;}
+ .tlc-premium-deck{height:clamp(365px,57%,480px);flex-basis:clamp(365px,57%,480px);grid-template-rows:160px minmax(0,1fr);}
+ .tlc-premium-panel-heading h2{font-size:19px;}
+ .tlc-premium-team{padding:5px;}
+ .tlc-premium-control-lines .tlc-premium-mini-line>span{font-size:8px;}
+ .tlc-premium-team-bottom>.tlc-premium-action svg{display:none;}
+}
+@media(max-height:680px){
+ .tlc-premium-deck{flex-basis: min(58%,400px);height:min(58%,400px);}
+ .tlc-atomic.tlc-premium-sandbox .tlc-premium-arena{min-height:105px;}
+ .tlc-premium-header{min-height:38px;}
+}
+@media(prefers-reduced-motion:reduce){.tlc-premium-action{transition:none;}}
