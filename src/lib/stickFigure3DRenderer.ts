@@ -18,6 +18,7 @@ import {
 } from 'three';
 import { FLAG_ALIVE, FLAG_LEADER, TEAM_MEN, type BattleSoA } from './battleSoA';
 import { attackEnvelope, guardEnvelope, STRIKE_JAB, STRIKE_SHOVE } from './combatChoreography';
+import { DEFAULT_TEAMS, type SandboxTeams } from './sandboxLoadouts';
 import {
   getStickFigureVariant, getStickMotion, STICK_FIGHTER_PALETTES,
   STICK_FIGHTER_SEGMENTS, type StickFigureVariant,
@@ -34,15 +35,25 @@ export interface StickFigure3DLayer {
   world: Group;
   body: InstancedMesh[];
   heads: InstancedMesh;
+  torsos: InstancedMesh;
+  hair: InstancedMesh;
+  footwear: [InstancedMesh,InstancedMesh];
+  eyes: [InstancedMesh,InstancedMesh];
+  weapons: InstancedMesh;
   shadows: InstancedMesh;
   limbGeometry: CylinderGeometry;
   headGeometry: SphereGeometry;
   shadowGeometry: CircleGeometry;
   bodyMaterial: MeshStandardMaterial;
   headMaterial: MeshStandardMaterial;
+  hairMaterial: MeshStandardMaterial;
+  bootMaterial: MeshStandardMaterial;
+  eyeMaterial: MeshStandardMaterial;
+  weaponMaterial: MeshStandardMaterial;
   shadowMaterial: MeshBasicMaterial;
   capacity: number;
   paintedCount: number;
+  appearanceKey: string;
   hidden: Uint8Array;
   variants: StickFigureVariant[];
   width: number;
@@ -70,6 +81,7 @@ const rightKnee = new Vector3();
 const leftFoot = new Vector3();
 const rightFoot = new Vector3();
 const head = new Vector3();
+const weaponTip = new Vector3();
 
 function limb(mesh: InstancedMesh, index: number, from: Vector3, to: Vector3, thickness: number): void {
   delta.subVectors(to, from);
@@ -123,6 +135,10 @@ export function createStickFigure3DLayer(
   const shadowGeometry = new CircleGeometry(1, 10);
   const bodyMaterial = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.6, metalness: 0.22, flatShading: true });
   const headMaterial = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.75, metalness: 0.05, flatShading: true });
+  const hairMaterial = new MeshStandardMaterial({color:0xffffff,roughness:.82,metalness:.02,flatShading:true});
+  const bootMaterial = new MeshStandardMaterial({color:0x101d30,roughness:.65,metalness:.18});
+  const eyeMaterial = new MeshStandardMaterial({color:0x162235,roughness:.3});
+  const weaponMaterial = new MeshStandardMaterial({color:0xffffff,roughness:.38,metalness:.52});
   const shadowMaterial = new MeshBasicMaterial({
     color: 0x071019, transparent: true, opacity: 0.35,
     depthWrite: false, side: DoubleSide,
@@ -138,15 +154,25 @@ export function createStickFigure3DLayer(
   heads.instanceMatrix.setUsage(DynamicDrawUsage);
   heads.frustumCulled = false;
   world.add(heads);
+  const make = (geometry:SphereGeometry|CylinderGeometry,material:MeshStandardMaterial)=>{
+    const mesh=new InstancedMesh(geometry,material,count);
+    mesh.instanceMatrix.setUsage(DynamicDrawUsage);mesh.frustumCulled=false;world.add(mesh);return mesh;
+  };
+  // Human torso mass, sculpted hair, feet, facial eyes and gameplay equipment.
+  const torsos=make(headGeometry,bodyMaterial);
+  const hair=make(headGeometry,hairMaterial);
+  const footwear:[InstancedMesh,InstancedMesh]=[make(headGeometry,bootMaterial),make(headGeometry,bootMaterial)];
+  const eyes:[InstancedMesh,InstancedMesh]=[make(headGeometry,eyeMaterial),make(headGeometry,eyeMaterial)];
+  const weapons=make(limbGeometry,weaponMaterial);
   const shadows = new InstancedMesh(shadowGeometry, shadowMaterial, count);
   shadows.instanceMatrix.setUsage(DynamicDrawUsage);
   shadows.frustumCulled = false;
   world.add(shadows);
 
   return {
-    renderer, scene, camera, world, body, heads, shadows,
-    limbGeometry, headGeometry, shadowGeometry, bodyMaterial, headMaterial, shadowMaterial,
-    capacity: count, paintedCount: 0, hidden: new Uint8Array(count),
+    renderer, scene, camera, world, body, heads, torsos, hair, footwear, eyes, weapons, shadows,
+    limbGeometry, headGeometry, shadowGeometry, bodyMaterial, headMaterial, hairMaterial, bootMaterial, eyeMaterial, weaponMaterial, shadowMaterial,
+    capacity: count, paintedCount: 0, appearanceKey:'', hidden: new Uint8Array(count),
     variants: [], width, height, lastDraw: 0, destroyed: false,
   };
 }
@@ -165,19 +191,25 @@ export function resizeStickFigure3DLayer(layer: StickFigure3DLayer, width: numbe
   layer.renderer.setSize(width, height, false);
 }
 
-function ensureColors(layer: StickFigure3DLayer, soa: BattleSoA, count: number) {
+function ensureColors(layer: StickFigure3DLayer, soa: BattleSoA, count: number, teams:SandboxTeams, rage:boolean) {
+  const appearance=teams.women.furiosa+":"+teams.men.weapon+":"+teams.women.weapon+":"+rage;
+  if(layer.appearanceKey!==appearance){layer.paintedCount=0;layer.appearanceKey=appearance;}
   if (layer.paintedCount >= count) return;
   for (let i = layer.paintedCount; i < count; i++) {
     const team = soa.teamID[i];
     const variant = getStickFigureVariant(i, team);
     layer.variants[i] = variant;
-    const uniformColor = new Color(bodyColor(variant.shade, team === TEAM_MEN, (soa.stateFlags[i] & FLAG_LEADER) !== 0));
+    const isMale=team===TEAM_MEN;
+    const uniformColor = new Color(teams.women.furiosa&&!isMale?0xc8476e:rage?isMale?0x6fb6f3:0xf478b4:bodyColor(variant.shade, isMale, (soa.stateFlags[i] & FLAG_LEADER) !== 0));
     const skin = STICK_FIGHTER_PALETTES.skin[(variant.shade + i) % STICK_FIGHTER_PALETTES.skin.length];
     for (const mesh of layer.body) mesh.setColorAt(i, uniformColor);
+    layer.torsos.setColorAt(i,uniformColor);
     layer.heads.setColorAt(i, new Color(skin));
+    layer.hair.setColorAt(i,new Color(isMale?0x182238:0xf2c65e));
+    layer.weapons.setColorAt(i,new Color(isMale?0x9ac9f8:0xfa95bd));
   }
   for (const mesh of layer.body) if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  if (layer.heads.instanceColor) layer.heads.instanceColor.needsUpdate = true;
+  for (const mesh of [layer.torsos,layer.hair,layer.weapons,layer.heads]) if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   layer.paintedCount = count;
 }
 
@@ -186,16 +218,18 @@ function ensureColors(layer: StickFigure3DLayer, soa: BattleSoA, count: number) 
  * coordinate, including alternating depth for legs and arms. Randomness is
  * seeded per unit, not regenerated every frame (no flicker or teleporting).
  */
-function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: number, reducedMotion: boolean, scale: number) {
+function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: number, reducedMotion: boolean, scale: number, teams:SandboxTeams) {
   const style = layer.variants[i];
   const speed = Math.hypot(soa.velX[i], soa.velY[i]);
   const moving = getStickMotion(style, seconds, speed, soa.stagger[i], reducedMotion);
-  const s = scale * style.height;
+  const male=soa.teamID[i]===TEAM_MEN;
+  const furiosa=!male&&teams.women.furiosa;
+  const s = scale * style.height * (furiosa?1.52:male?1.12:1.05);
   const baseX = soa.posX[i] - layer.width / 2;
   const baseY = layer.height / 2 - soa.posY[i];
   const z = style.depth;
   const hip = 1.9 * style.hips * s;
-  const shoulder = 2.6 * style.shoulders * s;
+  const shoulder = 2.6 * style.shoulders * s * (furiosa?1.34:male?1.17:1);
   const walk = moving.stride;
   const front = soa.teamID[i] === TEAM_MEN ? 1 : -1;
   // These angles come from the same fixed-step combat event as the hit impulse.
@@ -239,8 +273,13 @@ function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: num
     rightElbow.y - 3.2*s + (jab*4.1 + shove*3 + guard*5)*s,
     rightElbow.z + (1.8 + jab*1.7)*s);
   point(head, neck.x + 0.45 * s, neckY + 3.8 * s, z + 0.8 * s);
-  const radius = style.thickness * s * (soa.teamID[i] === TEAM_MEN ? 1.14 : 0.97);
+  const radius = style.thickness * s * (furiosa?1.55:male?1.23:1.03);
   const m = layer.body;
+  // Solid chest plate and muscular abdominal volume make the rigs read human.
+  dummy.position.copy(pelvis).lerp(neck,.57);
+  dummy.quaternion.identity();
+  dummy.scale.set(shoulder*1.18, 5.3*s, 1.7*s);
+  dummy.updateMatrix();layer.torsos.setMatrixAt(i,dummy.matrix);
   limb(m[0], i, pelvis, neck, 1.05 * radius);
   limb(m[1], i, leftShoulder, leftElbow, 0.57 * radius);
   limb(m[2], i, leftElbow, leftHand, 0.46 * radius);
@@ -256,6 +295,31 @@ function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: num
   dummy.scale.setScalar(2.45 * s);
   dummy.updateMatrix();
   layer.heads.setMatrixAt(i, dummy.matrix);
+  // Blonde sculpted hair; bald in Furiosa. Men wear short dark textured hair.
+  if(furiosa){layer.hair.setMatrixAt(i,EMPTY);}
+  else{
+    dummy.position.set(head.x,head.y+1.55*s,head.z-.25*s);
+    dummy.scale.set(2.55*s,male?1.05*s:1.85*s,2.55*s);
+    dummy.updateMatrix();layer.hair.setMatrixAt(i,dummy.matrix);
+  }
+  for(const [j,sign] of [-1,1].entries()){
+    dummy.position.set(head.x+sign*1.05*s,head.y-.2*s,head.z+2.18*s);
+    dummy.scale.set(.35*s,.35*s,.28*s);
+    dummy.updateMatrix();layer.eyes[j].setMatrixAt(i,dummy.matrix);
+  }
+  for(const [j,foot] of [leftFoot,rightFoot].entries()){
+    dummy.position.copy(foot);dummy.position.z+=.6*s;
+    dummy.scale.set(2.4*s,.9*s,1.45*s);
+    dummy.updateMatrix();layer.footwear[j].setMatrixAt(i,dummy.matrix);
+  }
+  const equipped=male?teams.men.weapon:teams.women.weapon;
+  if(equipped==="fists"){layer.weapons.setMatrixAt(i,EMPTY);}
+  else{
+    const sword=male?(equipped==="swords"||equipped==="guns+swords"):(equipped==="lipstick+makeup"||equipped==="lipstick");
+    const hand=rightHand;
+    point(weaponTip,hand.x+front*(sword?5:4)*s,hand.y+(sword?7:0)*s,hand.z+1.1*s);
+    limb(layer.weapons,i,hand,weaponTip,sword?.45*s:1.65*s);
+  }
 
   dummy.position.set(baseX, baseY - 1 * s, z - 3.1);
   dummy.quaternion.identity();
@@ -267,7 +331,8 @@ function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: num
 export function renderStickFigure3DLayer(
   layer: StickFigure3DLayer, soa: BattleSoA,
   camera: { x: number; y: number; zoom: number; w: number; h: number },
-  reducedMotion = false, timeSeconds = 0
+  reducedMotion = false, timeSeconds = 0,
+  teams:SandboxTeams=DEFAULT_TEAMS, rage=false
 ): void {
   if (layer.destroyed) return;
   const count = Math.min(layer.capacity, soa.unitCount);
@@ -276,26 +341,29 @@ export function renderStickFigure3DLayer(
   if (count > 1600 && now - layer.lastDraw < 32) return;
   layer.lastDraw = now;
 
-  ensureColors(layer, soa, count);
+  ensureColors(layer, soa, count, teams, rage);
   layer.world.position.set(camera.x, -camera.y, 0);
   layer.world.scale.setScalar(camera.zoom);
   const tinyArena = Math.min(layer.width, layer.height);
-  const scale = Math.max(0.47, Math.min(1.08, tinyArena / 460)) * (count > 1600 ? 0.80 : 0.94);
+  // With a maximum of 100, favor readable cinematic human proportions.
+  const scale = Math.max(1.08, Math.min(1.55, tinyArena / 240)) * (count <= 100 ? 1.15 : .86);
   for (let i = 0; i < count; i++) {
     if ((soa.stateFlags[i] & FLAG_ALIVE) === 0) {
       if (!layer.hidden[i]) {
         for (const mesh of layer.body) mesh.setMatrixAt(i, EMPTY);
         layer.heads.setMatrixAt(i, EMPTY);
+        for(const mesh of [layer.torsos,layer.hair,layer.weapons,...layer.footwear,...layer.eyes])mesh.setMatrixAt(i,EMPTY);
         layer.shadows.setMatrixAt(i, EMPTY);
         layer.hidden[i] = 1;
       }
       continue;
     }
     layer.hidden[i] = 0;
-    pose(layer, soa, i, timeSeconds, reducedMotion, scale);
+    pose(layer, soa, i, timeSeconds, reducedMotion, scale,teams);
   }
   for (const mesh of layer.body) mesh.instanceMatrix.needsUpdate = true;
   layer.heads.instanceMatrix.needsUpdate = true;
+  for(const mesh of [layer.torsos,layer.hair,layer.weapons,...layer.footwear,...layer.eyes])mesh.instanceMatrix.needsUpdate=true;
   layer.shadows.instanceMatrix.needsUpdate = true;
   layer.renderer.render(layer.scene, layer.camera);
 }
@@ -308,6 +376,7 @@ export function destroyStickFigure3DLayer(layer: StickFigure3DLayer): void {
   layer.shadowGeometry.dispose();
   layer.bodyMaterial.dispose();
   layer.headMaterial.dispose();
+  layer.hairMaterial.dispose();layer.bootMaterial.dispose();layer.eyeMaterial.dispose();layer.weaponMaterial.dispose();
   layer.shadowMaterial.dispose();
   layer.renderer.dispose();
   layer.renderer.forceContextLoss();

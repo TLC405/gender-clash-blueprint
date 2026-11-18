@@ -1,6 +1,6 @@
 /** TLC Battlecast arcade combat — fictional game attributes. */
 export type CombatMode = "brawl" | "swords" | "blasters" | "beauty" | "furiosa" | "water" | "mayhem";
-export type HeroWeapon = "nuke" | "water" | "lipstick" | "makeup";
+export type HeroWeapon = "nuke" | "water" | "lipstick" | "makeup" | "shockwave" | "rally";
 export const MAX_MATCH_FIGHTERS = 100;
 export const COMBAT_MODES: readonly {id:CombatMode; name:string; icon:string; detail:string; interval:number; radius:number; push:number}[] = [
  {id:"brawl",name:"RAGE CLASH",icon:"🥊",detail:"Everyone powers up on first impact; fists and grapples",interval:999,radius:0,push:0},
@@ -23,5 +23,7 @@ export function heroWeaponConfig(weapon:HeroWeapon) {
  case "water":return {radius:48,strength:310,damage:10};
  case "lipstick":return {radius:60,strength:410,damage:48};
  case "makeup":return {radius:87,strength:520,damage:75};
+ case "shockwave":return {radius:112,strength:760,damage:34};
+ case "rally":return {radius:0,strength:0,damage:0};
  }
 }

@@ -10,9 +10,9 @@ describe("TLC original-only spoken announcer and production release", () => {
   });
 
   it("shows an honest pending voice state rather than an inactive but clickable toggle", () => {
-    const source = readFileSync(new URL("../pages/Index.tsx", import.meta.url), "utf8");
-    expect(source).toContain("disabled={!elevenAudioReady}");
-    expect(source).toContain("no phone-generated announcer");
+    const source = readFileSync(new URL("../pages/PremiumSandbox.tsx", import.meta.url), "utf8");
+    expect(source).toContain("narratorEnabled={false}");
+    expect(source).not.toMatch(/speechSynthesis|SpeechSynthesisUtterance/);
   });
 
   it("requires all fourteen original files to decode before reporting success", () => {

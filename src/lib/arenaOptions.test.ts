@@ -43,9 +43,9 @@ describe("Eight playable TLC tactical formations", () => {
     // its outermost lanes, but its central apex must be different.
     expect(Array.from(soa.posX.slice(0,500)).some((x,i)=>Math.abs(x-mirrored.posX[i])>1)).toBe(true);
     expect(Array.from(soa.posX.slice(500,1350)).some((x,i)=>Math.abs(x-mirrored.posX[500+i])>1)).toBe(true);
-    const index=readFileSync(new URL("../pages/Index.tsx",import.meta.url),"utf8");
-    expect(index).toContain('formationTarget==="both"');
-    expect(index).toContain('setWomenFormationPattern(f.id)');
+    const index=readFileSync(new URL("../pages/PremiumSandbox.tsx",import.meta.url),"utf8");
+    expect(index).toContain('aria-label="Men formation"');
+    expect(index).toContain('aria-label="Women formation"');
   });
 
   it("keeps both armies in bounds, out of each other's spawn zone, for all match sizes", () => {
@@ -107,11 +107,11 @@ describe("High-definition TLC championship fields",()=>{
   });
 
   it("wires formation selection and four field styles to the real battle component",()=>{
-    const index=readFileSync(new URL("../pages/Index.tsx",import.meta.url),"utf8");
+    const index=readFileSync(new URL("../pages/PremiumSandbox.tsx",import.meta.url),"utf8");
     const simulation=readFileSync(new URL("../components/BattleSimulationEnhanced.tsx",import.meta.url),"utf8");
-    expect(index).toContain("formationPattern={formationPattern} womenFormationPattern={womenFormationPattern} arenaSurface={arenaSurface}");
-    expect(index).toContain("setFormationPattern(f.id)");
-    expect(index).toContain("setArenaSurface(a.id)");
+    expect(index).toContain("formationPattern={teams.men.formation} womenFormationPattern={teams.women.formation}");
+    expect(index).toContain("patchMen({formation:");
+    expect(index).toContain("setArena(e.target.value as ArenaSurface)");
     expect(simulation).toContain("formationPattern");
     expect(simulation).toContain("renderPremiumArena(ctx, width, height, arenaSurface, centerCrestRef.current)");
     expect(simulation).toContain("arenaCacheRef.current = null;");

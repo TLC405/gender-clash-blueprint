@@ -45,9 +45,9 @@ describe("TLC ElevenLabs production audio pack", () => {
 
 describe("TLC clean game field layout", () => {
   it("leaves gameplay canvas free of floating text and scorebug overlays", () => {
-    const source = readFileSync(new URL("../pages/Index.tsx", import.meta.url), "utf8");
+    const source = readFileSync(new URL("../pages/PremiumSandbox.tsx", import.meta.url), "utf8");
     const begin = source.indexOf('<div className="tlc-cockpit-field">');
-    const end = source.indexOf('<div className="tlc-atomic-commentary-rail"', begin);
+    const end = source.indexOf('<div className="tlc-atomic-commentary-rail', begin);
     expect(begin).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(begin);
     const field = source.slice(begin, end);

@@ -270,7 +270,9 @@ export function updatePhysics(
   canvasHeight: number,
   battleSpeed = 1,
   rageActive: boolean | { men: boolean; women: boolean } = false,
-  menPower = 1
+  menPower = 1,
+  womenSpeed = 1,
+  womenPower = 1
 ): PhysicsResult {
   const runtime = getRuntime(soa);
   const kills: PhysicsResult['kills'] = [];
@@ -342,7 +344,7 @@ export function updatePhysics(
     const boosted = team === TEAM_MEN ? menRage : womenRage;
     const profile = teamBalance(team);
     const strength = team === TEAM_MEN ? fury(teams.mn, r.menInitial) : fury(teams.wn, r.womenInitial);
-    const maxSpeed = config.maxSpeed * profile.moveMultiplier * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
+    const maxSpeed = config.maxSpeed * profile.moveMultiplier * (team === TEAM_WOMEN ? womenSpeed : 1) * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
     const enemy = findNearestEnemy(
       grid, x, y, team, soa.posX, soa.posY, soa.teamID, soa.stateFlags,
       FLAG_ALIVE, config.enemySightCells
@@ -378,7 +380,7 @@ export function updatePhysics(
     if (enemy.index >= 0 && enemy.distSq <= config.attackRange ** 2) {
       // Long-form attrition with occasional discrete physical impacts.
       // Men have heavier individual hits; women have more fighters.
-      const damage = config.baseDamage * profile.damageMultiplier * strength * step * (team === TEAM_MEN ? menPower : 1)
+      const damage = config.baseDamage * profile.damageMultiplier * strength * step * (team === TEAM_MEN ? menPower : womenPower)
         * (boosted ? 1.22 : 1) * (phase === 'sudden_death' ? 1.25 : 1);
       r.pendingDamage[enemy.index] += damage;
 
@@ -434,7 +436,7 @@ export function updatePhysics(
       const team = soa.teamID[i];
       const boosted = team === TEAM_MEN ? menRage : womenRage;
       const strength = team === TEAM_MEN ? fury(teams.mn, r.menInitial) : fury(teams.wn, r.womenInitial);
-      const limit = config.maxSpeed * teamBalance(team).moveMultiplier * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
+      const limit = config.maxSpeed * teamBalance(team).moveMultiplier * (team === TEAM_WOMEN ? womenSpeed : 1) * strength * (boosted ? config.rageSpeedMultiplier : 1) * (phase === 'sudden_death' ? 1.13 : 1);
       let vx = r.nextVX[i] + r.impulseX[i];
       let vy = r.nextVY[i] + r.impulseY[i];
       const velocity = Math.hypot(vx, vy);
