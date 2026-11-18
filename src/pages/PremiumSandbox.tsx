@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
 import { Camera, ChevronDown, Flame, Maximize2, Minimize2, Pause, Play, RotateCcw, Share2, Shield, Swords, Volume2, VolumeX, Zap } from "lucide-react";
 import { toast } from "sonner";
 import BattleSimulation from "@/components/BattleSimulationEnhanced";
@@ -124,7 +124,7 @@ const PremiumSandbox=()=>{
   const canEdit=!running;
   const weaponButton=(value:MenWeapon|WomenWeapon,label:string,icon:string,selected:boolean,click:()=>void)=>
     <Action key={value} active={selected} onClick={click}><span className="tlc-premium-weapon-icon">{icon}</span>{label}</Action>;
-  return <div className="tlc-app tlc-one-screen tlc-atomic tlc-premium-sandbox" style={viewportHeight?{"--premium-visible-height":viewportHeight+"px"} as React.CSSProperties:undefined}>
+  return <div className="tlc-app tlc-one-screen tlc-atomic tlc-premium-sandbox" style={viewportHeight?{"--premium-visible-height":viewportHeight+"px"} as CSSProperties:undefined}>
     <header className="tlc-premium-header">
       <div className="tlc-premium-brand">
         <img src={import.meta.env.BASE_URL+"branding/tlc-championship-crest.svg"} alt="TLC championship emblem"/>
@@ -166,7 +166,7 @@ const PremiumSandbox=()=>{
       <div className="tlc-premium-deck">
         <section className="tlc-premium-team tlc-premium-men" aria-label="Men panel">
           <div className="tlc-premium-panel-heading"><div><small>BLUE CORNER / TEAM 01</small><h2>MEN <span>{teams.men.count}</span></h2></div><Shield size={20}/></div>
-          <label className="tlc-premium-slider"><span>FIGHTERS <b>{teams.men.count}</b></span><input aria-label="Men count" type="range" min={1} max={Math.min(99,TOTAL_CAP-teams.women.count)} value={teams.men.count} disabled={!canEdit} onChange={e=>adjustCount("men",Number(e.target.value))}/></label>
+          <label className="tlc-premium-slider"><span>FIGHTERS <b>{teams.men.count}</b></span><input aria-label="Men count" type="range" min={1} max={99} value={teams.men.count} disabled={!canEdit} onChange={e=>adjustCount("men",Number(e.target.value))}/></label>
           <label className="tlc-premium-slider"><span>STRENGTH <b>{teams.men.strength.toFixed(1)}×</b></span><input aria-label="Men strength" type="range" min={.7} max={1.8} step={.1} value={teams.men.strength} onChange={e=>patchMen({strength:Number(e.target.value)})}/></label>
           <div className="tlc-premium-weapons" role="group" aria-label="Men weapons">{MEN_WEAPONS.map(w=>weaponButton(w.id,w.label,w.icon,teams.men.weapon===w.id,()=>{patchMen({weapon:w.id});playUiClick();}))}</div>
           <div className="tlc-premium-team-bottom">
@@ -208,7 +208,7 @@ const PremiumSandbox=()=>{
         </section>
         <section className="tlc-premium-team tlc-premium-women" aria-label="Women panel">
           <div className="tlc-premium-panel-heading"><div><small>PINK CORNER / TEAM 02</small><h2>WOMEN <span>{teams.women.count}</span></h2></div><Swords size={20}/></div>
-          <label className="tlc-premium-slider"><span>FIGHTERS <b>{teams.women.count}</b></span><input aria-label="Women count" type="range" min={1} max={Math.min(99,TOTAL_CAP-teams.men.count)} value={teams.women.count} disabled={!canEdit} onChange={e=>adjustCount("women",Number(e.target.value))}/></label>
+          <label className="tlc-premium-slider"><span>FIGHTERS <b>{teams.women.count}</b></span><input aria-label="Women count" type="range" min={1} max={99} value={teams.women.count} disabled={!canEdit} onChange={e=>adjustCount("women",Number(e.target.value))}/></label>
           <label className="tlc-premium-slider"><span>SPEED <b>{teams.women.speed.toFixed(1)}×</b></span><input aria-label="Women speed" type="range" min={.7} max={1.5} step={.1} value={teams.women.speed} onChange={e=>patchWomen({speed:Number(e.target.value)})}/></label>
           <div className="tlc-premium-weapons" role="group" aria-label="Women weapons">{WOMEN_WEAPONS.map(w=>weaponButton(w.id,w.label,w.icon,teams.women.weapon===w.id,()=>{patchWomen({weapon:w.id});playUiClick();}))}</div>
           <div className="tlc-premium-team-bottom">
