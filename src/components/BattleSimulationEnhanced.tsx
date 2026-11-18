@@ -16,7 +16,9 @@ import type { StickFigure3DLayer } from "@/lib/stickFigure3DRenderer";
 import { playKills, playImpacts, playBell, playClash, playMeteor, playVictory } from "@/lib/battleAudio";
 import { renderPremiumArena } from "@/lib/arenaRenderer";
 import type { ArenaSurface, FormationPattern } from "@/lib/arenaOptions";
-import { combatMode, heroWeaponConfig, type CombatMode, type HeroWeapon } from "@/lib/combatModes";
+import { heroWeaponConfig, type CombatMode, type HeroWeapon } from "@/lib/combatModes";
+import { teamAttack, DEFAULT_TEAMS, type SandboxTeams } from "@/lib/sandboxLoadouts";
+import { renderTlcCommander } from "@/lib/commanderRenderer";
 
 type BattleSimulationProps = {
   menArmySize: number;
@@ -46,6 +48,11 @@ type BattleSimulationProps = {
   menPower?: number;
   combatModeId?: CombatMode;
   heroAction?: {id:number;weapon:HeroWeapon;x:number;y:number};
+  heroPosition?: {x:number;y:number};
+  heroWeapon?: HeroWeapon;
+  teamLoadouts?: SandboxTeams;
+  chaosIntensity?: number;
+  cameraScale?: number;
 };
 
 const BattleSimulation = ({
@@ -53,7 +60,8 @@ const BattleSimulation = ({
   formationPattern = "battle-lines", womenFormationPattern = formationPattern, arenaSurface = "championship",
   menRageEnabled, womenRageEnabled, isRunning,
   onStatsUpdate, onPhaseChange, onTimeUpdate, onQuipChange, onVictory,
-  narratorEnabled, meteorTrigger = 0, meteorCharges = 0, onMeteorUsed, reducedMotion = false, menPower = 1, combatModeId = 'brawl', heroAction
+  narratorEnabled, meteorTrigger = 0, meteorCharges = 0, onMeteorUsed, reducedMotion = false, menPower = 1, combatModeId = 'brawl', heroAction, heroPosition, heroWeapon = 'water',
+  teamLoadouts = DEFAULT_TEAMS, chaosIntensity = 1, cameraScale = 1.18
 }: BattleSimulationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,8 +85,8 @@ const BattleSimulation = ({
   const clashPointRef = useRef({ x: 0, y: 0 });
   const stepFnRef = useRef<(dt: number) => void>(() => {});
   const renderFnRef = useRef<() => void>(() => {});
-  const propsRef = useRef({ menPower, battleSpeed, menRageEnabled, womenRageEnabled, isRunning, combatModeId, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory });
-  propsRef.current = { menPower, battleSpeed, menRageEnabled, womenRageEnabled, isRunning, combatModeId, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory };
+  const propsRef = useRef({ menPower, battleSpeed, menRageEnabled, womenRageEnabled, isRunning, combatModeId, teamLoadouts, chaosIntensity, cameraScale, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory });
+  propsRef.current = { menPower, battleSpeed, menRageEnabled, womenRageEnabled, isRunning, combatModeId, teamLoadouts, chaosIntensity, cameraScale, onStatsUpdate, onPhaseChange, onTimeUpdate, onVictory };
 
   const soaRef = useRef<BattleSoA>(createBattleSoA());
   const gridRef = useRef<SpatialHashGrid | null>(null);
@@ -93,7 +101,11 @@ const BattleSimulation = ({
   const logicalSizeRef = useRef({ width: 800, height: 600 });
   const firstClashRef = useRef(false);
   const meleeRageRef = useRef(false);
-  const lastWeaponAtRef = useRef(0);
+  const lastWeaponAtRef = useRef([0,0]);
+  const weaponSequenceRef = useRef([0,0]);
+  const rallyUntilRef = useRef(0);
+  const heroVisualRef = useRef<{position?:{x:number;y:number};weapon:HeroWeapon}>({weapon:'water'});
+  heroVisualRef.current = {position:heroPosition,weapon:heroWeapon};
   const heroHandledRef = useRef(0);
   const meteorHandledRef = useRef(0);
   const reducedMotionRef = useRef(reducedMotion);
@@ -144,7 +156,9 @@ const BattleSimulation = ({
     fallenRef.current = [];
     firstClashRef.current = false;
     meleeRageRef.current = false;
-    lastWeaponAtRef.current = 0;
+    lastWeaponAtRef.current = [0,0];
+    weaponSequenceRef.current = [0,0];
+    rallyUntilRef.current = 0;
     lastMilestoneRef.current = 0;
     shakeRef.current = { intensity: 0, offsetX: 0, offsetY: 0 };
     clashFlashRef.current = 0;
@@ -250,18 +264,23 @@ const BattleSimulation = ({
     strikeMeteor(x, y);
   }, [meteorTrigger, isRunning, strikeMeteor]);
 
-  // Player-controlled TLC drops are initiated by buttons; the hero marker is rendered in the UI.
+  // Commander is a fully drawn game-world fighter. Input attacks affect actual unit state.
   useEffect(() => {
     if(!heroAction || heroAction.id===heroHandledRef.current) return;
     heroHandledRef.current=heroAction.id;
     if(!isRunning || phaseRef.current==="victory" || !gridRef.current) return;
     const {width,height}=logicalSizeRef.current;
+    if(heroAction.weapon==="rally"){
+      rallyUntilRef.current=phaseTimeRef.current+9;
+      playClash();
+      return;
+    }
     const weapon=heroWeaponConfig(heroAction.weapon);
     const x=Math.max(20,Math.min(width-20,width*heroAction.x));
     const y=Math.max(20,Math.min(height-20,height*heroAction.y));
-    const target=heroAction.weapon==="water" ? TEAM_WOMEN : TEAM_WOMEN;
-    applyArcadeBlast(soaRef.current,x,y,weapon.radius,weapon.damage,weapon.strength,target);
-    spawnMeteorImpact(poolRef.current,x,y);
+    applyArcadeBlast(soaRef.current,x,y,weapon.radius,weapon.damage,weapon.strength,TEAM_WOMEN);
+    if(heroAction.weapon==="nuke" || heroAction.weapon==="shockwave")spawnMeteorImpact(poolRef.current,x,y);
+    else spawnClashShockwave(poolRef.current,x,y);
     playMeteor();
     propsRef.current.onStatsUpdate({menAlive:soaRef.current.menCount,womenAlive:soaRef.current.womenCount,...killStatsRef.current});
     if(soaRef.current.menCount===0||soaRef.current.womenCount===0)finishBattle(soaRef.current.menCount,soaRef.current.womenCount);
@@ -383,7 +402,8 @@ const BattleSimulation = ({
     const result = updatePhysics(
       soaRef.current, gridRef.current, poolRef.current,
       DEFAULT_CONFIG, phaseRef.current, dt,
-      width, height, p.battleSpeed, { men: p.menRageEnabled || meleeRageRef.current, women: p.womenRageEnabled || meleeRageRef.current }, p.menPower * (p.combatModeId==='furiosa'?0.72:1)
+      width, height, p.battleSpeed, { men: p.menRageEnabled || meleeRageRef.current || phaseTimeRef.current<rallyUntilRef.current, women: p.womenRageEnabled || meleeRageRef.current }, p.menPower,
+      p.teamLoadouts.women.speed, p.teamLoadouts.women.furiosa ? 1.55 : 1
     );
 
     killStatsRef.current.menKills += result.stats.menKills;
@@ -398,21 +418,26 @@ const BattleSimulation = ({
       if(!reducedMotionRef.current){clashFlashRef.current=.3;shakeRef.current.intensity=5;}
       for(let i=0;i<soaRef.current.unitCount;i++) if(soaRef.current.stateFlags[i]&FLAG_ALIVE)soaRef.current.stagger[i]=Math.max(soaRef.current.stagger[i],.12);
     }
-    const scenario=combatMode(p.combatModeId);
-    if(phaseRef.current!=="stand" && scenario.id!=="brawl" && phaseTimeRef.current-lastWeaponAtRef.current>=scenario.interval){
-      lastWeaponAtRef.current=phaseTimeRef.current;
+    // Each team's loadout is independent; weapons fire at real living opponents.
+    if(phaseRef.current!=="stand"){
       const s=soaRef.current;
-      const attackerTeam=scenario.id==="blasters"?TEAM_MEN:scenario.id==="beauty"||scenario.id==="furiosa"?TEAM_WOMEN:Math.random()>.5?TEAM_MEN:TEAM_WOMEN;
-      const target=attackerTeam===TEAM_MEN?TEAM_WOMEN:TEAM_MEN;
-      const slots:number[]=[];
-      for(let i=0;i<s.unitCount;i++)if(s.teamID[i]===target&&(s.stateFlags[i]&FLAG_ALIVE))slots.push(i);
-      if(slots.length){
-        const victim=slots[Math.floor(Math.random()*slots.length)];
-        const weaponDamage=scenario.id==="furiosa"?60:scenario.id==="swords"?45:scenario.id==="water"?9:38;
-        applyArcadeBlast(s,s.posX[victim],s.posY[victim],scenario.radius,weaponDamage,scenario.push,target);
+      for(const side of [TEAM_MEN,TEAM_WOMEN] as const){
+        const order=weaponSequenceRef.current[side];
+        const attack=teamAttack(p.teamLoadouts,side,order,p.chaosIntensity);
+        if(!attack || phaseTimeRef.current-lastWeaponAtRef.current[side]<attack.delay)continue;
+        lastWeaponAtRef.current[side]=phaseTimeRef.current;
+        weaponSequenceRef.current[side]++;
+        const target=side===TEAM_MEN?TEAM_WOMEN:TEAM_MEN;
+        const slots:number[]=[];
+        for(let i=0;i<s.unitCount;i++)if(s.teamID[i]===target&&(s.stateFlags[i]&FLAG_ALIVE))slots.push(i);
+        if(!slots.length)continue;
+        const victim=slots[(order*7+Math.floor(phaseTimeRef.current*3))%slots.length];
+        applyArcadeBlast(s,s.posX[victim],s.posY[victim],attack.radius,attack.damage,attack.push,target);
         spawnClashShockwave(poolRef.current,s.posX[victim],s.posY[victim]);
-        playImpacts(4);
+        playImpacts(attack.kind==="makeup"?6:2);
       }
+      // Arcade attacks may eliminate fighters after the melee engine's snapshot.
+      lastStatsRef.current={...result.stats,menAlive:s.menCount,womenAlive:s.womenCount};
     }
 
     const fallen = fallenRef.current;
@@ -522,7 +547,7 @@ const BattleSimulation = ({
     // Camera: gentle follow of clash point during melee
     const cam = camRef.current;
     const fighting = phase === 'melee' || phase === 'sudden_death';
-    const targetZoom = reducedMotionRef.current ? 1 : phase === 'stand' ? 1 + Math.min(phaseTimeRef.current / STAND_SECONDS, 1) * 0.03 : fighting && firstClashRef.current ? 1.08 : 1;
+    const targetZoom = propsRef.current.cameraScale * (reducedMotionRef.current ? 1 : phase === 'stand' ? 1.01 : fighting && firstClashRef.current ? 1.03 : 1);
     const targetX = !reducedMotionRef.current && fighting && firstClashRef.current ? (width / 2 - clashPointRef.current.x) * 0.25 : 0;
     const targetY = !reducedMotionRef.current && fighting && firstClashRef.current ? (height / 2 - clashPointRef.current.y) * 0.25 : 0;
     cam.zoom += (targetZoom - cam.zoom) * 0.04;
@@ -550,7 +575,7 @@ const BattleSimulation = ({
         stick3DOpsRef.current.renderStickFigure3DLayer(
           stick3DRef.current, soaRef.current,
           { x: camX, y: camY, zoom: cam.zoom, w: width, h: height },
-          reducedMotionRef.current, performance.now() / 1000
+          reducedMotionRef.current, performance.now() / 1000, propsRef.current.teamLoadouts, meleeRageRef.current
         );
       } catch (error) {
         console.warn('[TLC Arena] 3D rendering failed; switching to safe 2D mode',error);
@@ -560,7 +585,7 @@ const BattleSimulation = ({
     }
     if (!stick3DRef.current || !stick3DOpsRef.current || gpuDisabledRef.current) {
       ctx.save(); applyCam(ctx);
-      try { renderUnits(ctx, soaRef.current, false, 0, false, phase, combatModeId, meleeRageRef.current); }
+      try { renderUnits(ctx, soaRef.current, false, 0, false, phase, combatModeId, meleeRageRef.current, propsRef.current.teamLoadouts); }
       finally { ctx.restore(); }
     }
 
@@ -603,7 +628,10 @@ const BattleSimulation = ({
       }
     }
     fx.globalAlpha = 1;
-    renderParticles(fx, poolRef.current); fx.restore();
+    renderParticles(fx, poolRef.current);
+    const hero=heroVisualRef.current;
+    if(hero.position){renderTlcCommander(fx,hero.position.x*width,hero.position.y*height,performance.now()/1000,hero.weapon,Math.min(1.4,Math.max(1.0,Math.min(width,height)/320)),reducedMotionRef.current);}
+    fx.restore();
     renderLighting(fx, width, height, phase);
   }, [ensureArenaCache, renderLighting]);
 
@@ -691,15 +719,7 @@ const BattleSimulation = ({
       stick3DRef.current = null;
       stick3DOpsRef.current = null;
     };
-  }, [menArmySize, womenArmySize]);
-
-  useEffect(() => {
-    // 100 fighters make the articulated 2D equipment/physique rendering readable in mode battles.
-    if(combatModeId!=="brawl"){
-      gpuDisabledRef.current=true;
-      if(unitCanvasRef.current) unitCanvasRef.current.style.display="none";
-    }
-  },[combatModeId]);
+  }, [menArmySize, womenArmySize, isRunning]);
   useEffect(() => { initCanvas(); }, [initCanvas]);
 
   useEffect(() => {
