@@ -313,7 +313,7 @@ function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: num
     dummy.updateMatrix();layer.footwear[j].setMatrixAt(i,dummy.matrix);
   }
   const equipped=male?teams.men.weapon:teams.women.weapon;
-  if(equipped==="fists" || furiosa && equipped==="fists"){layer.weapons.setMatrixAt(i,EMPTY);}
+  if(equipped==="fists"){layer.weapons.setMatrixAt(i,EMPTY);}
   else{
     const sword=male?(equipped==="swords"||equipped==="guns+swords"):(equipped==="lipstick+makeup"||equipped==="lipstick");
     const hand=rightHand;
