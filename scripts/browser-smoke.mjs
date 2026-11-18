@@ -50,13 +50,24 @@ for(const scenario of scenarios){
     if(canvases<2)throw new Error("Missing arena canvases");
     const initial=await page.locator(".tlc-cockpit-field").boundingBox();
     if(!initial||initial.width<100||initial.height<100)throw new Error("Field has unusable dimensions");
-    await page.locator(".tlc-cockpit-shortcuts button").first().click();
-    await page.locator(".tlc-formation-card").first().waitFor({state:"visible",timeout:5000});
-    if(await page.locator(".tlc-formation-card").count()!==8)throw new Error("Formation cards missing");
-    await page.locator(".tlc-formation-card").nth(1).click();
-    await page.locator(".tlc-arena-surface").nth(1).click();
-    await page.locator(".tlc-cockpit-panel-head button").click();
-    await page.locator(".tlc-cockpit-play").click();
+    // Every core action is directly available without opening Modes or Stats.
+    await page.locator('[aria-label="Men panel"]').waitFor({state:"visible",timeout:5000});
+    await page.locator('[aria-label="Women panel"]').waitFor({state:"visible",timeout:5000});
+    await page.locator('[aria-label="Battle controls"]').waitFor({state:"visible",timeout:5000});
+    const menWeapons=await page.locator('[aria-label="Men weapons"] button').count();
+    const womenWeapons=await page.locator('[aria-label="Women weapons"] button').count();
+    if(menWeapons<4||womenWeapons<4)throw new Error("Team weapons are hidden or missing");
+    await page.locator('[aria-label="Men formation"]').selectOption("pincer");
+    await page.locator('[aria-label="Women formation"]').selectOption("shield-wall");
+    await page.locator('[aria-label="Women weapons"] button').nth(1).click();
+    await page.locator(".tlc-premium-deploy").click();
+    await page.locator('[aria-label="TLC Commander abilities"]').waitFor({state:"attached"});
+    const [men,women]=await Promise.all([
+      page.locator('[aria-label="Men count"]').inputValue(),
+      page.locator('[aria-label="Women count"]').inputValue(),
+    ]);
+    if(Number(men)+Number(women)>100)throw new Error("The 100-person safety cap broke");
+    await page.locator(".tlc-premium-start").click();
     await page.waitForTimeout(1600);
     if(scenario.safe){const noGpu=await page.evaluate(()=>{const e=document.querySelector(".tlc-cockpit-field canvas:nth-child(2)");return !e||getComputedStyle(e).display==="none"});if(!noGpu)throw new Error("Safe mode failed to disable WebGL");}
     if(errors.length)throw new Error("Browser JS errors: "+errors.join(" | "));
