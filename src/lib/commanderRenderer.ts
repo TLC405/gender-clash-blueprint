@@ -63,7 +63,7 @@ export function renderTlcCommander(
  ctx.quadraticCurveTo(1,-54+bob,-6.5,-51+bob);ctx.fill();
  ctx.fillStyle="#15263a";curve(ctx,-2,-57+bob,4,1.2,"#243951");
  ctx.strokeStyle="#2b2321";ctx.lineWidth=1.5;
- ctx.beginPath();ctx.moveTo(-4.8,-48+bob,-2.3,-48+bob);ctx.moveTo(2.1,-48+bob);ctx.lineTo(4.5,-48+bob);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-4.8,-48+bob);ctx.lineTo(-2.3,-48+bob);ctx.moveTo(2.1,-48+bob);ctx.lineTo(4.5,-48+bob);ctx.stroke();
  curve(ctx,-2.6,-47.5+bob,.8,.8,"#eaf0f7");curve(ctx,2.8,-47.5+bob,.8,.8,"#eaf0f7");
  ctx.strokeStyle="#744c3b";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(0,-47+bob);ctx.lineTo(-.6,-44.6+bob);ctx.stroke();
  ctx.strokeStyle="#3d2a28";ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,-44+bob,2,0,Math.PI);ctx.stroke();
