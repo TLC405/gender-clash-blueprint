@@ -81,6 +81,7 @@ const rightKnee = new Vector3();
 const leftFoot = new Vector3();
 const rightFoot = new Vector3();
 const head = new Vector3();
+const weaponTip = new Vector3();
 
 function limb(mesh: InstancedMesh, index: number, from: Vector3, to: Vector3, thickness: number): void {
   delta.subVectors(to, from);
@@ -316,8 +317,8 @@ function pose(layer: StickFigure3DLayer, soa: BattleSoA, i: number, seconds: num
   else{
     const sword=male?(equipped==="swords"||equipped==="guns+swords"):(equipped==="lipstick+makeup"||equipped==="lipstick");
     const hand=rightHand;
-    point(mid,hand.x+front*(sword?5:4)*s,hand.y+(sword?7:0)*s,hand.z+1.1*s);
-    limb(layer.weapons,i,hand,mid,sword?.45*s:1.65*s);
+    point(weaponTip,hand.x+front*(sword?5:4)*s,hand.y+(sword?7:0)*s,hand.z+1.1*s);
+    limb(layer.weapons,i,hand,weaponTip,sword?.45*s:1.65*s);
   }
 
   dummy.position.set(baseX, baseY - 1 * s, z - 3.1);
