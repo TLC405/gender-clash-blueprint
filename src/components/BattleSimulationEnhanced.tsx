@@ -402,7 +402,7 @@ const BattleSimulation = ({
     const result = updatePhysics(
       soaRef.current, gridRef.current, poolRef.current,
       DEFAULT_CONFIG, phaseRef.current, dt,
-      width, height, p.battleSpeed, { men: p.menRageEnabled || meleeRageRef.current || phaseTimeRef.current<rallyUntilRef.current, women: p.womenRageEnabled || meleeRageRef.current }, p.menPower,
+      width, height, p.battleSpeed * (0.65 + p.chaosIntensity * .35), { men: p.menRageEnabled || meleeRageRef.current || phaseTimeRef.current<rallyUntilRef.current, women: p.womenRageEnabled || meleeRageRef.current }, p.menPower * (phaseTimeRef.current<rallyUntilRef.current?1.35:1),
       p.teamLoadouts.women.speed, p.teamLoadouts.women.furiosa ? 1.55 : 1
     );
 
