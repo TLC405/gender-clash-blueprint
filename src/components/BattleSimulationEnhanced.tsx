@@ -106,6 +106,7 @@ const BattleSimulation = ({
   const rallyUntilRef = useRef(0);
   const heroVisualRef = useRef<{position?:{x:number;y:number};weapon:HeroWeapon}>({weapon:'water'});
   heroVisualRef.current = {position:heroPosition,weapon:heroWeapon};
+  const projectileRef = useRef<Array<{ax:number;ay:number;bx:number;by:number;age:number;kind:string}>>([]);
   const heroHandledRef = useRef(0);
   const meteorHandledRef = useRef(0);
   const reducedMotionRef = useRef(reducedMotion);
@@ -156,6 +157,7 @@ const BattleSimulation = ({
     fallenRef.current = [];
     firstClashRef.current = false;
     meleeRageRef.current = false;
+    projectileRef.current = [];
     lastWeaponAtRef.current = [0,0];
     weaponSequenceRef.current = [0,0];
     rallyUntilRef.current = 0;
@@ -279,6 +281,11 @@ const BattleSimulation = ({
     const x=Math.max(20,Math.min(width-20,width*heroAction.x));
     const y=Math.max(20,Math.min(height-20,height*heroAction.y));
     applyArcadeBlast(soaRef.current,x,y,weapon.radius,weapon.damage,weapon.strength,TEAM_WOMEN);
+    const origin=heroVisualRef.current.position;
+    if(origin){
+      projectileRef.current.push({ax:origin.x*width,ay:origin.y*height-24,bx:x,by:y,age:0,kind:heroAction.weapon});
+      if(projectileRef.current.length>60)projectileRef.current.shift();
+    }
     if(heroAction.weapon==="nuke" || heroAction.weapon==="shockwave")spawnMeteorImpact(poolRef.current,x,y);
     else spawnClashShockwave(poolRef.current,x,y);
     playMeteor();
@@ -432,6 +439,15 @@ const BattleSimulation = ({
         for(let i=0;i<s.unitCount;i++)if(s.teamID[i]===target&&(s.stateFlags[i]&FLAG_ALIVE))slots.push(i);
         if(!slots.length)continue;
         const victim=slots[(order*7+Math.floor(phaseTimeRef.current*3))%slots.length];
+        let attacker=-1;
+        for(let i=0;i<s.unitCount;i++){if(s.teamID[i]===side&&(s.stateFlags[i]&FLAG_ALIVE)){attacker=i;break;}}
+        if(attacker>=0){
+          projectileRef.current.push({
+            ax:s.posX[attacker],ay:s.posY[attacker]-12,
+            bx:s.posX[victim],by:s.posY[victim],age:0,kind:attack.kind,
+          });
+          if(projectileRef.current.length>60)projectileRef.current.shift();
+        }
         applyArcadeBlast(s,s.posX[victim],s.posY[victim],attack.radius,attack.damage,attack.push,target);
         spawnClashShockwave(poolRef.current,s.posX[victim],s.posY[victim]);
         playImpacts(attack.kind==="makeup"?6:2);
@@ -440,6 +456,8 @@ const BattleSimulation = ({
       lastStatsRef.current={...result.stats,menAlive:s.menCount,womenAlive:s.womenCount};
     }
 
+    // Deterministic bounded trails fade independently from the battle scores.
+    projectileRef.current=projectileRef.current.filter(p=>(p.age+=dt)<.55);
     const fallen = fallenRef.current;
     let livingMarkers = 0;
     for (let j = 0; j < fallen.length; j++) {
@@ -628,6 +646,23 @@ const BattleSimulation = ({
       }
     }
     fx.globalAlpha = 1;
+    for(const shot of projectileRef.current){
+      const t=Math.min(1,shot.age/.32);
+      const endX=shot.ax+(shot.bx-shot.ax)*t;
+      const endY=shot.ay+(shot.by-shot.ay)*t;
+      const color=shot.kind==="lipstick"||shot.kind==="makeup"?"#ff85c3":
+        shot.kind==="water"?"#66e0ff":shot.kind==="nuke"?"#ffbe72":
+        shot.kind==="sword"?"#d9ecff":"#9bc5ff";
+      const fade=Math.max(0,1-shot.age/.55);
+      fx.globalAlpha=fade;
+      fx.strokeStyle=color;fx.lineWidth=shot.kind==="nuke"?5:shot.kind==="makeup"?3:2;
+      fx.lineCap="round";fx.beginPath();
+      fx.moveTo(shot.ax,shot.ay);
+      fx.quadraticCurveTo((shot.ax+shot.bx)/2,(shot.ay+shot.by)/2-(shot.kind==="makeup"?38:9),endX,endY);
+      fx.stroke();
+      fx.fillStyle="#fff7e5";fx.beginPath();fx.arc(endX,endY,shot.kind==="nuke"?5:2.8,0,Math.PI*2);fx.fill();
+    }
+    fx.globalAlpha=1;
     renderParticles(fx, poolRef.current);
     const hero=heroVisualRef.current;
     if(hero.position){renderTlcCommander(fx,hero.position.x*width,hero.position.y*height,performance.now()/1000,hero.weapon,Math.min(1.4,Math.max(1.0,Math.min(width,height)/320)),reducedMotionRef.current);}
