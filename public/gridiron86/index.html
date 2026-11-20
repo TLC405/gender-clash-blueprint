@@ -450,6 +450,43 @@ pane.classList.add('immersive');b.textContent='EXIT FULL SCREEN'
 };
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement){$('match').classList.remove('immersive');$('fullscreenBtn').textContent='⛶ FULL SCREEN'}});
 
+
+/* Playable postseason and persistent championship history */
+save.history=Array.isArray(save.history)?save.history:[];
+record=function(ours,theirs){
+const weekPlayed=save.week,isPostseason=weekPlayed>=13,won=ours>theirs;
+save.results.push({week:weekPlayed,opp:getAway().name,ours,theirs});
+if(won){save.allwins++;save.credits+=5+(ours-theirs>=21?2:0);save.fans=clamp(save.fans+5,0,100);save.morale=clamp(save.morale+3,0,100);if(!isPostseason)save.wins++}
+else{save.credits+=2;save.fans=clamp(save.fans-3,0,100);save.morale=clamp(save.morale-2,0,100);if(!isPostseason)save.losses++}
+let message='';
+const startNewSeason=(champion)=>{
+save.history.push({season:save.season,wins:save.wins,losses:save.losses,champion});
+save.season++;save.week=1;save.wins=0;save.losses=0;save.results=[];
+save.roster.forEach(p=>{p.rating=clamp(p.rating+(Math.random()<.42?1:0),60,99);p.fatigue=0})
+};
+if(isPostseason){
+if(!won){message='Your playoff run ends. A new campaign begins.';startNewSeason(false)}
+else if(weekPlayed===15){save.champs++;save.credits+=15;message='SUMMIT CUP CHAMPIONS! You won the final. +15 GM credits.';startNewSeason(true)}
+else{save.week++;message='Playoff win! The next elimination round is unlocked.'}
+}else if(weekPlayed===12){
+if(save.wins>=8){save.week=13;message='POSTSEASON CLINCHED! Win three knockout games to claim the Summit Cup.'}
+else{message='Regular season complete. A new campaign starts.';startNewSeason(false)}
+}else save.week++;
+persist();refresh();return message
+};
+renderLeague=function(){
+const parent=$('scheduleRows');parent.innerHTML='';
+for(let w=1;w<=15;w++){
+const result=save.results.find(r=>r.week===w);
+if(w>12&&w>save.week&&!result)continue;
+const tr=document.createElement('tr');
+const values=[w<=12?'W'+String(w).padStart(2,'0'):w===13?'WILDCARD':w===14?'DIVISIONAL':'SUMMIT CUP',teams[opponentFor(w)].name,result?result.ours+' - '+result.theirs:'—',result?(result.ours>result.theirs?'WIN':'LOSS'):w===save.week?'NEXT':'UPCOMING'];
+values.forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i===3)td.style.color=result?(result.ours>result.theirs?'#188861':'#d23346'):'#708191';tr.appendChild(td)});
+parent.appendChild(tr)
+}
+$('seasonLabel').textContent='YEAR '+save.season+(save.week>12?' · PLAYOFFS':'')
+};
+
 refresh();requestAnimationFrame(loop);
 })();
 </script></body></html>
