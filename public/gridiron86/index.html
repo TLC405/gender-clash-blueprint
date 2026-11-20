@@ -487,6 +487,45 @@ parent.appendChild(tr)
 $('seasonLabel').textContent='YEAR '+save.season+(save.week>12?' · PLAYOFFS':'')
 };
 
+
+/* Scouting desk and passing lead assistance */
+save.scouted=Array.isArray(save.scouted)?save.scouted:[];
+const prospects=[
+{pos:'WR',name:'K. Wilder',number:4,rating:85,salary:24},
+{pos:'RB',name:'A. Brooks',number:22,rating:84,salary:19},
+{pos:'TE',name:'J. Vega',number:87,rating:79,salary:15},
+{pos:'DB',name:'T. Steele',number:29,rating:88,salary:25},
+{pos:'OL',name:'M. Cross',number:71,rating:82,salary:18},
+{pos:'DL',name:'V. Brooks',number:95,rating:86,salary:22}
+];
+function renderScouting(){
+const host=$('scoutCards');host.innerHTML='';
+const payroll=save.roster.reduce((a,p)=>a+p.salary,0);
+$('scoutCredits').textContent=save.credits;$('scoutPayroll').textContent='$'+payroll+'M / $200M';
+prospects.filter(p=>!save.scouted.includes(p.name)).forEach(p=>{
+const row=document.createElement('div');row.className='playercard';
+const title=document.createElement('div');title.className='playerinfo';title.textContent=p.pos+' · '+p.name+' · OVR '+p.rating+' · SALARY $'+p.salary+'M';
+const buy=makeBtn('SIGN / 12 CR',()=>{
+const currentPay=save.roster.reduce((sum,x)=>sum+x.salary,0);
+if(save.credits<12||currentPay+p.salary>200){modal('SIGNING UNAVAILABLE','Check your credits and the $200M salary cap.',[{label:'OK',action:()=>{}}]);return}
+save.credits-=12;save.scouted.push(p.name);save.roster.push({...p,id:'FA'+save.scouted.length,fatigue:0});
+save.morale=clamp(save.morale+2,0,100);persist();refresh();beep(700,130);
+modal('NEW SIGNING',p.name+' joins '+showName()+'.',[{label:'VIEW ROSTER',action:()=>tab('roster')}])
+},'small');
+row.append(title,buy);host.appendChild(row)
+});
+if(!host.children.length){const msg=document.createElement('p');msg.className='lead';msg.textContent='The current free-agent class is fully signed.';host.appendChild(msg)}
+}
+const refreshBeforeScouting=refresh;
+refresh=function(){refreshBeforeScouting();if(active==='scouting')renderScouting()};
+v2AimPos=function(pointer){
+if(!play||!v2Gesture)return null;
+const diffX=v2Gesture.start.x-pointer.x,diffY=v2Gesture.start.y-pointer.y;
+const quarterback=play.qb,desiredY=clamp(quarterback.y+diffY/8,3,51);
+const nearest=play.wr.reduce((a,b)=>Math.abs(a.y-desiredY)<Math.abs(b.y-desiredY)?a:b);
+return {x:clamp(quarterback.x+Math.max(2,diffX/7),quarterback.x+2,Math.min(100,nearest.x+4.7)),y:clamp(desiredY*.55+nearest.y*.45,3,51)}
+};
+
 refresh();requestAnimationFrame(loop);
 })();
 </script></body></html>
