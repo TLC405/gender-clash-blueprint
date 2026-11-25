@@ -154,6 +154,18 @@ h1,h2,h3{color:#1a293b}.lead{color:#556675}
 @media(max-width:800px){#match:fullscreen>.grid2,#match.immersive .grid2{grid-template-columns:1fr}#match:fullscreen .stack,#match.immersive .stack{display:none}.playcard{flex-basis:118px}}
 @media(max-width:600px){.shell{padding:8px 7px 18px}.top{padding:9px 10px}.networkbar{padding:8px;font-size:9px}.gameTop{padding:7px 8px}.scoremid{display:none}.intro{min-height:0}.featuregrid{gap:5px}.playcard{flex-basis:114px;min-height:80px;padding:9px 8px}.playcard b{font-size:17px}.playcard small{font-size:8px}}
 @media(orientation:landscape) and (max-height:600px){#match:fullscreen .fieldwrap canvas,#match.immersive .fieldwrap canvas{max-height:calc(100dvh - 154px)}#match:fullscreen .underfield,#match.immersive .underfield{padding:5px 9px}#match:fullscreen .controlinfo,#match.immersive .controlinfo{display:none}#match:fullscreen .playcard,#match.immersive .playcard{min-height:37px;flex-basis:105px}#match:fullscreen .playcards,#match.immersive .playcards{padding:1px 0 4px}#match:fullscreen .playcard small,#match.immersive .playcard small{display:none}}
+</style><style id="lineup-depth-css">
+/* 11-on-11 depth chart and presnap grouping */
+.lineup-strip{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 10px}
+.lineup-strip span{display:inline-flex;align-items:center;gap:6px;white-space:normal;padding:8px 10px;border:1px solid #d8e1eb;border-left:3px solid #c12a3b;background:#f5f7fa;color:#3a4f64;border-radius:4px;font:800 10px 'DM Sans';letter-spacing:.025em}
+.lineup-strip span:nth-child(2){border-left-color:#1e5d89}
+.lineup-strip b{color:#c12a3b;font:900 11px 'DM Sans'}
+.lineup-strip span:nth-child(2) b{color:#1f5e85}
+.roster-group{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;align-items:center;padding:13px 8px 7px;border-bottom:2px solid #d6e1e9;font:900 22px 'Barlow Condensed',sans-serif;color:#193d5b;letter-spacing:.04em}
+.roster-group strong{font:800 11px 'DM Sans';color:#758596}
+.roster-position-tag{display:inline-flex;justify-content:center;align-items:center;min-width:43px;height:43px;background:#193d58;border:2px solid #678ca4;border-radius:5px;color:#fff;font:900 19px 'Barlow Condensed'}
+#field{background:#2b6049}
+@media(max-width:550px){.lineup-strip{gap:5px}.lineup-strip span{font-size:9px;padding:6px 7px}.roster-group{font-size:20px}}
 </style></head>
 <body>
 <div class="shell">
@@ -165,12 +177,12 @@ h1,h2,h3{color:#1a293b}.lead{color:#556675}
 <div class="panel"><div class="intro"><div class="kicker">Season <span id="seasonHero">1</span> / Week <span id="weekHero">1</span></div><h1>BUILD A<br><span class="gold">DYNASTY.</span></h1><p class="lead">Classic arcade football with an original broadcast look. Call your plays, make the throws, manage your roster, and chase a championship.</p><div class="btnrow"><button class="btn" id="startBtn">Play Next Game &#9654;</button><button class="btn ghost" id="simBtn">Simulate Week</button></div></div><div class="panelpad"><div class="featuregrid"><div class="feature"><strong id="winStat">0</strong><span>Wins</span></div><div class="feature"><strong id="lossStat">0</strong><span>Losses</span></div><div class="feature"><strong id="teamStat">76</strong><span>Team OVR</span></div></div></div></div>
 <div class="stack">
 <div class="panel"><div class="sectiontop"><span class="kicker">Next matchup</span><span class="badge" id="wkBadge">Week 01</span></div><div class="panelpad"><div class="matchup"><div class="teamtile"><div id="homeCrest" class="crest">OK</div><b id="homeName">Oklahoma Outlaws</b><small>YOUR CLUB</small></div><div class="versus">VS</div><div class="teamtile"><div id="awayCrest" class="crest">AU</div><b id="awayName">Austin Comets</b><small>OPPOSITION</small></div></div><p class="lead" style="margin-bottom:0">Road to the Summit Cup. Complete the 12-week campaign to unlock postseason football.</p></div></div>
-<div class="panel"><div class="sectiontop"><span class="kicker">Club status</span></div><div class="panelpad"><div class="statline"><span>Fan confidence</span><b class="statsvalue" id="fansStat">61%</b></div><div class="statline"><span>Salary cap</span><b class="statsvalue" id="capStat">$0 / $200M</b></div><div class="statline"><span>Team morale</span><b class="statsvalue" id="moraleStat">76%</b></div><div class="event">TIP: Touch or click a receiver on the field to lead a pass. You can also use the A / B / C receiver buttons.</div></div></div></div></div>
+<div class="panel"><div class="sectiontop"><span class="kicker">Club status</span></div><div class="panelpad"><div class="statline"><span>Fan confidence</span><b class="statsvalue" id="fansStat">61%</b></div><div class="statline"><span>Salary cap</span><b class="statsvalue" id="capStat">$0 / $260M</b></div><div class="statline"><span>Team morale</span><b class="statsvalue" id="moraleStat">76%</b></div><div class="event">TIP: Touch or click a receiver on the field to lead a pass. You can also use the A / B / C receiver buttons.</div></div></div></div></div>
 </section>
-<section id="match" class="screen"><div class="grid2"><div><div class="gameTop"><div class="scoreteams"><div class="scoreteam"><i id="colorHome"></i><span id="scoreHomeName">OKL</span></div><div class="scoreNum" id="scoreHome">0</div><div style="font:900 21px 'Barlow Condensed';color:#718798">–</div><div class="scoreNum" id="scoreAway">0</div><div class="scoreteam"><i id="colorAway"></i><span id="scoreAwayName">AUS</span></div></div><div class="scoremid">Q<span id="quarter">1</span><b id="clock">2:00</b></div><button class="btn ghost small" id="pauseBtn">PAUSE</button><button class="btn ghost small" id="fullscreenBtn" title="Expand game to full screen">⛶ FULL SCREEN</button></div><div class="fieldwrap"><canvas id="field" width="960" height="520" aria-label="Football field. Tap a receiver to throw."></canvas><div class="fieldoverlay" id="fieldInfo">READY FOR KICKOFF</div></div><div class="underfield"><div class="control-prompt"><span>Tap RB = Run</span><span>Hold & pull QB = Pass</span><span>Swipe runner = Cut</span></div><div class="playcards" id="playCards" aria-label="Select a play"></div><div class="pwrrow"><span id="downText">1ST & 10</span><span id="ballText">BALL ON 25</span><strong id="playState">CHOOSE A PLAY</strong></div><p class="controlinfo" id="hint">Tap the RB to run. Hold the QB and pull backward to aim a pass.</p><div class="playcontrols" id="controls"></div><div class="pacebar"><label for="paceQuick">GAME SPEED</label><select id="paceQuick"><option value="practice">Practice · 0.45×</option><option value="slow">Slow · 0.60×</option><option value="classic">Classic · 0.78×</option><option value="fast">Fast · 0.95×</option></select><span class="credits-note">Tune the game feel while you play</span></div></div></div>
+<section id="match" class="screen"><div class="grid2"><div><div class="gameTop"><div class="scoreteams"><div class="scoreteam"><i id="colorHome"></i><span id="scoreHomeName">OKL</span></div><div class="scoreNum" id="scoreHome">0</div><div style="font:900 21px 'Barlow Condensed';color:#718798">–</div><div class="scoreNum" id="scoreAway">0</div><div class="scoreteam"><i id="colorAway"></i><span id="scoreAwayName">AUS</span></div></div><div class="scoremid">Q<span id="quarter">1</span><b id="clock">2:00</b></div><button class="btn ghost small" id="pauseBtn">PAUSE</button><button class="btn ghost small" id="fullscreenBtn" title="Expand game to full screen">⛶ FULL SCREEN</button></div><div class="fieldwrap"><canvas id="field" width="960" height="520" aria-label="Football field. Tap a receiver to throw."></canvas><div class="fieldoverlay" id="fieldInfo">READY FOR KICKOFF</div></div><div class="underfield"><div class="control-prompt"><span>Tap RB = Run</span><span>Hold & pull QB = Pass</span><span>Swipe runner = Cut</span></div><div class="lineup-strip" id="lineupStrip"><span><b>OFFENSE</b> QB · RB · 3 WR · TE · 5 OL</span><span><b>DEFENSE</b> 4 DL · 3 LB · 4 DB</span></div><div class="playcards" id="playCards" aria-label="Select a play"></div><div class="pwrrow"><span id="downText">1ST & 10</span><span id="ballText">BALL ON 25</span><strong id="playState">CHOOSE A PLAY</strong></div><p class="controlinfo" id="hint">Tap the RB to run. Hold the QB and pull backward to aim a pass.</p><div class="playcontrols" id="controls"></div><div class="pacebar"><label for="paceQuick">GAME SPEED</label><select id="paceQuick"><option value="practice">Practice · 0.45×</option><option value="slow">Slow · 0.60×</option><option value="classic">Classic · 0.78×</option><option value="fast">Fast · 0.95×</option></select><span class="credits-note">Tune the game feel while you play</span></div></div></div>
 <div class="stack"><div class="panel"><div class="sectiontop"><span class="kicker">Playbook / controls</span></div><div class="panelpad"><div class="statline"><span>Offensive package</span><b id="packageText">WEST COAST</b></div><div class="statline"><span>Quarterback</span><b id="qbText">#12</b></div><div class="statline"><span>Drive progress</span><b id="driveText">25 YDS</b></div><div class="event" id="coachText">No snap button: tap RB for a handoff; hold and pull QB backward to throw. Swipe the ball carrier to cut.</div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Scoring notes</span></div><div class="panelpad"><div class="statline"><span>Touchdown</span><b>6 + PAT = 7</b></div><div class="statline"><span>Field goal</span><b>3 PTS</b></div><div class="statline"><span>Four downs</span><b>GAIN 10 YDS</b></div><button class="btn ghost block" id="forfeitBtn" style="margin-top:17px">Leave Match</button></div></div></div></div></section>
-<section id="roster" class="screen"><div class="panel"><div class="sectiontop"><h2>THE LOCKER ROOM</h2><span class="badge" id="rosterCount">8 athletes</span></div><div class="panelpad"><p class="lead">Every athlete has a unique rating, salary and role. Upgrades and roster decisions shape your franchise.</p><div class="rostergrid" id="rosterCards"></div></div></div></section>
-<section id="office" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>FRONT OFFICE</h2><span class="badge">build the program</span></div><div class="panelpad"><p class="lead">Spend earned GM credits on facilities, morale or talent. All progress saves automatically on this device.</p><div id="upgradeCards"></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Financial report</span></div><div class="panelpad"><div class="statline"><span>GM credits</span><b class="statsvalue" id="officeCredits">25</b></div><div class="statline"><span>Current payroll</span><b class="statsvalue" id="officePayroll">0M</b></div><div class="statline"><span>Salary ceiling</span><b class="statsvalue">$200M</b></div><div class="event">Earn 5 credits for a win, 2 for a loss, and occasional bonus credits for decisive victories. Upgrades carry between seasons.</div></div></div></div></section>
+<section id="roster" class="screen"><div class="panel"><div class="sectiontop"><h2>THE LOCKER ROOM</h2><span class="badge" id="rosterCount">22 athletes</span></div><div class="panelpad"><p class="lead">Every athlete has a unique rating, salary and role. Upgrades and roster decisions shape your franchise.</p><div class="rostergrid" id="rosterCards"></div></div></div></section>
+<section id="office" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>FRONT OFFICE</h2><span class="badge">build the program</span></div><div class="panelpad"><p class="lead">Spend earned GM credits on facilities, morale or talent. All progress saves automatically on this device.</p><div id="upgradeCards"></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Financial report</span></div><div class="panelpad"><div class="statline"><span>GM credits</span><b class="statsvalue" id="officeCredits">25</b></div><div class="statline"><span>Current payroll</span><b class="statsvalue" id="officePayroll">0M</b></div><div class="statline"><span>Salary ceiling</span><b class="statsvalue">$260M</b></div><div class="event">Earn 5 credits for a win, 2 for a loss, and occasional bonus credits for decisive victories. Upgrades carry between seasons.</div></div></div></div></section>
 <section id="league" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>THE SEASON</h2><span class="badge" id="seasonLabel">Year 1</span></div><div class="panelpad"><div class="tablewrap"><table><thead><tr><th>Week</th><th>Opponent</th><th>Result</th><th>Status</th></tr></thead><tbody id="scheduleRows"></tbody></table></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Franchise history</span></div><div class="panelpad"><div class="featuregrid"><div class="feature"><strong id="champs">0</strong><span>Titles</span></div><div class="feature"><strong id="allwins">0</strong><span>Career W</span></div><div class="feature"><strong id="seasons">1</strong><span>Season</span></div></div><div class="event">Eight regular-season wins qualify your team for three playoff rounds. Win the Summit Cup final to claim the title.</div><div class="event" id="careerStats">Career on-field statistics will appear here.</div><div class="credits-note" id="seasonHistory">Franchise history appears after your first season.</div></div></div></div></section>
 <section id="scouting" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>SCOUTING DEPARTMENT</h2><span class="badge">FREE AGENTS</span></div><div class="panelpad"><p class="lead">Add talent without replacing your established starters. Every signing counts against the team salary ceiling.</p><div class="rostergrid" id="scoutCards"></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Recruitment desk</span></div><div class="panelpad"><div class="statline"><span>Available credits</span><b class="statsvalue" id="scoutCredits">25</b></div><div class="statline"><span>Current payroll</span><b class="statsvalue" id="scoutPayroll">$138M</b></div><div class="event">Scout signings cost GM credits and salary cap room. Roster growth carries between seasons on this device.</div></div></div></div></section><section id="settings" class="screen"><div class="grid2"><div class="panel"><div class="sectiontop"><h2>FRANCHISE SETTINGS</h2></div><div class="panelpad"><label class="label" for="customName">Your team name</label><input class="input" id="customName" maxlength="28" placeholder="Oklahoma Outlaws"><label class="label" for="difficulty">Opponent difficulty</label><select class="input" id="difficulty"><option value="rookie">Rookie</option><option value="pro">Pro</option><option value="legend">Legend</option></select><label class="label" for="paceSetting">Game speed preset</label><select class="input" id="paceSetting"><option value="practice">Practice · 0.45×</option><option value="slow">Slow · 0.60×</option><option value="classic">Classic · 0.78×</option><option value="fast">Fast · 0.95×</option></select><label class="label" for="soundChoice">Audio</label><select class="input" id="soundChoice"><option value="yes">On</option><option value="no">Muted</option></select><div class="btnrow"><button class="btn" id="saveSettings">Save changes</button><button class="btn danger" id="resetCareer">Reset career</button></div></div></div><div class="panel"><div class="sectiontop"><span class="kicker">Release notes</span></div><div class="panelpad"><p class="lead">TLC Gridiron '86 browser-playtest v0.2. An original arcade football prototype inspired by classic pixel-era sports games. This is not Retro Bowl or affiliated with New Star Games.</p><div class="event">Current playtest: live passing and running, defender pursuit, downs, touchdowns, field goals, opponent simulation, roster, office upgrades, season progression and local saves. More advanced franchise logic, blocking, animations and special teams remain in development.</div></div></div></div></section>
 </main><div class="footer">TLC SPORTS LABS · ORIGINAL PLAYTEST BUILD 0.1 · SAVES LOCALLY IN THIS BROWSER</div></div>
@@ -193,8 +205,13 @@ const teams=[
 {name:'Chicago Night',abbr:'CHI',color:'#323f63',accent:'#e8b657',ovr:83}
 ];
 const starters=[
-['QB','J. Mercer',12,81,23],['RB','D. Knox',28,78,16],['WR','M. Reed',11,87,21],['WR','T. Vale',18,79,15],
-['TE','S. Cole',85,76,14],['OL','B. Stone',62,82,16],['DL','R. Hayes',94,81,18],['DB','C. Frost',21,77,15]
+['QB','J. Mercer',12,81,23],['RB','D. Knox',28,78,16],
+['WR','M. Reed',11,87,21],['WR','T. Vale',18,79,15],['WR','A. Shaw',3,75,4],
+['TE','S. Cole',85,76,14],
+['OL','B. Stone',62,82,16],['OL','F. Baker',74,73,3],['OL','D. Irons',68,75,4],['OL','C. Finch',61,72,3],['OL','L. Ward',79,74,3],
+['DL','R. Hayes',94,81,18],['DL','J. Boone',90,74,4],['DL','E. Carter',92,72,4],['DL','C. Barnes',96,71,3],
+['LB','M. Cole',55,78,4],['LB','T. Miles',44,76,4],['LB','P. Grant',58,72,3],
+['DB','C. Frost',21,77,15],['DB','N. King',24,74,4],['DB','V. Lane',32,73,3],['DB','J. Pike',27,71,3]
 ];
 const $=id=>document.getElementById(id);
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -312,7 +329,7 @@ updateHud()}
 function loop(now){const dt=Math.min((now-lastTime)/1000,.047);lastTime=now;update(dt);if(active==='match')field();requestAnimationFrame(loop)}
 function refresh(){
 $('creditsTop').textContent=save.credits;$('seasonHero').textContent=save.season;$('weekHero').textContent=save.week;$('winStat').textContent=save.wins;$('lossStat').textContent=save.losses;
-$('teamStat').textContent=Math.round(save.roster.reduce((s,p)=>s+p.rating,0)/save.roster.length);$('fansStat').textContent=save.fans+'%';$('moraleStat').textContent=save.morale+'%';$('capStat').textContent='$'+save.roster.reduce((s,p)=>s+p.salary,0)+'M / $200M';
+$('teamStat').textContent=Math.round(save.roster.reduce((s,p)=>s+p.rating,0)/save.roster.length);$('fansStat').textContent=save.fans+'%';$('moraleStat').textContent=save.morale+'%';$('capStat').textContent='$'+save.roster.reduce((s,p)=>s+p.salary,0)+'M / $260M';
 let ht=getTeam(),aw=getAway();$('homeCrest').textContent='OK';$('homeCrest').style.background=ht.color;$('awayCrest').textContent=aw.abbr.slice(0,2);$('awayCrest').style.background=aw.color;$('homeName').textContent=ht.name;$('awayName').textContent=aw.name;$('wkBadge').textContent='WEEK '+String(save.week).padStart(2,'0');
 $('officeCredits').textContent=save.credits;$('officePayroll').textContent='$'+save.roster.reduce((s,p)=>s+p.salary,0)+'M';
 $('rosterCount').textContent=save.roster.length+' ATHLETES';$('seasonLabel').textContent='YEAR '+save.season;$('champs').textContent=save.champs;$('allwins').textContent=save.allwins;$('seasons').textContent=save.season;
@@ -501,13 +518,13 @@ const prospects=[
 function renderScouting(){
 const host=$('scoutCards');host.innerHTML='';
 const payroll=save.roster.reduce((a,p)=>a+p.salary,0);
-$('scoutCredits').textContent=save.credits;$('scoutPayroll').textContent='$'+payroll+'M / $200M';
+$('scoutCredits').textContent=save.credits;$('scoutPayroll').textContent='$'+payroll+'M / $260M';
 prospects.filter(p=>!save.scouted.includes(p.name)).forEach(p=>{
 const row=document.createElement('div');row.className='playercard';
 const title=document.createElement('div');title.className='playerinfo';title.textContent=p.pos+' · '+p.name+' · OVR '+p.rating+' · SALARY $'+p.salary+'M';
 const buy=makeBtn('SIGN / 12 CR',()=>{
 const currentPay=save.roster.reduce((sum,x)=>sum+x.salary,0);
-if(save.credits<12||currentPay+p.salary>200){modal('SIGNING UNAVAILABLE','Check your credits and the $200M salary cap.',[{label:'OK',action:()=>{}}]);return}
+if(save.credits<12||currentPay+p.salary>260){modal('SIGNING UNAVAILABLE','Check your credits and the $260M salary cap.',[{label:'OK',action:()=>{}}]);return}
 save.credits-=12;save.scouted.push(p.name);save.roster.push({...p,id:'FA'+save.scouted.length,fatigue:0});
 save.morale=clamp(save.morale+2,0,100);persist();refresh();beep(700,130);
 modal('NEW SIGNING',p.name+' joins '+showName()+'.',[{label:'VIEW ROSTER',action:()=>tab('roster')}])
@@ -547,6 +564,46 @@ refreshBeforeStats();
 const s=save.fieldStats;
 if($('careerStats'))$('careerStats').textContent='FIELD STATS · '+s.completions+'/'+s.passAttempts+' COMPLETIONS · '+s.passingYards+' PASS YDS · '+s.rushingYards+' RUSH YDS · '+(s.passingTD+s.rushingTD)+' TOTAL TDS · '+s.interceptions+' INT';
 if($('seasonHistory'))$('seasonHistory').textContent=save.history.length?save.history.slice(-4).reverse().map(h=>'SEASON '+h.season+': '+h.wins+'–'+h.losses+(h.champion?' · CHAMPIONS':'')).join('  |  '):'Franchise history begins after your first season.'
+};
+
+
+/* v0.4 roster migration: preserve old squad and add missing role depth */
+if(!Array.isArray(save.roster))save.roster=[];
+const existingNames=new Set(save.roster.map(p=>p.name));
+for(const p of starters){
+if(!existingNames.has(p[1])){
+save.roster.push({pos:p[0],name:p[1],number:p[2],rating:p[3],salary:p[4],fatigue:0,id:'depth-'+p[2]})
+}
+}
+save.version=Math.max(save.version||1,4);
+save.roster.sort((a,b)=>['QB','RB','WR','TE','OL','DL','LB','DB'].indexOf(a.pos)-['QB','RB','WR','TE','OL','DL','LB','DB'].indexOf(b.pos));
+persist();
+const oldDepthRoster=renderRoster;
+renderRoster=function(){
+const box=$('rosterCards');box.innerHTML='';
+const defs=[{name:'OFFENSE',roles:['QB','RB','WR','TE','OL']},{name:'DEFENSE',roles:['DL','LB','DB']}];
+defs.forEach(group=>{
+const heading=document.createElement('div');heading.className='roster-group';
+const left=document.createElement('span');left.textContent=group.name;
+const right=document.createElement('strong');right.textContent=save.roster.filter(p=>group.roles.includes(p.pos)).length+' PLAYERS';
+heading.append(left,right);box.appendChild(heading);
+group.roles.forEach(role=>{
+save.roster.filter(p=>p.pos===role).forEach(p=>{
+const card=document.createElement('div');card.className='playercard';
+const tag=document.createElement('div');tag.className='roster-position-tag';tag.textContent=role;
+const info=document.createElement('div');info.className='playerinfo';
+const title=document.createElement('b');title.textContent=p.name+'  #'+p.number;
+const meta=document.createElement('small');meta.textContent='OVR '+p.rating+' · SALARY $'+p.salary+'M';
+const stat=document.createElement('div');stat.className='bars';
+const fill=document.createElement('i');fill.style.width=clamp(p.rating,0,100)+'%';stat.appendChild(fill);
+const grow=makeBtn('TRAIN +1 / 8',()=>{
+if(save.credits<8){modal('NOT ENOUGH CREDITS','Earn more GM credits before training this player.',[{label:'OK',action:()=>{}}]);return}
+save.credits-=8;p.rating=clamp(p.rating+1,60,99);persist();refresh();beep(650,60)
+},'small');
+grow.disabled=p.rating>=99;info.append(title,meta,stat,grow);card.append(tag,info);box.appendChild(card)
+})
+})
+})
 };
 
 refresh();requestAnimationFrame(loop);
