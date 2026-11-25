@@ -606,6 +606,253 @@ grow.disabled=p.rating>=99;info.append(title,meta,stat,grow);card.append(tag,inf
 })
 };
 
+
+/* ENGINE v0.4 — 22 live football positions and fixed-step pursuit.
+   Gameplay simulation coordinates are yards, measured forward from own goal.
+   All physics are original and parameterized for mobile/browser experimentation. */
+const p4Tick=1/60,p4Pace={practice:.45,slow:.60,classic:.78,fast:.95};
+let p4Accumulator=0,p4Preview=null,p4SnapTotal=0,p4LastDebug=null;
+const p4OffColor='#2465a1',p4DefColor='#be3345';
+function p4Entity(role,label,x,y,number,speed,accel){
+return {role,label,id:label,number,x,y,vx:0,vy:0,startX:x,startY:y,targetY:y,speed,accel,r:.74,contact:0,cooldown:0}
+}
+function p4Numbers(role){return save.roster.filter(p=>p.pos===role).map(p=>p.number)}
+function p4BuildFormation(spot){
+const b=spot;
+const nums={QB:p4Numbers('QB'),RB:p4Numbers('RB'),WR:p4Numbers('WR'),TE:p4Numbers('TE'),OL:p4Numbers('OL'),DL:p4Numbers('DL'),LB:p4Numbers('LB'),DB:p4Numbers('DB')};
+const ol=['LT','LG','C','RG','RT'].map((name,i)=>p4Entity('OL',name,b-.8,[18.3,22.4,26.5,30.6,34.7][i],nums.OL[i]||60+i,2.4,15));
+const qb=p4Entity('QB','QB',b-3.2,26.5,nums.QB[0]||12,5.5,17);
+const rb=p4Entity('RB','RB',b-6.6,34,nums.RB[0]||28,6.1,15.5);
+const wr=[p4Entity('WR','A',b-1.2,7.4,nums.WR[0]||11,7.4,17),
+p4Entity('WR','B',b-1.4,13.9,nums.WR[1]||18,7.5,17),
+p4Entity('WR','C',b-1.2,48,nums.WR[2]||3,7.3,16)];
+const te=p4Entity('TE','D',b-1.1,40.8,nums.TE[0]||85,6.5,14);
+const dl=['DE','DT','DT','DE'].map((name,i)=>p4Entity('DL',name,b+2.5,[18.4,23.4,29.6,34.7][i],nums.DL[i]||90+i,5.0,15));
+const lb=['OLB','MLB','OLB'].map((name,i)=>p4Entity('LB',name,b+6,[14.8,27.0,39.3][i],nums.LB[i]||50+i,6.0,16));
+const db=['CB','FS','SS','CB'].map((name,i)=>p4Entity('DB',name,b+[8.8,12.2,12.2,8.8][i],[7.5,21,34.8,47.5][i],nums.DB[i]||20+i,6.6,17));
+const blockers=ol, receivers=[...wr,te], defenders=[...dl,...lb,...db];
+dl.forEach((d,i)=>{d.job='rush';d.assignment=i});
+lb.forEach((d,i)=>{d.job='zone';d.assignment=i});
+db.forEach((d,i)=>{d.job='cover';d.assignment=[0,1,3,2][i]});
+return {spot:b,off:{ol,qb,rb,wr,te,all:[...ol,qb,rb,...wr,te]},def:{dl,lb,db,all:defenders},blockers,receivers}
+}
+function p4Setup(){
+if(!g)return null;
+if(!p4Preview||p4Preview.spot!==g.ball||p4Preview.down!==g.down){
+p4Preview=p4BuildFormation(g.ball);p4Preview.down=g.down
+}
+return p4Preview
+}
+const p4PreviousGame=startGame;
+startGame=function(){
+p4PreviousGame();p4Preview=null;p4Accumulator=0;p4SnapTotal=0;p4Setup();updateHud()
+};
+const p4PreviousBegin=beginPlay;
+beginPlay=function(kind){
+if(!g||g.done||paused||play)return;
+p4PreviousBegin(kind);
+if(!play)return;
+const formation=p4BuildFormation(g.ball),p=play;
+p.formation=formation;p.blockers=formation.off.ol;p.qb=formation.off.qb;p.rb=formation.off.rb;
+p.wr=formation.receivers;p.defs=formation.def.all;
+p.carrier=p.mode==='RUN'?(p.scheme==='keeper'?p.qb:p.rb):null;
+p.phase=p.mode==='RUN'?'live':'route';p.elapsed=0;p.sackClock=0;p.hurdleCooldown=0;p.jukeCooldown=0;p.ball=null;p.catchBy=null;
+p.targetNote=p.mode==='RUN'?'FIND A RUNNING LANE BEHIND YOUR FIVE LINEMEN.':'READ THE SECONDARY. PRESSURE BUILDS IN THE POCKET.';
+p4Accumulator=0;p4SnapTotal++;p4Preview=null;
+setNote(p.targetNote);updateHud();updateControls()
+};
+function p4Move(obj,tx,ty,dt,maxSpeed=obj.speed){
+const dx=tx-obj.x,dy=ty-obj.y,dist=Math.hypot(dx,dy);
+const desiredX=dist>.035?dx/dist*maxSpeed:0,desiredY=dist>.035?dy/dist*maxSpeed:0;
+const maxDelta=(obj.accel||13)*dt;
+obj.vx+=clamp(desiredX-obj.vx,-maxDelta,maxDelta);
+obj.vy+=clamp(desiredY-obj.vy,-maxDelta,maxDelta);
+obj.x=clamp(obj.x+obj.vx*dt,.8,101.2);obj.y=clamp(obj.y+obj.vy*dt,2.8,50.7)
+}
+function p4Distance(a,b){return Math.hypot(a.x-b.x,(a.y-b.y)*.82)}
+function p4RouteTarget(r,elapsed,call){
+const first=r.startX,side=r.label==='A'?1:r.label==='B'?-1:r.label==='C'?-1:1;
+let reach=first+Math.min(35,elapsed*(r.speed+.8)+5.5),y=r.startY;
+if(call==='slants')y=clamp(r.startY+side*Math.min(11,Math.max(0,elapsed-0.25)*4.2),3,50);
+else if(call==='cross')y=clamp(r.startY+side*Math.min(25,Math.max(0,elapsed-.65)*6),3,50);
+else if(call==='vertical')y=r.startY;
+else if(r.role==='TE')y=clamp(r.startY-6,3,50);
+else y=r.startY+(r.label==='C'?-6:r.label==='A'?4:0);
+if(r.role==='TE'&&call==='slants')y=clamp(r.startY-7,3,50);
+return {x:reach,y}
+}
+function p4BlockStep(p,dt){
+const blockers=p.blockers,dl=p.formation.def.dl;
+blockers.forEach((o,i)=>{
+let d=dl[Math.min(3,Math.round(i*3/4))];
+for(const candidate of dl){if(Math.abs(candidate.y-o.y)<Math.abs(d.y-o.y))d=candidate}
+const targetX=clamp(d.x-.9,p.formation.spot-1.3,p.formation.spot+2.2);
+p4Move(o,targetX,clamp(d.y,o.startY-2.0,o.startY+2.0),dt,2.2);
+const dist=p4Distance(o,d);
+if(dist<2.5){
+const push=clamp((2.5-dist)*dt*4,0,.16);
+const dx=d.x-o.x,dy=d.y-o.y,mag=Math.max(.01,Math.hypot(dx,dy));
+d.x=clamp(d.x+dx/mag*push,.8,101);
+d.y=clamp(d.y+dy/mag*push,3,50);
+d.vx*=.79;d.vy*=.84;d.contact=(d.contact||0)+dt;
+d.blocked=true;
+}
+});
+}
+function p4DefenderStep(p,dt){
+const isRun=p.phase==='live'&&!!p.carrier,ball=p.ball,ftime=p.elapsed;
+const anchor=p.carrier||p.qb;
+p.defs.forEach((d,index)=>{
+d.blocked=false;d.cooldown=Math.max(0,(d.cooldown||0)-dt);
+let tx=d.startX,ty=d.startY,spd=d.speed;
+if(d.role==='DL'){
+tx=anchor.x-.3;ty=anchor.y;
+if(p.phase==='route')tx=p.qb.x;spd*=p.phase==='live'?1.06:.88
+}else if(d.role==='LB'){
+if(isRun&&ftime>.28){tx=anchor.x+1.0;ty=anchor.y}
+else if(ball){tx=ball.x+1.5;ty=ball.y}
+else{const near=p.wr.reduce((a,w)=>p4Distance(a,d)<p4Distance(w,d)?a:w,p.wr[0]);tx=clamp(near.x+1, d.startX-2,d.startX+12);ty=near.y}
+}else if(d.role==='DB'){
+const marked=p.wr[d.assignment]||p.wr[0];
+if(isRun&&ftime>.65){tx=anchor.x+1.0;ty=anchor.y}
+else if(ball&&p4Distance(d,ball)<11){tx=ball.x+.5;ty=ball.y}
+else{tx=marked.x+1.7;ty=marked.y;spd*=.98}
+}
+const difficulty=save.difficulty==='legend'?1.11:save.difficulty==='rookie'?.84:1;
+p4Move(d,tx,ty,dt,spd*difficulty);
+});
+p4BlockStep(p,dt)
+}
+function p4CarrierStep(p,dt){
+const r=p.carrier;if(!r)return;
+let targetY=typeof r.targetY==='number'?r.targetY:r.y;
+targetY=clamp(targetY,3,50.1);
+const speed=r.speed*(p.dodgeT>0?1.11:1);
+p4Move(r,r.x+18,targetY,dt,speed);
+if(r.x>=100){finishPlay(100-g.ball,'TOUCHDOWN! OFFENSE REACHES THE END ZONE.');return}
+for(const d of p.defs){
+if(d.cooldown>0)continue;
+const dist=p4Distance(d,r);
+if(dist<1.68){
+d.touch=(d.touch||0)+dt;
+if(d.touch>=.12){
+const attempt=clamp(.7+(d.role==='DL'?.08:0)-(p.dodgeT>0?.42:0)-(p.dodge>0?.18:0)-(save.roster.find(x=>x.pos===r.role)?.rating||76)/700,.13,.84);
+d.touch=0;d.cooldown=.8;
+if(Math.random()<attempt){
+let gain=Math.round(r.x-g.ball);
+finishPlay(gain,gain>=0?'TACKLED AFTER '+gain+' YARDS.':'TACKLED FOR A LOSS OF '+Math.abs(gain)+' YARDS.');return
+}
+r.vx*=.43;r.vy+=r.y<d.y?-1.9:1.9;
+setNote('BROKEN TACKLE! KEEP RUNNING.')
+}
+}else d.touch=0;
+}
+}
+function p4PassStep(p,dt){
+const ball=p.ball;
+if(!ball)return;
+ball.t+=dt;
+const t=clamp(ball.t/ball.dur,0,1);
+ball.x=ball.fromX+(ball.toX-ball.fromX)*t;ball.y=ball.fromY+(ball.toY-ball.fromY)*t;
+ball.height=Math.sin(Math.PI*t)*clamp(ball.dur*6,3,9);
+if(t<1)return;
+const nearest=p.wr.slice().sort((a,b)=>p4Distance(a,ball)-p4Distance(b,ball))[0];
+const distance=p4Distance(nearest,ball),close=p.defs.filter(d=>d.role!=='DL').sort((a,b)=>p4Distance(a,ball)-p4Distance(b,ball))[0];
+const covered=close&&p4Distance(close,ball)<2.2;
+const pressure=p.defs.some(d=>d.role==='DL'&&p4Distance(d,p.qb)<3.1);
+const chance=clamp(.96-distance*.095-(covered?.17:0)-(pressure?.08:0),.16,.97);
+if(distance<=4.7&&Math.random()<chance){
+p.carrier=nearest;p.phase='live';p.ball=null;nearest.vx=Math.max(1.8,nearest.vx);
+setNote('COMPLETE TO '+(nearest.role==='TE'?'TIGHT END':'RECEIVER')+' '+nearest.label+'! FOLLOW YOUR BLOCKERS.');beep(660,70);
+updateControls();return
+}
+if(covered&&Math.random()<.23){finishPlay(0,'PASS INTERCEPTED BY THE SECONDARY.',true);return}
+finishPlay(0,'INCOMPLETE PASS. DEFENSIVE COVERAGE HOLDS.')
+}
+function p4Step(dt){
+if(!g||g.done||paused||!play||$('modal').classList.contains('show'))return;
+const p=play;p.elapsed+=dt;
+g.time=Math.max(0,g.time-dt*1.4);
+p.dodge=Math.max(0,(p.dodge||0)-dt);p.dodgeT=Math.max(0,(p.dodgeT||0)-dt);
+p.hurdleCooldown=Math.max(0,(p.hurdleCooldown||0)-dt);
+p.jukeCooldown=Math.max(0,(p.jukeCooldown||0)-dt);
+for(const r of p.wr){
+const target=p4RouteTarget(r,p.elapsed,p.scheme);
+p4Move(r,target.x,target.y,dt)
+}
+if(p.phase==='route'||p.phase==='pass'||p.phase==='live')p4DefenderStep(p,dt);
+if(p.phase==='route'){
+if(p.formation.def.dl.some(d=>p4Distance(d,p.qb)<1.6)){
+finishPlay(Math.round(p.qb.x-g.ball),'SACK! DEFENSIVE LINE BREAKS THE POCKET.');return
+}
+if(p.elapsed>7.5){
+p.phase='live';p.carrier=p.qb;p.mode='RUN';p.qb.targetY=p.qb.y;setNote('PASS WINDOW CLOSED. QB SCRAMBLE!');updateControls()
+}
+}else if(p.phase==='pass'){
+p4PassStep(p,dt)
+}else if(p.phase==='live'){
+p4CarrierStep(p,dt)
+}
+if(g&&!g.done&&g.time<=0&&!play)nextQuarter();
+}
+update=function(frameDt){
+if(!g||g.done||paused||!play||$('modal').classList.contains('show'))return;
+const speed=p4Pace[save.pace]||.60;
+p4Accumulator=Math.min(.16,p4Accumulator+Math.min(.06,Math.max(0,frameDt))*speed);
+let cycles=0;
+while(p4Accumulator>=p4Tick&&cycles<9){
+p4Step(p4Tick);p4Accumulator-=p4Tick;cycles++;
+if(!play)break
+}
+if(g&&play&&!g.done)updateHud()
+};
+const p4PreviousStartPass=startPass;
+startPass=function(x,y){
+if(!play||play.phase!=='route'||paused)return;
+p4PreviousStartPass(x,y);
+if(!play||!play.ball)return;
+const b=play.ball,dist=Math.hypot(b.toX-b.fromX,(b.toY-b.fromY)*.8);
+b.dur=clamp(dist/19,.35,1.65);
+b.x=b.fromX;b.y=b.fromY;b.height=0;
+};
+const p4PreviousThrowAt=throwAt;
+throwAt=function(i){
+if(!play||play.phase!=='route')return;
+const r=play.wr[i];if(!r)return;
+const aimX=clamp(r.x+r.speed*.6,play.qb.x+1,100);
+startPass(aimX,r.y)
+};
+const p4PreviousShift=shiftCarrier;
+shiftCarrier=function(delta){
+if(!play||play.phase!=='live'||!play.carrier)return;
+if(play.jukeCooldown>0)return;
+const r=play.carrier;r.targetY=clamp((r.targetY??r.y)+delta,3,50);
+play.dodge=.36;play.jukeCooldown=.32;beep(360,45)
+};
+const p4PreviousHurdle=hurdle;
+hurdle=function(){
+if(!play||play.phase!=='live'||play.hurdleCooldown>0)return;
+play.dodgeT=.42;play.hurdleCooldown=2.3;beep(680,90);setNote('HURDLE! TIME THE MOVE TO AVOID CONTACT.')
+};
+const p4PreviousFinish=finishPlay;
+finishPlay=function(yards,message,turnover=false){
+if(!g||g.done)return;
+const down=g.down,toGo=g.toGo,spot=g.ball;
+p4PreviousFinish(yards,message,turnover);
+if(yards<0&&g&&!g.done&&g.down===down+1&&Math.abs(g.ball-spot)>0){
+g.toGo=Math.ceil(toGo-yards);updateHud()
+}
+p4Accumulator=0;p4Preview=null
+};
+const p4OldControls=updateControls;
+updateControls=function(){
+p4OldControls();
+if(!g||g.done||!play||play.phase!=='route')return;
+const container=$('controls');
+const button=makeBtn('PASS D · TE',()=>throwAt(3),'passbtn slim');
+container.appendChild(button)
+};
+
 refresh();requestAnimationFrame(loop);
 })();
 </script></body></html>
