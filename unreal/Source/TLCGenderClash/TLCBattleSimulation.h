@@ -29,7 +29,7 @@ public:
   UFUNCTION(BlueprintCallable) bool BuildBattle(int32 MenCount=50,int32 WomenCount=50);
   UFUNCTION(BlueprintCallable) void StartSimulation();
   UFUNCTION(BlueprintCallable) void ResetSimulation();
-  UFUNCTION(BlueprintCallable) void SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon);
+  UFUNCTION(BlueprintCallable) bool SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon);
   UFUNCTION(BlueprintCallable) void SetTeamFormation(ETLCTeam Team,ETLCFormation Formation);
   UFUNCTION(BlueprintCallable) void SetTeamRage(ETLCTeam Team,bool bEnabled);
   UFUNCTION(BlueprintCallable) void SetFuriosaMode(bool bEnabled);
@@ -87,6 +87,7 @@ private:
   void ClearEventTimers();
   void ApplyPresetPalette(ATLCFighterCharacter* Fighter)const;
   int32 SpawnReinforcements(ETLCTeam Team,int32 RequestedCount);
+  bool IsWeaponAllowedByPreset(ETLCWeaponType Weapon)const;
   void ApplyRadialHit(const FVector& Origin,float Radius,ETLCTeam SourceTeam,float Damage,float Knockback);
   void ApplyConeHit(const FVector& Origin,const FVector& Forward,float Range,float HalfAngleDegrees,ETLCTeam SourceTeam,float Damage,float Knockback);
   void FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime);
