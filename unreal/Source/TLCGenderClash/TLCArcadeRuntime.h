@@ -37,6 +37,9 @@ struct FTLCAnnouncerEvent {
   UPROPERTY(EditAnywhere,BlueprintReadWrite) int32 Priority=0;
   UPROPERTY(EditAnywhere,BlueprintReadWrite) FString CachedLine;
   UPROPERTY(EditAnywhere,BlueprintReadWrite) float MinimumCooldown=4.f;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) FName LocalizationKey;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) FName GenerationId;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) bool bCanInterrupt=false;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTLCWeaponFired,ETLCTeam,Team,ETLCWeaponType,Weapon);
@@ -65,8 +68,12 @@ public:
   UFUNCTION(BlueprintCallable) void ClearInterests();
   UFUNCTION(BlueprintPure) FTLCCameraInterest GetBestInterest() const;
   UFUNCTION(BlueprintCallable) void ResolveCameraFocus();
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) float MinimumHoldSeconds=1.15f;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) float SwitchAdvantageRatio=.15f;
 private:
   TArray<FTLCCameraInterest> Interests;
+  FTLCCameraInterest CurrentInterest;
+  double CurrentSince=0.0;
 };
 
 UCLASS(Blueprintable)
@@ -74,13 +81,17 @@ class TLCGENDERCLASH_API ATLCAnnouncerDirector : public AActor {
   GENERATED_BODY()
 public:
   ATLCAnnouncerDirector();
+  virtual void Tick(float DeltaSeconds) override;
   UPROPERTY(BlueprintAssignable) FTLCAnnouncerLine OnLineReady;
   UFUNCTION(BlueprintCallable) bool TryAnnounce(const FTLCAnnouncerEvent& Event);
+  UFUNCTION(BlueprintCallable) void QueueAnnounce(const FTLCAnnouncerEvent& Event);
   UFUNCTION(BlueprintCallable) void ResetAnnouncer();
 private:
   TMap<FName,double> LastSpokenAt;
+  TArray<FTLCAnnouncerEvent> Queue;
   double GlobalLastSpoken=0.0;
   float GlobalCooldown=1.6f;
+  int32 MaxQueueDepth=8;
 };
 
 UCLASS(Blueprintable)
