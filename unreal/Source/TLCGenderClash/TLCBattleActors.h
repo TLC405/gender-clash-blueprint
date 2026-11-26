@@ -76,7 +76,7 @@ public:
   UFUNCTION(BlueprintPure) ETLCFighterKind GetKind()const{return Kind;}
   UFUNCTION(BlueprintPure) float GetHealthNormalized()const{return MaxHealth>0.f?Health/MaxHealth:0.f;}
   UFUNCTION(BlueprintPure) ETLCWeaponType GetWeapon()const{return Weapon;}
-  UFUNCTION(BlueprintPure) float GetDamageMultiplier()const{return DamageScale*TeamStrengthMultiplier*(bRage?1.16f:1.f)*RallyMultiplier;}
+  UFUNCTION(BlueprintPure) float GetDamageMultiplier()const{return DamageScale*TeamStrengthMultiplier*(bRage?1.16f:1.f)*RallyMultiplier*GetFormationDamageMultiplier();}
   UFUNCTION(BlueprintPure) bool CountsTowardNormalTeam()const{return bCountsTowardNormalTeam;}
 
   void SetCountsTowardNormalTeam(bool bValue){bCountsTowardNormalTeam=bValue;}
