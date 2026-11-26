@@ -94,6 +94,7 @@ private:
   bool bTouchBack=false;
   bool bTouchLeft=false;
   bool bTouchRight=false;
+  FVector2D LastViewportSize=FVector2D::ZeroVector;
 
   void BuildUI();
   UTextBlock* MakeLabel(const FString& Text,int32 Size,const FLinearColor& Color);
