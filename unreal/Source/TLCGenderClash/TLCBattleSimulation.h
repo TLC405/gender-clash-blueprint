@@ -33,6 +33,8 @@ public:
   UFUNCTION(BlueprintCallable) bool SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon);
   UFUNCTION(BlueprintCallable) void SetTeamFormation(ETLCTeam Team,ETLCFormation Formation);
   UFUNCTION(BlueprintCallable) void SetTeamRage(ETLCTeam Team,bool bEnabled);
+  UFUNCTION(BlueprintCallable) void SetMenStrength(float Value);
+  UFUNCTION(BlueprintCallable) void SetWomenSpeed(float Value);
   UFUNCTION(BlueprintCallable) void SetFuriosaMode(bool bEnabled);
   UFUNCTION(BlueprintCallable) void ApplyPreset(ETLCBattlePreset Preset);
   UFUNCTION(BlueprintCallable) void ExecuteSpecialEvent(ETLCSpecialEvent EventType);
@@ -79,6 +81,8 @@ private:
   bool bMenRage=false;
   bool bWomenRage=false;
   bool bFuriosaMode=false;
+  float MenStrengthValue=8.f;
+  float WomenSpeedValue=7.f;
   ETLCBattlePreset CurrentPreset=ETLCBattlePreset::BroadcastArena;
   TArray<FTimerHandle> ActiveEventTimers;
   TArray<float> FrameSamples;
