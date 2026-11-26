@@ -34,6 +34,28 @@ FTLCBattleConfigurationResult UTLCBattleRulesLibrary::ValidateConfiguration(cons
   return R;
 }
 
+bool UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase From,ETLCBattlePhase To){
+  switch(From){
+    case ETLCBattlePhase::Ready: return To==ETLCBattlePhase::Active;
+    case ETLCBattlePhase::Active: return To==ETLCBattlePhase::Paused||To==ETLCBattlePhase::SuddenDeath||To==ETLCBattlePhase::Stalemate||To==ETLCBattlePhase::Final;
+    case ETLCBattlePhase::Paused: return To==ETLCBattlePhase::Active||To==ETLCBattlePhase::SuddenDeath;
+    case ETLCBattlePhase::SuddenDeath: return To==ETLCBattlePhase::Paused||To==ETLCBattlePhase::Stalemate||To==ETLCBattlePhase::Final;
+    case ETLCBattlePhase::Stalemate: return To==ETLCBattlePhase::SuddenDeath||To==ETLCBattlePhase::Final;
+    case ETLCBattlePhase::Final: return To==ETLCBattlePhase::Replaying;
+    case ETLCBattlePhase::Replaying: return To==ETLCBattlePhase::Final;
+    default: return false;
+  }
+}
+int32 UTLCBattleRulesLibrary::AcceptedReinforcementCount(int32 MenAlive,int32 WomenAlive,int32 Requested,int32 PremiumCap){
+  if(Requested<=0||MenAlive<0||WomenAlive<0)return 0;
+  return FMath::Clamp(Requested,0,FMath::Max(0,PremiumCap-(MenAlive+WomenAlive)));
+}
+ETLCTeam UTLCBattleRulesLibrary::ResolveEliminationWinner(int32 MenAlive,bool bMenBossAlive,int32 WomenAlive,bool bWomenBossAlive){
+  const bool MenPower=MenAlive>0||bMenBossAlive;const bool WomenPower=WomenAlive>0||bWomenBossAlive;
+  if(MenPower&&WomenPower)return ETLCTeam::Neutral;
+  if(MenPower)return ETLCTeam::Men;if(WomenPower)return ETLCTeam::Women;return ETLCTeam::Neutral;
+}
+
 FVector2D UTLCFormationLibrary::CalculateSlot(ETLCFormation Formation, ETLCTeam Team, int32 Index, int32 Count, FVector2D Arena, float Margin) {
   Count=FMath::Max(1,Count); Index=FMath::Clamp(Index,0,Count-1);
   Margin = FMath::Clamp(Margin, 0.f, FMath::Min(Arena.X, Arena.Y) * .45f);
@@ -205,8 +227,7 @@ void ATLCBattleDirector::ReportElimination(ETLCTeam T){
 
 int32 ATLCBattleDirector::AddReinforcements(ETLCTeam Team,int32 RequestedCount){
   if((Phase!=ETLCBattlePhase::Active&&Phase!=ETLCBattlePhase::SuddenDeath)||RequestedCount<=0)return 0;
-  const int32 Total=MenState.Alive+WomenState.Alive;
-  const int32 Accepted=FMath::Clamp(RequestedCount,0,FMath::Max(0,MaxVisibleFighters-Total));
+  const int32 Accepted=UTLCBattleRulesLibrary::AcceptedReinforcementCount(MenState.Alive,WomenState.Alive,RequestedCount,MaxVisibleFighters);
   if(Accepted<=0)return 0;
   FTLCTeamRuntimeState* S=Team==ETLCTeam::Men?&MenState:Team==ETLCTeam::Women?&WomenState:nullptr;
   if(!S)return 0;
@@ -231,18 +252,7 @@ FTLCTacticalSnapshot ATLCBattleDirector::GetSnapshot()const{
 
 void ATLCBattleDirector::SetBattleIntensity(float V){BattleIntensity=FMath::Clamp(V,0.f,1.f);}
 
-bool ATLCBattleDirector::IsLegalTransition(ETLCBattlePhase From,ETLCBattlePhase To)const{
-  switch(From){
-    case ETLCBattlePhase::Ready: return To==ETLCBattlePhase::Active;
-    case ETLCBattlePhase::Active: return To==ETLCBattlePhase::Paused||To==ETLCBattlePhase::SuddenDeath||To==ETLCBattlePhase::Stalemate||To==ETLCBattlePhase::Final;
-    case ETLCBattlePhase::Paused: return To==ETLCBattlePhase::Active||To==ETLCBattlePhase::SuddenDeath;
-    case ETLCBattlePhase::SuddenDeath: return To==ETLCBattlePhase::Paused||To==ETLCBattlePhase::Stalemate||To==ETLCBattlePhase::Final;
-    case ETLCBattlePhase::Stalemate: return To==ETLCBattlePhase::SuddenDeath||To==ETLCBattlePhase::Final;
-    case ETLCBattlePhase::Final: return To==ETLCBattlePhase::Replaying;
-    case ETLCBattlePhase::Replaying: return To==ETLCBattlePhase::Final;
-    default: return false;
-  }
-}
+bool ATLCBattleDirector::IsLegalTransition(ETLCBattlePhase From,ETLCBattlePhase To)const{return UTLCBattleRulesLibrary::IsLegalPhaseTransition(From,To);}
 
 bool ATLCBattleDirector::SetPhase(ETLCBattlePhase P,bool bForce){
   if(Phase==P) return true;
