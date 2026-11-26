@@ -10,6 +10,7 @@ class USphereComponent;
 class UStaticMeshComponent;
 class UTextRenderComponent;
 class ATLCBattleSimulationDirector;
+class ATLCFighterCharacter;
 
 UENUM(BlueprintType)
 enum class ETLCFighterKind : uint8 {
@@ -33,7 +34,7 @@ struct FTLCHitPayload {
   UPROPERTY(EditAnywhere,BlueprintReadWrite) bool bAreaEffect=false;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTLCFighterEliminated,class ATLCFighterCharacter*,Fighter);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTLCFighterEliminated,ATLCFighterCharacter*,Fighter);
 
 UCLASS(Blueprintable)
 class TLCGENDERCLASH_API ATLCFighterCharacter : public ACharacter {
