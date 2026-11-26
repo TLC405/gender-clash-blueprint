@@ -63,7 +63,11 @@ private:
   UPROPERTY() TObjectPtr<UComboBoxString> MenFormationCombo;
   UPROPERTY() TObjectPtr<UComboBoxString> WomenFormationCombo;
   UPROPERTY() TObjectPtr<UCheckBox> MenRageToggle;
+  UPROPERTY() TObjectPtr<UCheckBox> MenGunsToggle;
+  UPROPERTY() TObjectPtr<UCheckBox> MenSwordsToggle;
   UPROPERTY() TObjectPtr<UCheckBox> WomenRageToggle;
+  UPROPERTY() TObjectPtr<UCheckBox> WomenLipstickToggle;
+  UPROPERTY() TObjectPtr<UCheckBox> WomenBombToggle;
   UPROPERTY() TObjectPtr<UCheckBox> FuriosaToggle;
   UPROPERTY() TObjectPtr<UCheckBox> SlowMoToggle;
   UPROPERTY() TObjectPtr<UCheckBox> CinematicToggle;
@@ -118,9 +122,13 @@ private:
   UFUNCTION() void OnSpecialEvent();
   UFUNCTION() void OnMenGun();
   UFUNCTION() void OnMenSword();
+  UFUNCTION() void OnMenGunsToggleChanged(bool bChecked);
+  UFUNCTION() void OnMenSwordsToggleChanged(bool bChecked);
   UFUNCTION() void OnMenFists();
   UFUNCTION() void OnWomenLipstick();
   UFUNCTION() void OnWomenBomb();
+  UFUNCTION() void OnWomenLipstickToggleChanged(bool bChecked);
+  UFUNCTION() void OnWomenBombToggleChanged(bool bChecked);
   UFUNCTION() void OnWomenFists();
   UFUNCTION() void OnNuke();
   UFUNCTION() void OnWaterCannon();
