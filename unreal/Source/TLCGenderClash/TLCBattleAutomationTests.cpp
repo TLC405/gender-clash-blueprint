@@ -68,4 +68,36 @@ bool FTLCAIHysteresis::RunTest(const FString&){
   return true;
 }
 
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTLCPhaseTransitionRules,"TLC.GenderClash.Battle.PhaseTransitions",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FTLCPhaseTransitionRules::RunTest(const FString&){
+  TestTrue(TEXT("Ready -> Active"),UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase::Ready,ETLCBattlePhase::Active));
+  TestFalse(TEXT("Ready cannot jump to Final"),UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase::Ready,ETLCBattlePhase::Final));
+  TestTrue(TEXT("Active -> Paused"),UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase::Active,ETLCBattlePhase::Paused));
+  TestTrue(TEXT("Paused -> Active"),UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase::Paused,ETLCBattlePhase::Active));
+  TestFalse(TEXT("Paused cannot jump to Final"),UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase::Paused,ETLCBattlePhase::Final));
+  TestTrue(TEXT("Final -> Replaying"),UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase::Final,ETLCBattlePhase::Replaying));
+  TestFalse(TEXT("Final cannot silently restart"),UTLCBattleRulesLibrary::IsLegalPhaseTransition(ETLCBattlePhase::Final,ETLCBattlePhase::Active));
+  return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTLCReinforcementCapRules,"TLC.GenderClash.Battle.ReinforcementCap",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FTLCReinforcementCapRules::RunTest(const FString&){
+  TestEqual(TEXT("90 alive accepts only 10"),UTLCBattleRulesLibrary::AcceptedReinforcementCount(45,45,20,100),10);
+  TestEqual(TEXT("100 alive accepts none"),UTLCBattleRulesLibrary::AcceptedReinforcementCount(60,40,5,100),0);
+  TestEqual(TEXT("negative request rejected"),UTLCBattleRulesLibrary::AcceptedReinforcementCount(50,40,-2,100),0);
+  TestEqual(TEXT("available capacity preserved"),UTLCBattleRulesLibrary::AcceptedReinforcementCount(20,30,5,100),5);
+  return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTLCBossAwareOutcomeRules,"TLC.GenderClash.Battle.BossAwareOutcome",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FTLCBossAwareOutcomeRules::RunTest(const FString&){
+  TestEqual(TEXT("both zero is draw"),UTLCBattleRulesLibrary::ResolveEliminationWinner(0,false,0,false),ETLCTeam::Neutral);
+  TestEqual(TEXT("robot keeps men alive"),UTLCBattleRulesLibrary::ResolveEliminationWinner(0,true,5,false),ETLCTeam::Neutral);
+  TestEqual(TEXT("unicorn keeps women alive"),UTLCBattleRulesLibrary::ResolveEliminationWinner(5,false,0,true),ETLCTeam::Neutral);
+  TestEqual(TEXT("women win after robot is gone"),UTLCBattleRulesLibrary::ResolveEliminationWinner(0,false,5,false),ETLCTeam::Women);
+  TestEqual(TEXT("men win after unicorn is gone"),UTLCBattleRulesLibrary::ResolveEliminationWinner(5,false,0,false),ETLCTeam::Men);
+  return true;
+}
+
 #endif
