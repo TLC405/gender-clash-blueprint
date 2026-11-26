@@ -56,6 +56,7 @@ public:
   UFUNCTION(BlueprintCallable) void SetFormationGoal(const FVector& Goal);
   UFUNCTION(BlueprintCallable) void SetWeapon(ETLCWeaponType NewWeapon);
   UFUNCTION(BlueprintCallable) void SetRage(bool bEnabled);
+  UFUNCTION(BlueprintCallable) void SetFuriosaState(bool bEnabled);
   UFUNCTION(BlueprintCallable) void ApplyRallyBuff(float Multiplier,float DurationSeconds);
   UFUNCTION(BlueprintCallable) bool ApplyBattleHit(const FTLCHitPayload& Hit);
   UFUNCTION(BlueprintCallable) bool BeginAbduction(float LiftSeconds);
@@ -69,6 +70,7 @@ public:
   UFUNCTION(BlueprintPure) ETLCFighterKind GetKind()const{return Kind;}
   UFUNCTION(BlueprintPure) float GetHealthNormalized()const{return MaxHealth>0.f?Health/MaxHealth:0.f;}
   UFUNCTION(BlueprintPure) ETLCWeaponType GetWeapon()const{return Weapon;}
+  UFUNCTION(BlueprintPure) float GetDamageMultiplier()const{return DamageScale*(bRage?1.16f:1.f)*RallyMultiplier;}
   UFUNCTION(BlueprintPure) bool CountsTowardNormalTeam()const{return bCountsTowardNormalTeam;}
 
   void SetCountsTowardNormalTeam(bool bValue){bCountsTowardNormalTeam=bValue;}
