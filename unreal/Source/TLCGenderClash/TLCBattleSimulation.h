@@ -44,6 +44,7 @@ public:
 
   UFUNCTION(BlueprintPure) ATLCFighterCharacter* FindBestTarget(ATLCFighterCharacter* Requester)const;
   UFUNCTION(BlueprintPure) float GetDesiredAttackRange(ATLCFighterCharacter* Fighter)const;
+  UFUNCTION(BlueprintPure) float GetCloseDecisionInterval(int32 AgentId)const;
   UFUNCTION(BlueprintPure) float GetLocalDecisionInterval(int32 AgentId)const;
   UFUNCTION(BlueprintPure) float GetStrategicDecisionInterval(int32 AgentId)const;
   UFUNCTION(BlueprintCallable) float ExecuteAttack(ATLCFighterCharacter* Attacker,ATLCFighterCharacter* Target);
