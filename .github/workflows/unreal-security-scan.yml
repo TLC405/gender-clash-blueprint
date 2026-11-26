@@ -1,0 +1,34 @@
+name: Security and Artifact Policy
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gitleaks:
+    name: Gitleaks secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  forbidden-artifacts:
+    name: Block packages and signing material
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Reject forbidden tracked files
+        shell: bash
+        run: |
+          set -euo pipefail
+          bad="$(git ls-files | grep -Ei '(^|/)(\.env($|\.)|.*\.(p12|pfx|pem|keystore|jks|aab|apk|exe)$)' | grep -Ev '(^|/)\.env\.(example|sample)$' || true)"
+          if [ -n "$bad" ]; then
+            echo "Forbidden package/signing/environment material is tracked:"
+            echo "$bad"
+            exit 1
+          fi

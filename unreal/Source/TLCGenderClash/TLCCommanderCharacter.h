@@ -18,6 +18,7 @@ public:
   UFUNCTION(BlueprintCallable) bool TriggerLipstickShot();
   UFUNCTION(BlueprintCallable) bool TriggerShockwaveSlam();
   UFUNCTION(BlueprintCallable) bool TriggerRallyBuff();
+  UFUNCTION(BlueprintCallable) void ResetAbilityCooldowns();
   UFUNCTION(BlueprintImplementableEvent) void ExecuteAbilityVisuals(FName AbilityName);
 protected:
   UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TObjectPtr<UAbilitySystemComponent> AbilitySystem;
