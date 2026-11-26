@@ -149,7 +149,8 @@ void ATLCFighterCharacter::SetWeapon(ETLCWeaponType NewWeapon){Weapon=NewWeapon;
 void ATLCFighterCharacter::SetRage(bool bEnabled){bRage=bEnabled;}
 void ATLCFighterCharacter::SetFuriosaState(bool bEnabled){
   if(Team!=ETLCTeam::Women||(Kind!=ETLCFighterKind::Normal&&Kind!=ETLCFighterKind::Furiosa))return;
-  Kind=bEnabled?ETLCFighterKind::Furiosa:ETLCFighterKind::Normal;ConfigureKind();ApplyTeamVisuals();
+  const float HealthRatio=MaxHealth>0.f?FMath::Clamp(Health/MaxHealth,0.f,1.f):1.f;
+  Kind=bEnabled?ETLCFighterKind::Furiosa:ETLCFighterKind::Normal;ConfigureKind();Health=MaxHealth*HealthRatio;ApplyTeamVisuals();
 }
 void ATLCFighterCharacter::SetMaxHealth(float NewMaxHealth){MaxHealth=FMath::Max(1.f,NewMaxHealth);Health=FMath::Min(Health,MaxHealth);}
 void ATLCFighterCharacter::Heal(float Amount){if(bAlive&&!bAbducting)Health=FMath::Clamp(Health+FMath::Max(0.f,Amount),0.f,MaxHealth);}
