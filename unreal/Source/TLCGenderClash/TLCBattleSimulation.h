@@ -26,6 +26,7 @@ public:
 
   UFUNCTION(BlueprintCallable) void BindBattleDirector(ATLCBattleDirector* InDirector);
   UFUNCTION(BlueprintCallable) void BindCameraDirector(ATLCCameraDirector* InDirector);
+  UFUNCTION(BlueprintCallable) void BindPerformanceManager(ATLCPerformanceLODManager* InManager);
   UFUNCTION(BlueprintCallable) bool BuildBattle(int32 MenCount=50,int32 WomenCount=50);
   UFUNCTION(BlueprintCallable) void StartSimulation();
   UFUNCTION(BlueprintCallable) void ResetSimulation();
@@ -51,6 +52,8 @@ public:
 
   UFUNCTION(BlueprintPure) int32 GetLivingNormalCount(ETLCTeam Team)const;
   UFUNCTION(BlueprintPure) int32 GetActiveProjectileCount()const;
+  UFUNCTION(BlueprintPure) float GetAverageFrameMilliseconds()const{return AverageFrameMs;}
+  UFUNCTION(BlueprintPure) float GetP99FrameMilliseconds()const{return P99FrameMs;}
   UFUNCTION(BlueprintPure) bool IsSimulationRunning()const{return bRunning;}
   UFUNCTION(BlueprintPure) ETLCBattlePreset GetCurrentPreset()const{return CurrentPreset;}
   UFUNCTION(BlueprintPure) ATLCCommanderCharacter* GetCommander()const{return Commander;}
@@ -60,6 +63,7 @@ private:
   UPROPERTY() TObjectPtr<ATLCBattleDirector> BattleDirector;
   UPROPERTY() TObjectPtr<ATLCWeaponDirector> WeaponDirector;
   UPROPERTY() TObjectPtr<ATLCCameraDirector> CameraDirector;
+  UPROPERTY() TObjectPtr<ATLCPerformanceLODManager> PerformanceManager;
   UPROPERTY() TObjectPtr<ATLCProjectilePool> ProjectilePool;
   UPROPERTY() TObjectPtr<ATLCCommanderCharacter> Commander;
   UPROPERTY() TObjectPtr<ATLCUFOActor> UFO;
@@ -77,6 +81,10 @@ private:
   bool bFuriosaMode=false;
   ETLCBattlePreset CurrentPreset=ETLCBattlePreset::BroadcastArena;
   TArray<FTimerHandle> ActiveEventTimers;
+  TArray<float> FrameSamples;
+  float AverageFrameMs=0.f;
+  float P99FrameMs=0.f;
+  float PerformanceAccumulator=0.f;
 
   UFUNCTION() void HandleFighterEliminated(ATLCFighterCharacter* Fighter);
   UFUNCTION() void HandleBattleResetRequested();
@@ -92,6 +100,6 @@ private:
   bool IsWeaponAllowedByPreset(ETLCWeaponType Weapon)const;
   void ApplyRadialHit(const FVector& Origin,float Radius,ETLCTeam SourceTeam,float Damage,float Knockback);
   void ApplyConeHit(const FVector& Origin,const FVector& Forward,float Range,float HalfAngleDegrees,ETLCTeam SourceTeam,float Damage,float Knockback);
-  void FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime);
+  bool FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime);
   TArray<ATLCFighterCharacter*> CollectLivingEnemies(ETLCTeam Team)const;
 };
