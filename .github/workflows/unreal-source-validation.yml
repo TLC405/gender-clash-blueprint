@@ -1,0 +1,21 @@
+name: Unreal Source Validation
+on:
+  push:
+    branches: [main, unreal-production-rebuild]
+    paths: ["unreal/**", ".github/workflows/unreal-source-validation.yml"]
+  pull_request:
+    paths: ["unreal/**", ".github/workflows/unreal-source-validation.yml"]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: python3 unreal/scripts/validate_project.py
+      - run: |
+          python3 -m json.tool unreal/TLCGenderClash.uproject >/dev/null
+          python3 -m json.tool unreal/Data/BattleBalance.json >/dev/null
+          python3 -m json.tool unreal/Data/AudioVoiceManifest.json >/dev/null

@@ -1,0 +1,18 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.8",
+  "Category": "Games",
+  "Description": "TLC Gender Clash - premium one-screen arcade battle sandbox.",
+  "Modules": [{"Name":"TLCGenderClash","Type":"Runtime","LoadingPhase":"Default"}],
+  "Plugins": [
+    {"Name":"EnhancedInput","Enabled":true},
+    {"Name":"GameplayAbilities","Enabled":true},
+    {"Name":"StateTree","Enabled":true},
+    {"Name":"GameplayStateTree","Enabled":true},
+    {"Name":"MassEntity","Enabled":true},
+    {"Name":"MassGameplay","Enabled":true},
+    {"Name":"Niagara","Enabled":true},
+    {"Name":"CommonUI","Enabled":true},
+    {"Name":"AudioModulation","Enabled":true}
+  ]
+}
