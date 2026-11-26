@@ -191,6 +191,23 @@ float ATLCBattleSimulationDirector::GetCloseDecisionInterval(int32 AgentId)const
 float ATLCBattleSimulationDirector::GetLocalDecisionInterval(int32 AgentId)const{return UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::LocalTactical,AgentId);}
 float ATLCBattleSimulationDirector::GetStrategicDecisionInterval(int32 AgentId)const{return UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::Strategic,AgentId);}
 
+bool ATLCBattleSimulationDirector::ShouldPrioritizeCommander(ATLCFighterCharacter* Requester)const{
+  if(!Requester||Requester->GetTeam()!=ETLCTeam::Women||!Commander||!Commander->IsHeroAlive())return false;
+  const float Distance=FVector::Dist2D(Requester->GetActorLocation(),Commander->GetActorLocation());
+  return Distance<=1050.f||GetLivingNormalCount(ETLCTeam::Men)<=12;
+}
+FVector ATLCBattleSimulationDirector::GetCommanderLocation()const{return Commander?Commander->GetActorLocation():GetActorLocation();}
+float ATLCBattleSimulationDirector::ExecuteAttackOnCommander(ATLCFighterCharacter* A){
+  if(!A||!Commander||!Commander->IsHeroAlive()||!WeaponDirector||A->GetTeam()!=ETLCTeam::Women)return 0.f;
+  FTLCWeaponTuning Tune=WeaponDirector->GetTuning(A->GetWeapon());Tune.Damage*=A->GetDamageMultiplier();
+  const FVector Dir=(Commander->GetActorLocation()-A->GetActorLocation()).GetSafeNormal();
+  if(Tune.bRanged){
+    if(!FireProjectileFrom(A->GetActorLocation()+Dir*70.f+FVector(0,0,80),Commander->GetActorLocation()+FVector(0,0,80),A->GetTeam(),Tune.Damage,Tune.Knockback,1450.f,2.2f))Commander->ApplyHeroDamage(Tune.Damage,Tune.Knockback,Dir);
+  }else Commander->ApplyHeroDamage(Tune.Damage,Tune.Knockback,Dir);
+  WeaponDirector->ReportWeaponFired(A->GetTeam(),A->GetWeapon());return Tune.Cooldown;
+}
+void ATLCBattleSimulationDirector::HandleCommanderEliminated(){if(BattleDirector)BattleDirector->SetHeroAlive(ETLCTeam::Men,false);}
+
 float ATLCBattleSimulationDirector::ExecuteAttack(ATLCFighterCharacter* A,ATLCFighterCharacter* T){
   if(!A||!T||!A->IsBattleAlive()||!T->IsBattleAlive()||!WeaponDirector)return 0.f;
   FTLCWeaponTuning Tune=WeaponDirector->GetTuning(A->GetWeapon());
@@ -234,7 +251,7 @@ ATLCCommanderCharacter* ATLCBattleSimulationDirector::SpawnCommander(){
   if(Commander||!GetWorld())return Commander;
   const FVector Loc=GetActorLocation()+FVector(-ArenaSize.X*.38f,0,110.f);
   Commander=GetWorld()->SpawnActor<ATLCCommanderCharacter>(ATLCCommanderCharacter::StaticClass(),Loc,FRotator::ZeroRotator);
-  if(Commander){Commander->OnAbilityTriggered.AddDynamic(this,&ATLCBattleSimulationDirector::HandleCommanderAbility);if(BattleDirector)BattleDirector->SetHeroAlive(ETLCTeam::Men,true);}
+  if(Commander){Commander->OnAbilityTriggered.AddDynamic(this,&ATLCBattleSimulationDirector::HandleCommanderAbility);Commander->OnCommanderEliminated.AddDynamic(this,&ATLCBattleSimulationDirector::HandleCommanderEliminated);if(BattleDirector)BattleDirector->SetHeroAlive(ETLCTeam::Men,true);}
   return Commander;
 }
 
