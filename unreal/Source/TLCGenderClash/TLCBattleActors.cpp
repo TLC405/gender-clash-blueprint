@@ -376,10 +376,10 @@ void ATLCPooledProjectile::HandleOverlap(UPrimitiveComponent*,AActor* Other,UPri
   if(ATLCFighterCharacter* Fighter=Cast<ATLCFighterCharacter>(Other)){
     if(Fighter->GetTeam()==Team)return;
     FTLCHitPayload Hit;Hit.HitId=HitId;Hit.SourceTeam=Team;Hit.Damage=Damage;Hit.Knockback=Knockback;Hit.Direction=Velocity.GetSafeNormal();
-    Fighter->ApplyBattleHit(Hit);DeactivateProjectile();return;
+    Fighter->ApplyBattleHit(Hit);if(Simulation)Simulation->NotifyImpactVFX(GetActorLocation(),true);DeactivateProjectile();return;
   }
   if(ATLCCommanderCharacter* Hero=Cast<ATLCCommanderCharacter>(Other)){
-    if(Team==ETLCTeam::Men)return;Hero->ApplyHeroDamage(Damage,Knockback,Velocity.GetSafeNormal());DeactivateProjectile();
+    if(Team==ETLCTeam::Men)return;Hero->ApplyHeroDamage(Damage,Knockback,Velocity.GetSafeNormal());if(Simulation)Simulation->NotifyImpactVFX(GetActorLocation(),true);DeactivateProjectile();
   }
 }
 
