@@ -10,6 +10,8 @@ required = [
     "Source/TLCGenderClash/TLCCommanderCharacter.cpp",
     "Source/TLCGenderClash/TLCAIIntegrationGatewaySubsystem.cpp",
     "Source/TLCGenderClash/TLCArcadeRuntime.cpp",
+    "Source/TLCGenderClash/TLCAIDecisionPolicy.cpp",
+    "Source/TLCGenderClash/TLCDataAssets.cpp",
     "Data/BattleBalance.json",
     "Data/AudioVoiceManifest.json",
     "Data/GeneratedAudioManifest.json",
@@ -28,6 +30,13 @@ for path in sorted((ROOT / "Data").glob("*.json")):
         parsed[path.name] = json.loads(path.read_text())
     except json.JSONDecodeError as exc:
         raise SystemExit(f"Invalid JSON {path.relative_to(ROOT)}: {exc}")
+
+for name, manifest in parsed.items():
+    for field in ("schemaVersion","compatibilityVersion","lastUpdated","source","localizationKey"):
+        if field not in manifest:
+            raise SystemExit(f"{name} is missing manifest metadata field: {field}")
+    if manifest["schemaVersion"] != 1 or manifest["compatibilityVersion"] != 1:
+        raise SystemExit(f"{name} has an unsupported manifest version.")
 
 project = json.loads((ROOT / "TLCGenderClash.uproject").read_text())
 if project.get("EngineAssociation") != "5.8":

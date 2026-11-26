@@ -1,10 +1,52 @@
 {
-  "schemaVersion":1,
-  "maxVisibleNormalFighters":100,
-  "defaults":{
-    "men":{"count":50,"strength":8,"speed":6,"rage":false,"guns":false,"swords":false},
-    "women":{"count":50,"strength":6,"speed":8,"rage":false,"lipstickGun":false,"makeupBomb":false,"furiosa":false}
+  "schemaVersion": 1,
+  "maxVisibleNormalFighters": 100,
+  "defaults": {
+    "men": {
+      "count": 50,
+      "strength": 8,
+      "speed": 6,
+      "rage": false,
+      "guns": false,
+      "swords": false
+    },
+    "women": {
+      "count": 50,
+      "strength": 6,
+      "speed": 8,
+      "rage": false,
+      "lipstickGun": false,
+      "makeupBomb": false,
+      "furiosa": false
+    }
   },
-  "commander":{"nukeCooldown":22.0,"waterCannonCooldown":7.0,"lipstickShotCooldown":3.5,"shockwaveSlamCooldown":8.0,"rallyBuffCooldown":14.0},
-  "specialEvents":{"ufoAbduction":1.0,"maleGiant":0.75,"femaleGiant":0.75,"lightningStrike":0.65,"suddenFog":0.45,"meteor":0.35,"lowGravity":0.30,"reinforcementDrop":0.55,"stampede":0.30,"tornado":0.25,"robotMalfunction":0.30,"unicornRage":0.30,"giantBeachBall":0.35,"healingZone":0.45,"battlefieldBlackout":0.25,"mascotInvasion":0.20}
+  "commander": {
+    "nukeCooldown": 22,
+    "waterCannonCooldown": 7,
+    "lipstickShotCooldown": 3.5,
+    "shockwaveSlamCooldown": 8,
+    "rallyBuffCooldown": 14
+  },
+  "specialEvents": {
+    "ufoAbduction": 1,
+    "maleGiant": 0.75,
+    "femaleGiant": 0.75,
+    "lightningStrike": 0.65,
+    "suddenFog": 0.45,
+    "meteor": 0.35,
+    "lowGravity": 0.3,
+    "reinforcementDrop": 0.55,
+    "stampede": 0.3,
+    "tornado": 0.25,
+    "robotMalfunction": 0.3,
+    "unicornRage": 0.3,
+    "giantBeachBall": 0.35,
+    "healingZone": 0.45,
+    "battlefieldBlackout": 0.25,
+    "mascotInvasion": 0.2
+  },
+  "compatibilityVersion": 1,
+  "lastUpdated": "2026-11-25",
+  "source": "unreal/Data/BattleBalance.json",
+  "localizationKey": "tlc.manifest.battle_balance"
 }

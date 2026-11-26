@@ -1,14 +1,28 @@
 {
-  "schemaVersion":1,
-  "targets":{"desktopFPS":60,"mobileFPS":45,"maxNormalFighters":100},
-  "budgets":{
-    "simultaneousRagdolls":12,
-    "closeImpactVoices":8,
-    "teamVoiceBarksPerTeam":2,
-    "announcerVoices":1,
-    "commanderVoices":1,
-    "projectileActors":160,
-    "highCostNiagaraSystems":12
+  "schemaVersion": 1,
+  "targets": {
+    "desktopFPS": 60,
+    "mobileFPS": 45,
+    "maxNormalFighters": 100
   },
-  "scalabilityOrder":["distantParticles","ragdollLifetime","hairSecondaryMotion","shadowDetail","distantAnimationRate"]
+  "budgets": {
+    "simultaneousRagdolls": 12,
+    "closeImpactVoices": 8,
+    "teamVoiceBarksPerTeam": 2,
+    "announcerVoices": 1,
+    "commanderVoices": 1,
+    "projectileActors": 160,
+    "highCostNiagaraSystems": 12
+  },
+  "scalabilityOrder": [
+    "distantParticles",
+    "ragdollLifetime",
+    "hairSecondaryMotion",
+    "shadowDetail",
+    "distantAnimationRate"
+  ],
+  "compatibilityVersion": 1,
+  "lastUpdated": "2026-11-25",
+  "source": "unreal/Data/PerformanceBudgets.json",
+  "localizationKey": "tlc.manifest.performance_budgets"
 }

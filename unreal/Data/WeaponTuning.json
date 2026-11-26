@@ -1,11 +1,56 @@
 {
-  "schemaVersion":1,
-  "weapons":{
-    "fists":{"damage":18,"range":145,"cooldown":0.55,"knockback":80,"ranged":false},
-    "gun":{"damage":26,"range":1400,"cooldown":0.75,"knockback":20,"ranged":true},
-    "sword":{"damage":32,"range":190,"cooldown":0.72,"knockback":120,"ranged":false},
-    "lipstickGun":{"damage":22,"range":1200,"cooldown":0.68,"knockback":25,"ranged":true},
-    "makeupBomb":{"damage":28,"range":900,"cooldown":2.4,"knockback":230,"ranged":true}
+  "schemaVersion": 1,
+  "weapons": {
+    "fists": {
+      "damage": 18,
+      "range": 145,
+      "cooldown": 0.55,
+      "knockback": 80,
+      "ranged": false
+    },
+    "gun": {
+      "damage": 26,
+      "range": 1400,
+      "cooldown": 0.75,
+      "knockback": 20,
+      "ranged": true
+    },
+    "sword": {
+      "damage": 32,
+      "range": 190,
+      "cooldown": 0.72,
+      "knockback": 120,
+      "ranged": false
+    },
+    "lipstickGun": {
+      "damage": 22,
+      "range": 1200,
+      "cooldown": 0.68,
+      "knockback": 25,
+      "ranged": true
+    },
+    "makeupBomb": {
+      "damage": 28,
+      "range": 900,
+      "cooldown": 2.4,
+      "knockback": 230,
+      "ranged": true
+    }
   },
-  "rules":{"men":["fists","gun","sword"],"women":["fists","lipstickGun","makeupBomb"]}
+  "rules": {
+    "men": [
+      "fists",
+      "gun",
+      "sword"
+    ],
+    "women": [
+      "fists",
+      "lipstickGun",
+      "makeupBomb"
+    ]
+  },
+  "compatibilityVersion": 1,
+  "lastUpdated": "2026-11-25",
+  "source": "unreal/Data/WeaponTuning.json",
+  "localizationKey": "tlc.manifest.weapon_tuning"
 }

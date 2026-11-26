@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "TLCBattleSystems.h"
+#include "TLCAIDecisionPolicy.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTLCBattleConfigValidation,"TLC.GenderClash.Battle.ConfigurationValidation",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FTLCBattleConfigValidation::RunTest(const FString&){
@@ -40,4 +41,31 @@ bool FTLCEventSeedDeterminism::RunTest(const FString&){
   TestTrue(TEXT("trigger metadata survives"),R.bTriggered);
   return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTLCAIHysteresis,"TLC.GenderClash.AI.HysteresisAndCadence",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FTLCAIHysteresis::RunTest(const FString&){
+  FTLCAgentDecisionState S;
+  S.CurrentAction="Advance";S.CurrentScore=.70f;S.BehaviorEntryTime=10.f;S.MinimumCommitmentSeconds=1.f;S.HysteresisRatio=.15f;
+
+  FTLCDecisionCandidate Weak;
+  Weak.Action="Flank";Weak.Score=.75f;Weak.bNavigationFeasible=true;
+  TestFalse(TEXT("small score increase does not thrash behavior"),UTLCAIDecisionPolicy::ShouldSwitchBehavior(S,Weak,11.2f));
+
+  FTLCDecisionCandidate Strong=Weak;
+  Strong.Score=.86f;
+  TestTrue(TEXT("strong feasible improvement can switch"),UTLCAIDecisionPolicy::ShouldSwitchBehavior(S,Strong,11.2f));
+
+  FTLCDecisionCandidate Blocked=Strong;
+  Blocked.bNavigationFeasible=false;
+  TestFalse(TEXT("unreachable action is rejected"),UTLCAIDecisionPolicy::ShouldSwitchBehavior(S,Blocked,11.2f));
+
+  FTLCDecisionCandidate Critical=Blocked;
+  Critical.bNavigationFeasible=true;Critical.bSurvivalCritical=true;Critical.Score=.1f;
+  TestTrue(TEXT("survival critical override can break commitment"),UTLCAIDecisionPolicy::ShouldSwitchBehavior(S,Critical,10.1f));
+
+  TestTrue(TEXT("close combat tick faster than tactical"),UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::CloseCombat,3)<UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::LocalTactical,3));
+  TestTrue(TEXT("tactical tick faster than strategic"),UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::LocalTactical,3)<UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::Strategic,3));
+  return true;
+}
+
 #endif

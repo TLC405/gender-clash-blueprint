@@ -29,13 +29,13 @@
     "battleMusicCore": {
       "flowId": "GvgJ750AFjYfPzROngpE",
       "generationId": "smAb0Sj6q5jOfvc16GaR",
-      "durationSeconds": 45.0,
+      "durationSeconds": 45,
       "model": "eleven_music_v2"
     },
     "meleeHit": {
       "flowId": "xQARsDIfKMOEGnDyjLGf",
       "generationId": "VWmw6NlwJRp8BIaXOKRj",
-      "durationSeconds": 1.0
+      "durationSeconds": 1
     },
     "lipstickShot": {
       "flowId": "dvIiP59lTUK1UGrfdZ3a",
@@ -50,12 +50,16 @@
     "ufoBeam": {
       "flowId": "NHGLKA3uxeoRijihlJsY",
       "generationId": "OlVePNgL7GTo7wyRFr8e",
-      "durationSeconds": 2.0
+      "durationSeconds": 2
     },
     "giantStomp": {
       "flowId": "iIaOyg1HfMehzhuKAoN7",
       "generationId": "gRyby3eY7CiQhBNdw7iU",
-      "durationSeconds": 2.0
+      "durationSeconds": 2
     }
-  }
+  },
+  "compatibilityVersion": 1,
+  "lastUpdated": "2026-11-25",
+  "source": "unreal/Data/GeneratedAudioManifest.json",
+  "localizationKey": "tlc.manifest.generated_audio"
 }
