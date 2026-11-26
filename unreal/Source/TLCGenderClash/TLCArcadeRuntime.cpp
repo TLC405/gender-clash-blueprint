@@ -10,12 +10,14 @@ ATLCWeaponDirector::ATLCWeaponDirector(){
   WeaponTuning.Add(ETLCWeaponType::Sword,{ETLCWeaponType::Sword,32.f,190.f,.72f,120.f,false});
   WeaponTuning.Add(ETLCWeaponType::LipstickGun,{ETLCWeaponType::LipstickGun,22.f,1200.f,.68f,25.f,true});
   WeaponTuning.Add(ETLCWeaponType::MakeupBomb,{ETLCWeaponType::MakeupBomb,28.f,900.f,2.4f,230.f,true});
+  WeaponTuning.Add(ETLCWeaponType::Musket,{ETLCWeaponType::Musket,34.f,1550.f,2.35f,45.f,true});
+  WeaponTuning.Add(ETLCWeaponType::Spear,{ETLCWeaponType::Spear,29.f,255.f,.88f,145.f,false});
 }
 FTLCWeaponTuning ATLCWeaponDirector::GetTuning(ETLCWeaponType T)const{
   if(const FTLCWeaponTuning*V=WeaponTuning.Find(T))return *V;return FTLCWeaponTuning();
 }
 bool ATLCWeaponDirector::CanTeamUse(ETLCTeam Team,ETLCWeaponType T)const{
-  if(T==ETLCWeaponType::Fists)return true;
+  if(T==ETLCWeaponType::Fists||T==ETLCWeaponType::Musket||T==ETLCWeaponType::Spear)return true;
   if(Team==ETLCTeam::Men)return T==ETLCWeaponType::Gun||T==ETLCWeaponType::Sword;
   if(Team==ETLCTeam::Women)return T==ETLCWeaponType::LipstickGun||T==ETLCWeaponType::MakeupBomb;
   return false;
