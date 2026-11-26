@@ -49,10 +49,14 @@ private:
   UPROPERTY() TObjectPtr<UTextBlock> EventText;
   UPROPERTY() TObjectPtr<UTextBlock> MenCountText;
   UPROPERTY() TObjectPtr<UTextBlock> WomenCountText;
+  UPROPERTY() TObjectPtr<UTextBlock> MenStrengthText;
+  UPROPERTY() TObjectPtr<UTextBlock> WomenSpeedText;
   UPROPERTY() TObjectPtr<UTextBlock> MenWeaponText;
   UPROPERTY() TObjectPtr<UTextBlock> WomenWeaponText;
   UPROPERTY() TObjectPtr<USlider> MenCountSlider;
   UPROPERTY() TObjectPtr<USlider> WomenCountSlider;
+  UPROPERTY() TObjectPtr<USlider> MenStrengthSlider;
+  UPROPERTY() TObjectPtr<USlider> WomenSpeedSlider;
   UPROPERTY() TObjectPtr<USlider> CameraZoomSlider;
   UPROPERTY() TObjectPtr<USlider> ChaosSlider;
   UPROPERTY() TObjectPtr<UComboBoxString> PresetCombo;
@@ -134,6 +138,8 @@ private:
 
   UFUNCTION() void OnMenCountChanged(float Value);
   UFUNCTION() void OnWomenCountChanged(float Value);
+  UFUNCTION() void OnMenStrengthChanged(float Value);
+  UFUNCTION() void OnWomenSpeedChanged(float Value);
   UFUNCTION() void OnCameraZoomChanged(float Value);
   UFUNCTION() void OnChaosChanged(float Value);
   UFUNCTION() void OnMenRageChanged(bool bChecked);
