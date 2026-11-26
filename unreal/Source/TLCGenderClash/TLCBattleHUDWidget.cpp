@@ -98,6 +98,8 @@ void UTLCBattleHUDWidget::BuildUI(){
   AddSectionLabel(Men,TEXT("MEN PANEL"),FLinearColor(.45f,.70f,1.f,1));
   MenCountText=MakeLabel(TEXT("FIGHTERS 50"),13,Chalk);Men->AddChildToVerticalBox(MenCountText);
   MenCountSlider=WidgetTree->ConstructWidget<USlider>();MenCountSlider->SetValue(.5f);MenCountSlider->OnValueChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenCountChanged);Men->AddChildToVerticalBox(MenCountSlider);
+  MenStrengthText=MakeLabel(TEXT("STRENGTH 8"),13,Gold);Men->AddChildToVerticalBox(MenStrengthText);
+  MenStrengthSlider=WidgetTree->ConstructWidget<USlider>();MenStrengthSlider->SetValue(7.f/9.f);MenStrengthSlider->OnValueChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenStrengthChanged);Men->AddChildToVerticalBox(MenStrengthSlider);
   MenRageToggle=WidgetTree->ConstructWidget<UCheckBox>();MenRageToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenRageChanged);UHorizontalBox* MR=WidgetTree->ConstructWidget<UHorizontalBox>();MR->AddChildToHorizontalBox(MenRageToggle);MR->AddChildToHorizontalBox(MakeLabel(TEXT(" RAGE"),13,Chalk));Men->AddChildToVerticalBox(MR);
   MenFormationCombo=WidgetTree->ConstructWidget<UComboBoxString>();for(const TCHAR* F:{TEXT("Ranks"),TEXT("Line"),TEXT("Wedge"),TEXT("Shield Wall"),TEXT("Columns"),TEXT("Spread"),TEXT("Circle"),TEXT("Rush")})MenFormationCombo->AddOption(F);MenFormationCombo->SetSelectedOption(TEXT("Ranks"));MenFormationCombo->OnSelectionChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenFormationChanged);Men->AddChildToVerticalBox(MenFormationCombo);
   MenWeaponText=MakeLabel(TEXT("WEAPON: FISTS"),12,Gold);Men->AddChildToVerticalBox(MenWeaponText);
@@ -111,6 +113,8 @@ void UTLCBattleHUDWidget::BuildUI(){
   AddSectionLabel(Women,TEXT("WOMEN PANEL"),FLinearColor(1.f,.48f,.63f,1));
   WomenCountText=MakeLabel(TEXT("FIGHTERS 50"),13,Chalk);Women->AddChildToVerticalBox(WomenCountText);
   WomenCountSlider=WidgetTree->ConstructWidget<USlider>();WomenCountSlider->SetValue(.5f);WomenCountSlider->OnValueChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenCountChanged);Women->AddChildToVerticalBox(WomenCountSlider);
+  WomenSpeedText=MakeLabel(TEXT("SPEED 7"),13,Gold);Women->AddChildToVerticalBox(WomenSpeedText);
+  WomenSpeedSlider=WidgetTree->ConstructWidget<USlider>();WomenSpeedSlider->SetValue(6.f/9.f);WomenSpeedSlider->OnValueChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenSpeedChanged);Women->AddChildToVerticalBox(WomenSpeedSlider);
   WomenRageToggle=WidgetTree->ConstructWidget<UCheckBox>();WomenRageToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenRageChanged);UHorizontalBox* WR=WidgetTree->ConstructWidget<UHorizontalBox>();WR->AddChildToHorizontalBox(WomenRageToggle);WR->AddChildToHorizontalBox(MakeLabel(TEXT(" RAGE"),13,Chalk));Women->AddChildToVerticalBox(WR);
   FuriosaToggle=WidgetTree->ConstructWidget<UCheckBox>();FuriosaToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnFuriosaChanged);UHorizontalBox* FR=WidgetTree->ConstructWidget<UHorizontalBox>();FR->AddChildToHorizontalBox(FuriosaToggle);FR->AddChildToHorizontalBox(MakeLabel(TEXT(" FURIOSA"),13,Chalk));Women->AddChildToVerticalBox(FR);
   WomenFormationCombo=WidgetTree->ConstructWidget<UComboBoxString>();for(const TCHAR* F:{TEXT("Ranks"),TEXT("Line"),TEXT("Wedge"),TEXT("Shield Wall"),TEXT("Columns"),TEXT("Spread"),TEXT("Circle"),TEXT("Rush")})WomenFormationCombo->AddOption(F);WomenFormationCombo->SetSelectedOption(TEXT("Ranks"));WomenFormationCombo->OnSelectionChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenFormationChanged);Women->AddChildToVerticalBox(WomenFormationCombo);
@@ -254,3 +258,14 @@ void UTLCBattleHUDWidget::OnTouchLeftPressed(){bTouchLeft=true;}
 void UTLCBattleHUDWidget::OnTouchLeftReleased(){bTouchLeft=false;}
 void UTLCBattleHUDWidget::OnTouchRightPressed(){bTouchRight=true;}
 void UTLCBattleHUDWidget::OnTouchRightReleased(){bTouchRight=false;}
+
+void UTLCBattleHUDWidget::OnMenStrengthChanged(float V){
+  const float Value=1.f+FMath::Clamp(V,0.f,1.f)*9.f;
+  if(MenStrengthText)MenStrengthText->SetText(FText::FromString(FString::Printf(TEXT("STRENGTH %.0f"),Value)));
+  if(Simulation)Simulation->SetMenStrength(Value);
+}
+void UTLCBattleHUDWidget::OnWomenSpeedChanged(float V){
+  const float Value=1.f+FMath::Clamp(V,0.f,1.f)*9.f;
+  if(WomenSpeedText)WomenSpeedText->SetText(FText::FromString(FString::Printf(TEXT("SPEED %.0f"),Value)));
+  if(Simulation)Simulation->SetWomenSpeed(Value);
+}
