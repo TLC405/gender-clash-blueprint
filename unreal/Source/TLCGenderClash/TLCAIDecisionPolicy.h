@@ -4,6 +4,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "TLCAIDecisionPolicy.generated.h"
 
+class AActor;
+
 UENUM(BlueprintType)
 enum class ETLCDecisionCadence : uint8 {
   CloseCombat,
