@@ -161,7 +161,11 @@ void UTLCBattleHUDWidget::ApplyResponsiveLayout(){
   CenterPanelSlot->SetAnchors(FAnchors(.36f,Bottom,.64f,.985f));CenterPanelSlot->SetOffsets(FMargin(0));
 }
 
-void UTLCBattleHUDWidget::NativeTick(const FGeometry& G,float Dt){Super::NativeTick(G,Dt);RefreshRuntimeText();UpdateCommanderButtons();ApplyTouchCommanderMovement();}
+void UTLCBattleHUDWidget::NativeTick(const FGeometry& G,float Dt){
+  Super::NativeTick(G,Dt);RefreshRuntimeText();UpdateCommanderButtons();ApplyTouchCommanderMovement();
+  FVector2D Size=FVector2D::ZeroVector;if(GEngine&&GEngine->GameViewport)GEngine->GameViewport->GetViewportSize(Size);
+  if(!Size.Equals(LastViewportSize,2.f)){LastViewportSize=Size;ApplyResponsiveLayout();}
+}
 
 void UTLCBattleHUDWidget::RefreshRuntimeText(){
   if(!BattleDirector)return;const auto S=BattleDirector->GetSnapshot();
@@ -221,14 +225,27 @@ void UTLCBattleHUDWidget::OnWomenFormationChanged(FString S,ESelectInfo::Type){i
 void UTLCBattleHUDWidget::OnPresetChanged(FString S,ESelectInfo::Type){
   if(!Simulation||!BattleDirector||BattleDirector->GetPhase()!=ETLCBattlePhase::Ready)return;
   ETLCBattlePreset P=ETLCBattlePreset::BroadcastArena;
-  if(S==TEXT("Narrow Pass")){P=ETLCBattlePreset::NarrowPass;PendingMen=30;PendingWomen=70;}
-  else if(S==TEXT("North vs South")){P=ETLCBattlePreset::NorthVsSouth;PendingMen=50;PendingWomen=50;}
-  else {PendingMen=50;PendingWomen=50;}
+  if(S==TEXT("Narrow Pass")){
+    P=ETLCBattlePreset::NarrowPass;PendingMen=30;PendingWomen=70;
+    if(MenWeaponText)MenWeaponText->SetText(FText::FromString(TEXT("LOCKED: SPEARS / FISTS")));
+    if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(TEXT("LOCKED: SPEARS / FISTS")));
+  }else if(S==TEXT("North vs South")){
+    P=ETLCBattlePreset::NorthVsSouth;PendingMen=50;PendingWomen=50;
+    if(MenWeaponText)MenWeaponText->SetText(FText::FromString(TEXT("LOCKED: MUSKETS / FISTS")));
+    if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(TEXT("LOCKED: MUSKETS / FISTS")));
+  }else {
+    PendingMen=50;PendingWomen=50;
+    if(MenWeaponText)MenWeaponText->SetText(FText::FromString(TEXT("LOADOUT: FISTS")));
+    if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(TEXT("LOADOUT: FISTS")));
+  }
+  bMenGun=bMenSword=bWomenLipstick=bWomenBomb=false;
+  if(MenGunsToggle)MenGunsToggle->SetIsChecked(false);if(MenSwordsToggle)MenSwordsToggle->SetIsChecked(false);if(WomenLipstickToggle)WomenLipstickToggle->SetIsChecked(false);if(WomenBombToggle)WomenBombToggle->SetIsChecked(false);
+  const bool bArcade=P==ETLCBattlePreset::BroadcastArena;
+  if(MenGunsToggle)MenGunsToggle->SetIsEnabled(bArcade);if(MenSwordsToggle)MenSwordsToggle->SetIsEnabled(bArcade);if(WomenLipstickToggle)WomenLipstickToggle->SetIsEnabled(bArcade);if(WomenBombToggle)WomenBombToggle->SetIsEnabled(bArcade);
   Simulation->ApplyPreset(P);
   if(MenCountSlider)MenCountSlider->SetValue(PendingMen/100.f);
   if(WomenCountSlider)WomenCountSlider->SetValue(PendingWomen/100.f);
-  RefreshPendingCountLabels();
-  Simulation->BuildBattle(PendingMen,PendingWomen);
+  RefreshPendingCountLabels();Simulation->BuildBattle(PendingMen,PendingWomen);
 }
 
 void UTLCBattleHUDWidget::SetButtonText(UButton* Button,const FString& Text){
