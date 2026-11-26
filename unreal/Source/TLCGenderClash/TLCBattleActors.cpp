@@ -132,6 +132,10 @@ void ATLCFighterCharacter::ResetForBattle(){
 void ATLCFighterCharacter::SetFormationGoal(const FVector& Goal){FormationGoal=Goal;}
 void ATLCFighterCharacter::SetWeapon(ETLCWeaponType NewWeapon){Weapon=NewWeapon;}
 void ATLCFighterCharacter::SetRage(bool bEnabled){bRage=bEnabled;}
+void ATLCFighterCharacter::SetFuriosaState(bool bEnabled){
+  if(Team!=ETLCTeam::Women||(Kind!=ETLCFighterKind::Normal&&Kind!=ETLCFighterKind::Furiosa))return;
+  Kind=bEnabled?ETLCFighterKind::Furiosa:ETLCFighterKind::Normal;ConfigureKind();ApplyTeamVisuals();
+}
 void ATLCFighterCharacter::SetMaxHealth(float NewMaxHealth){MaxHealth=FMath::Max(1.f,NewMaxHealth);Health=FMath::Min(Health,MaxHealth);}
 void ATLCFighterCharacter::ApplyRallyBuff(float Multiplier,float DurationSeconds){
   RallyMultiplier=FMath::Max(1.f,Multiplier);
