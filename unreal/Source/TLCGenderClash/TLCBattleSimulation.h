@@ -8,6 +8,7 @@
 #include "TLCBattleSimulation.generated.h"
 
 class ATLCCommanderCharacter;
+class ATLCCameraDirector;
 
 UCLASS(Blueprintable)
 class TLCGENDERCLASH_API ATLCBattleSimulationDirector : public AActor {
@@ -24,6 +25,7 @@ public:
   UPROPERTY(EditAnywhere,BlueprintReadWrite) ETLCWeaponType WomenWeapon=ETLCWeaponType::Fists;
 
   UFUNCTION(BlueprintCallable) void BindBattleDirector(ATLCBattleDirector* InDirector);
+  UFUNCTION(BlueprintCallable) void BindCameraDirector(ATLCCameraDirector* InDirector);
   UFUNCTION(BlueprintCallable) bool BuildBattle(int32 MenCount=50,int32 WomenCount=50);
   UFUNCTION(BlueprintCallable) void StartSimulation();
   UFUNCTION(BlueprintCallable) void ResetSimulation();
@@ -31,6 +33,8 @@ public:
   UFUNCTION(BlueprintCallable) void SetTeamFormation(ETLCTeam Team,ETLCFormation Formation);
   UFUNCTION(BlueprintCallable) void SetTeamRage(ETLCTeam Team,bool bEnabled);
   UFUNCTION(BlueprintCallable) void SetFuriosaMode(bool bEnabled);
+  UFUNCTION(BlueprintCallable) void ApplyPreset(ETLCBattlePreset Preset);
+  UFUNCTION(BlueprintCallable) void ExecuteSpecialEvent(ETLCSpecialEvent EventType);
   UFUNCTION(BlueprintCallable) ATLCCommanderCharacter* SpawnCommander();
   UFUNCTION(BlueprintCallable) ATLCFighterCharacter* SpawnRobot();
   UFUNCTION(BlueprintCallable) ATLCFighterCharacter* SpawnUnicorn();
@@ -47,11 +51,13 @@ public:
   UFUNCTION(BlueprintPure) int32 GetLivingNormalCount(ETLCTeam Team)const;
   UFUNCTION(BlueprintPure) int32 GetActiveProjectileCount()const;
   UFUNCTION(BlueprintPure) bool IsSimulationRunning()const{return bRunning;}
+  UFUNCTION(BlueprintPure) ETLCBattlePreset GetCurrentPreset()const{return CurrentPreset;}
   const TArray<ATLCFighterCharacter*>& GetFightersNative()const{return Fighters;}
 
 private:
   UPROPERTY() TObjectPtr<ATLCBattleDirector> BattleDirector;
   UPROPERTY() TObjectPtr<ATLCWeaponDirector> WeaponDirector;
+  UPROPERTY() TObjectPtr<ATLCCameraDirector> CameraDirector;
   UPROPERTY() TObjectPtr<ATLCProjectilePool> ProjectilePool;
   UPROPERTY() TObjectPtr<ATLCCommanderCharacter> Commander;
   UPROPERTY() TObjectPtr<ATLCUFOActor> UFO;
@@ -67,6 +73,8 @@ private:
   bool bMenRage=false;
   bool bWomenRage=false;
   bool bFuriosaMode=false;
+  ETLCBattlePreset CurrentPreset=ETLCBattlePreset::BroadcastArena;
+  TArray<FTimerHandle> ActiveEventTimers;
 
   UFUNCTION() void HandleFighterEliminated(ATLCFighterCharacter* Fighter);
   UFUNCTION() void HandleBattleResetRequested();
@@ -76,6 +84,9 @@ private:
   FVector SlotToWorld(ETLCTeam Team,int32 TeamIndex,int32 TeamCount,ETLCFormation Formation)const;
   void RefreshFormationGoals(ETLCTeam Team);
   void SpawnConfiguredFighters();
+  void ClearEventTimers();
+  void ApplyPresetPalette(ATLCFighterCharacter* Fighter)const;
+  int32 SpawnReinforcements(ETLCTeam Team,int32 RequestedCount);
   void ApplyRadialHit(const FVector& Origin,float Radius,ETLCTeam SourceTeam,float Damage,float Knockback);
   void ApplyConeHit(const FVector& Origin,const FVector& Forward,float Range,float HalfAngleDegrees,ETLCTeam SourceTeam,float Damage,float Knockback);
   void FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime);
