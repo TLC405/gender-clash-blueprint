@@ -26,13 +26,20 @@ void ATLCWeaponDirector::ReportWeaponFired(ETLCTeam Team,ETLCWeaponType T){if(Ca
 
 ATLCCameraDirector::ATLCCameraDirector(){PrimaryActorTick.bCanEverTick=false;}
 void ATLCCameraDirector::SubmitInterest(const FTLCCameraInterest&I){Interests.Add(I);}
-void ATLCCameraDirector::ClearInterests(){Interests.Reset();}
+void ATLCCameraDirector::ClearInterests(){Interests.Reset();CurrentInterest=FTLCCameraInterest();CurrentSince=0.0;}
 FTLCCameraInterest ATLCCameraDirector::GetBestInterest()const{
   FTLCCameraInterest Best;for(const auto&I:Interests)if(I.Score>Best.Score)Best=I;return Best;
 }
-void ATLCCameraDirector::ResolveCameraFocus(){const auto Best=GetBestInterest();if(Best.Score>0)OnFocusChanged.Broadcast(Best);Interests.Reset();}
+void ATLCCameraDirector::ResolveCameraFocus(){
+  const auto Best=GetBestInterest();Interests.Reset();if(Best.Score<=0||!GetWorld())return;
+  const double Now=GetWorld()->GetTimeSeconds();
+  const bool bNoCurrent=CurrentInterest.Score<=0.f;
+  const bool bHoldExpired=(Now-CurrentSince)>=MinimumHoldSeconds;
+  const bool bClearlyBetter=Best.Score>=CurrentInterest.Score*(1.f+SwitchAdvantageRatio);
+  if(bNoCurrent||bClearlyBetter||bHoldExpired){CurrentInterest=Best;CurrentSince=Now;OnFocusChanged.Broadcast(CurrentInterest);}
+}
 
-ATLCAnnouncerDirector::ATLCAnnouncerDirector(){PrimaryActorTick.bCanEverTick=false;}
+ATLCAnnouncerDirector::ATLCAnnouncerDirector(){PrimaryActorTick.bCanEverTick=true;}
 bool ATLCAnnouncerDirector::TryAnnounce(const FTLCAnnouncerEvent&E){
   if(!GetWorld()||E.CachedLine.IsEmpty())return false;
   const double Now=GetWorld()->GetTimeSeconds();
@@ -41,7 +48,17 @@ bool ATLCAnnouncerDirector::TryAnnounce(const FTLCAnnouncerEvent&E){
   if(Last>0&&Now-Last<E.MinimumCooldown)return false;
   LastSpokenAt.Add(E.EventName,Now);GlobalLastSpoken=Now;OnLineReady.Broadcast(E.EventName,E.CachedLine);return true;
 }
-void ATLCAnnouncerDirector::ResetAnnouncer(){LastSpokenAt.Reset();GlobalLastSpoken=0;}
+void ATLCAnnouncerDirector::QueueAnnounce(const FTLCAnnouncerEvent&E){
+  if(E.EventName.IsNone()||E.CachedLine.IsEmpty())return;
+  for(FTLCAnnouncerEvent& Existing:Queue)if(Existing.EventName==E.EventName){if(E.Priority>Existing.Priority)Existing=E;return;}
+  Queue.Add(E);Queue.Sort([](const FTLCAnnouncerEvent&A,const FTLCAnnouncerEvent&B){return A.Priority>B.Priority;});
+  if(Queue.Num()>MaxQueueDepth)Queue.SetNum(MaxQueueDepth);
+}
+void ATLCAnnouncerDirector::Tick(float Dt){
+  Super::Tick(Dt);if(Queue.Num()==0)return;
+  if(TryAnnounce(Queue[0]))Queue.RemoveAt(0);
+}
+void ATLCAnnouncerDirector::ResetAnnouncer(){LastSpokenAt.Reset();Queue.Reset();GlobalLastSpoken=0;}
 
 ATLCPerformanceLODManager::ATLCPerformanceLODManager(){PrimaryActorTick.bCanEverTick=false;}
 float ATLCPerformanceLODManager::ComputeQualityPressure(float Ms,int32 Fighters,int32 Projectiles)const{
