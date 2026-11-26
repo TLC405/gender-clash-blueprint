@@ -9,6 +9,7 @@
 
 class ATLCCommanderCharacter;
 class ATLCCameraDirector;
+class ATLCVFXDirector;
 
 UCLASS(Blueprintable)
 class TLCGENDERCLASH_API ATLCBattleSimulationDirector : public AActor {
@@ -27,6 +28,7 @@ public:
   UFUNCTION(BlueprintCallable) void BindBattleDirector(ATLCBattleDirector* InDirector);
   UFUNCTION(BlueprintCallable) void BindCameraDirector(ATLCCameraDirector* InDirector);
   UFUNCTION(BlueprintCallable) void BindPerformanceManager(ATLCPerformanceLODManager* InManager);
+  UFUNCTION(BlueprintCallable) void BindVFXDirector(ATLCVFXDirector* InDirector);
   UFUNCTION(BlueprintCallable) bool BuildBattle(int32 MenCount=50,int32 WomenCount=50);
   UFUNCTION(BlueprintCallable) void StartSimulation();
   UFUNCTION(BlueprintCallable) void ResetSimulation();
@@ -56,6 +58,7 @@ public:
   UFUNCTION(BlueprintPure) FVector GetCommanderLocation()const;
   UFUNCTION(BlueprintCallable) float ExecuteAttackOnCommander(ATLCFighterCharacter* Attacker);
   UFUNCTION(BlueprintCallable) void ExecuteBossSpecial(ATLCFighterCharacter* Boss);
+  UFUNCTION(BlueprintCallable) void NotifyImpactVFX(const FVector& Location,bool bProjectile);
   UFUNCTION(BlueprintPure) float GetRobotHealthNormalized()const;
   UFUNCTION(BlueprintPure) float GetUnicornHealthNormalized()const;
 
@@ -73,6 +76,7 @@ private:
   UPROPERTY() TObjectPtr<ATLCWeaponDirector> WeaponDirector;
   UPROPERTY() TObjectPtr<ATLCCameraDirector> CameraDirector;
   UPROPERTY() TObjectPtr<ATLCPerformanceLODManager> PerformanceManager;
+  UPROPERTY() TObjectPtr<ATLCVFXDirector> VFXDirector;
   UPROPERTY() TObjectPtr<ATLCProjectilePool> ProjectilePool;
   UPROPERTY() TObjectPtr<ATLCCommanderCharacter> Commander;
   UPROPERTY() TObjectPtr<ATLCUFOActor> UFO;
