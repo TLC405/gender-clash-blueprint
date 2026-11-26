@@ -127,11 +127,11 @@ void UTLCBattleHUDWidget::BuildUI(){
   SlowMoToggle=WidgetTree->ConstructWidget<UCheckBox>();SlowMoToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnSlowMoChanged);UHorizontalBox* SM=WidgetTree->ConstructWidget<UHorizontalBox>();SM->AddChildToHorizontalBox(SlowMoToggle);SM->AddChildToHorizontalBox(MakeLabel(TEXT(" SLOW MOTION"),12,Chalk));Center->AddChildToVerticalBox(SM);
   CinematicToggle=WidgetTree->ConstructWidget<UCheckBox>();CinematicToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnCinematicChanged);UHorizontalBox* CF=WidgetTree->ConstructWidget<UHorizontalBox>();CF->AddChildToHorizontalBox(CinematicToggle);CF->AddChildToHorizontalBox(MakeLabel(TEXT(" CINEMATIC FX"),12,Chalk));Center->AddChildToVerticalBox(CF);
   AddSectionLabel(Center,TEXT("TLC COMMANDER"),Gold);
-  UButton* N=MakeButton(Center,TEXT("NUKE"),TEXT("Nuke"));N->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnNuke);
-  UButton* WC=MakeButton(Center,TEXT("WATER CANNON"),TEXT("Water"));WC->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnWaterCannon);
-  UButton* LS=MakeButton(Center,TEXT("LIPSTICK SHOT"),TEXT("LipstickShot"));LS->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnLipstickShot);
-  UButton* SW=MakeButton(Center,TEXT("SHOCKWAVE"),TEXT("Shock"));SW->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnShockwave);
-  UButton* RB=MakeButton(Center,TEXT("RALLY"),TEXT("Rally"));RB->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnRally);
+  NukeButton=MakeButton(Center,TEXT("NUKE"),TEXT("Nuke"));NukeButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnNuke);
+  WaterButton=MakeButton(Center,TEXT("WATER CANNON"),TEXT("Water"));WaterButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnWaterCannon);
+  LipstickShotButton=MakeButton(Center,TEXT("LIPSTICK SHOT"),TEXT("LipstickShot"));LipstickShotButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnLipstickShot);
+  ShockwaveButton=MakeButton(Center,TEXT("SHOCKWAVE"),TEXT("Shock"));ShockwaveButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnShockwave);
+  RallyButton=MakeButton(Center,TEXT("RALLY"),TEXT("Rally"));RallyButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnRally);
 
   ApplyResponsiveLayout();
 }
@@ -145,7 +145,7 @@ void UTLCBattleHUDWidget::ApplyResponsiveLayout(){
   CenterPanelSlot->SetAnchors(FAnchors(.36f,Bottom,.64f,.985f));CenterPanelSlot->SetOffsets(FMargin(0));
 }
 
-void UTLCBattleHUDWidget::NativeTick(const FGeometry& G,float Dt){Super::NativeTick(G,Dt);RefreshRuntimeText();}
+void UTLCBattleHUDWidget::NativeTick(const FGeometry& G,float Dt){Super::NativeTick(G,Dt);RefreshRuntimeText();UpdateCommanderButtons();}
 
 void UTLCBattleHUDWidget::RefreshRuntimeText(){
   if(!BattleDirector)return;const auto S=BattleDirector->GetSnapshot();
@@ -166,7 +166,12 @@ void UTLCBattleHUDWidget::HandleSpecialEvent(ETLCSpecialEvent E){if(EventText)Ev
 
 void UTLCBattleHUDWidget::OnStart(){ApplyPendingConfig();if(Simulation)Simulation->StartSimulation();}
 void UTLCBattleHUDWidget::OnPause(){if(BattleDirector)BattleDirector->PauseBattle();}
-void UTLCBattleHUDWidget::OnReset(){if(BattleDirector)BattleDirector->ResetBattle();}
+void UTLCBattleHUDWidget::OnReset(){
+  UGameplayStatics::SetGlobalTimeDilation(this,1.f);
+  if(SlowMoToggle)SlowMoToggle->SetIsChecked(false);if(MenRageToggle)MenRageToggle->SetIsChecked(false);if(WomenRageToggle)WomenRageToggle->SetIsChecked(false);if(FuriosaToggle)FuriosaToggle->SetIsChecked(false);
+  bMenGun=bMenSword=bWomenLipstick=bWomenBomb=false;if(MenWeaponText)MenWeaponText->SetText(FText::FromString(TEXT("WEAPON: FISTS")));if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: FISTS")));if(EventText)EventText->SetText(FText::FromString(TEXT("FIELD CLEAR")));
+  if(BattleDirector)BattleDirector->ResetBattle();
+}
 void UTLCBattleHUDWidget::OnSpawnCommander(){if(Simulation)Simulation->SpawnCommander();}
 void UTLCBattleHUDWidget::OnSpawnRobot(){if(Simulation)Simulation->SpawnRobot();}
 void UTLCBattleHUDWidget::OnSpawnUnicorn(){if(Simulation)Simulation->SpawnUnicorn();}
@@ -177,11 +182,11 @@ void UTLCBattleHUDWidget::OnMenSword(){if(Simulation&&Simulation->SetTeamWeapon(
 void UTLCBattleHUDWidget::OnWomenFists(){bWomenLipstick=bWomenBomb=false;if(Simulation)Simulation->SetTeamWeapon(ETLCTeam::Women,ETLCWeaponType::Fists);WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: FISTS")));}
 void UTLCBattleHUDWidget::OnWomenLipstick(){if(Simulation&&Simulation->SetTeamWeapon(ETLCTeam::Women,ETLCWeaponType::LipstickGun)){bWomenLipstick=true;bWomenBomb=false;WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: LIPSTICK GUN")));}else if(EventText)EventText->SetText(FText::FromString(TEXT("LIPSTICK GUN BLOCKED BY BATTLE PRESET")));}
 void UTLCBattleHUDWidget::OnWomenBomb(){if(Simulation&&Simulation->SetTeamWeapon(ETLCTeam::Women,ETLCWeaponType::MakeupBomb)){bWomenBomb=true;bWomenLipstick=false;WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: MAKEUP BOMB")));}else if(EventText)EventText->SetText(FText::FromString(TEXT("MAKEUP BOMB BLOCKED BY BATTLE PRESET")));}
-void UTLCBattleHUDWidget::OnNuke(){if(Simulation)if(ATLCCommanderCharacter* C=Simulation->SpawnCommander())C->TriggerNuke();}
-void UTLCBattleHUDWidget::OnWaterCannon(){if(Simulation)if(ATLCCommanderCharacter* C=Simulation->SpawnCommander())C->TriggerWaterCannon();}
-void UTLCBattleHUDWidget::OnLipstickShot(){if(Simulation)if(ATLCCommanderCharacter* C=Simulation->SpawnCommander())C->TriggerLipstickShot();}
-void UTLCBattleHUDWidget::OnShockwave(){if(Simulation)if(ATLCCommanderCharacter* C=Simulation->SpawnCommander())C->TriggerShockwaveSlam();}
-void UTLCBattleHUDWidget::OnRally(){if(Simulation)if(ATLCCommanderCharacter* C=Simulation->SpawnCommander())C->TriggerRallyBuff();}
+void UTLCBattleHUDWidget::OnNuke(){if(Simulation&&Simulation->GetCommander())Simulation->GetCommander()->TriggerNuke();else if(EventText)EventText->SetText(FText::FromString(TEXT("SPAWN TLC COMMANDER FIRST")));}
+void UTLCBattleHUDWidget::OnWaterCannon(){if(Simulation&&Simulation->GetCommander())Simulation->GetCommander()->TriggerWaterCannon();else if(EventText)EventText->SetText(FText::FromString(TEXT("SPAWN TLC COMMANDER FIRST")));}
+void UTLCBattleHUDWidget::OnLipstickShot(){if(Simulation&&Simulation->GetCommander())Simulation->GetCommander()->TriggerLipstickShot();else if(EventText)EventText->SetText(FText::FromString(TEXT("SPAWN TLC COMMANDER FIRST")));}
+void UTLCBattleHUDWidget::OnShockwave(){if(Simulation&&Simulation->GetCommander())Simulation->GetCommander()->TriggerShockwaveSlam();else if(EventText)EventText->SetText(FText::FromString(TEXT("SPAWN TLC COMMANDER FIRST")));}
+void UTLCBattleHUDWidget::OnRally(){if(Simulation&&Simulation->GetCommander())Simulation->GetCommander()->TriggerRallyBuff();else if(EventText)EventText->SetText(FText::FromString(TEXT("SPAWN TLC COMMANDER FIRST")));}
 
 void UTLCBattleHUDWidget::OnMenCountChanged(float V){PendingMen=FMath::Clamp(FMath::RoundToInt(V*100.f),0,100-PendingWomen);MenCountSlider->SetValue(PendingMen/100.f);RefreshPendingCountLabels();}
 void UTLCBattleHUDWidget::OnWomenCountChanged(float V){PendingWomen=FMath::Clamp(FMath::RoundToInt(V*100.f),0,100-PendingMen);WomenCountSlider->SetValue(PendingWomen/100.f);RefreshPendingCountLabels();}
@@ -206,4 +211,18 @@ void UTLCBattleHUDWidget::OnPresetChanged(FString S,ESelectInfo::Type){
   if(WomenCountSlider)WomenCountSlider->SetValue(PendingWomen/100.f);
   RefreshPendingCountLabels();
   Simulation->BuildBattle(PendingMen,PendingWomen);
+}
+
+void UTLCBattleHUDWidget::SetButtonText(UButton* Button,const FString& Text){
+  if(!Button)return;if(UTextBlock* T=Cast<UTextBlock>(Button->GetContent()))T->SetText(FText::FromString(Text));
+}
+void UTLCBattleHUDWidget::UpdateCommanderButtons(){
+  if(!Simulation)return;ATLCCommanderCharacter* C=Simulation->GetCommander();
+  TArray<TPair<UButton*,FName>> Buttons={{NukeButton,"Nuke"},{WaterButton,"WaterCannon"},{LipstickShotButton,"LipstickShot"},{ShockwaveButton,"ShockwaveSlam"},{RallyButton,"RallyBuff"}};
+  for(const auto& Pair:Buttons){
+    if(!Pair.Key)continue;
+    if(!C){Pair.Key->SetIsEnabled(false);SetButtonText(Pair.Key,Pair.Value.ToString()+TEXT(" • SPAWN HERO"));continue;}
+    const float Remaining=C->GetCooldownRemaining(Pair.Value);Pair.Key->SetIsEnabled(Remaining<=.01f);
+    SetButtonText(Pair.Key,Remaining>.01f?FString::Printf(TEXT("%s • %.1fs"),*Pair.Value.ToString(),Remaining):Pair.Value.ToString());
+  }
 }
