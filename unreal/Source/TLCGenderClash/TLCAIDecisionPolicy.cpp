@@ -5,7 +5,7 @@ bool UTLCAIDecisionPolicy::IsCandidateFeasible(const FTLCDecisionCandidate& C){
   if(C.Score<=0.0f)return false;
   if(C.Cost<0.0f||C.StaminaCost<0.0f||C.RageCost<0.0f)return false;
   if(C.FormationDisruptionRisk>0.85f&&!C.bSurvivalCritical)return false;
-  if(C.Action=="Flank"&&C.bUnderRangedFire&&!C.bSurvivalCritical)return false;
+  if(C.Action==FName(TEXT("Flank"))&&C.bUnderRangedFire&&!C.bSurvivalCritical)return false;
   return true;
 }
 
@@ -15,7 +15,7 @@ bool UTLCAIDecisionPolicy::ShouldSwitchBehavior(
   float Now){
   if(!IsCandidateFeasible(C))return false;
   if(C.bSurvivalCritical)return true;
-  if(S.CurrentAction.IsNone()||S.CurrentAction=="None")return true;
+  if(S.CurrentAction.IsNone()||S.CurrentAction==FName(TEXT("None")))return true;
 
   const float TimeInBehavior=FMath::Max(0.0f,Now-S.BehaviorEntryTime);
   if(TimeInBehavior<S.MinimumCommitmentSeconds)return false;
