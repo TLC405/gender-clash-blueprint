@@ -119,6 +119,8 @@ private:
   float NextLocalDecisionAt=0.f;
   float NextStrategicDecisionAt=0.f;
   float NextAttackAt=0.f;
+  float NextSpecialAt=0.f;
+  float SpecialBurstEndsAt=-1.f;
   bool bAlive=true;
   bool bRage=false;
   bool bAbducting=false;
@@ -131,6 +133,7 @@ private:
   void UpdateDecision(float Now);
   void UpdateMovement(float DeltaSeconds);
   void UpdateCombat(float Now);
+  void UpdateSpecialCombat(float Now);
   float GetDesiredMoveSpeed()const;
   float GetFormationDamageMultiplier()const;
   float GetFormationDamageTakenMultiplier(const FVector& IncomingDirection)const;
