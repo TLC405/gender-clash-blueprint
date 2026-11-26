@@ -30,11 +30,17 @@ bool ATLCCommanderCharacter::TriggerLipstickShot(){return TryAbility("LipstickSh
 bool ATLCCommanderCharacter::TriggerShockwaveSlam(){return TryAbility("ShockwaveSlam");}
 bool ATLCCommanderCharacter::TriggerRallyBuff(){return TryAbility("RallyBuff");}
 void ATLCCommanderCharacter::ResetAbilityCooldowns(){LastUsedAt.Reset();}
+void ATLCCommanderCharacter::ResetHeroHealth(){HeroHealth=MaxHeroHealth;bHeroAlive=true;SetActorHiddenInGame(false);SetActorEnableCollision(true);GetCharacterMovement()->SetMovementMode(MOVE_Walking);}
+bool ATLCCommanderCharacter::ApplyHeroDamage(float Damage,float Knockback,const FVector& Direction){
+  if(!bHeroAlive)return false;HeroHealth-=FMath::Max(0.f,Damage);
+  if(Knockback>0.f){FVector Launch=Direction.GetSafeNormal()*FMath::Min(Knockback,720.f);Launch.Z=FMath::Min(220.f,Knockback*.18f);LaunchCharacter(Launch,true,true);}
+  if(HeroHealth<=0.f){HeroHealth=0.f;bHeroAlive=false;GetCharacterMovement()->StopMovementImmediately();SetActorEnableCollision(false);OnCommanderEliminated.Broadcast();return true;}return false;
+}
 float ATLCCommanderCharacter::GetCooldownRemaining(FName N)const{
   if(!GetWorld())return 0.f;const double Last=LastUsedAt.FindRef(N);const float CD=CooldownSeconds.FindRef(N);if(Last<=0||CD<=0)return 0.f;return FMath::Max(0.f,CD-(float)(GetWorld()->GetTimeSeconds()-Last));
 }
 bool ATLCCommanderCharacter::TryAbility(FName N){
-  if(!GetWorld()||UGameplayStatics::IsGamePaused(GetWorld()))return false;
+  if(!bHeroAlive||!GetWorld()||UGameplayStatics::IsGamePaused(GetWorld()))return false;
   const double Now=GetWorld()->GetTimeSeconds(),Last=LastUsedAt.FindRef(N);
   const float CD=CooldownSeconds.FindRef(N);if(Last>0&&Now-Last<CD)return false;
   LastUsedAt.Add(N,Now);OnAbilityTriggered.Broadcast(N);ExecuteAbilityVisuals(N);return true;
