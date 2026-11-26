@@ -19,7 +19,7 @@ void ATLCVerticalSliceGameMode::BeginPlay(){
   PerformanceManager=GetWorld()->SpawnActor<ATLCPerformanceLODManager>();
   RuntimeCoordinator=GetWorld()->SpawnActor<ATLCBattleRuntimeCoordinator>();
 
-  if(Simulation){Simulation->BindBattleDirector(BattleDirector);Simulation->BindCameraDirector(CameraDirector);Simulation->BuildBattle(50,50);}
+  if(Simulation){Simulation->BindBattleDirector(BattleDirector);Simulation->BindCameraDirector(CameraDirector);Simulation->BindPerformanceManager(PerformanceManager);Simulation->BuildBattle(50,50);}
   if(SpecialEventDirector)SpecialEventDirector->OnEventTriggered.AddDynamic(this,&ATLCVerticalSliceGameMode::HandleSpecialEvent);
   if(BattleDirector){BattleDirector->OnPhaseChanged.AddDynamic(this,&ATLCVerticalSliceGameMode::HandlePhaseChanged);BattleDirector->OnBattleFinished.AddDynamic(this,&ATLCVerticalSliceGameMode::HandleBattleFinished);}
   if(AnnouncerDirector&&AudioDirector)AnnouncerDirector->OnLineReady.AddDynamic(AudioDirector,&ATLCAudioDirector::HandleAnnouncerLine);
