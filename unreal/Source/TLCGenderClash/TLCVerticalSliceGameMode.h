@@ -13,6 +13,7 @@ class ATLCCameraDirector;
 class ATLCAnnouncerDirector;
 class ATLCPerformanceLODManager;
 class ATLCProceduralArena;
+enum class ETLCSpecialEvent : uint8;
 
 UCLASS()
 class TLCGENDERCLASH_API ATLCVerticalSliceGameMode : public AGameModeBase {
