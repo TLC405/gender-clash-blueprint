@@ -208,6 +208,28 @@ float ATLCBattleSimulationDirector::ExecuteAttackOnCommander(ATLCFighterCharacte
 }
 void ATLCBattleSimulationDirector::HandleCommanderEliminated(){if(BattleDirector)BattleDirector->SetHeroAlive(ETLCTeam::Men,false);}
 
+void ATLCBattleSimulationDirector::ExecuteBossSpecial(ATLCFighterCharacter* Boss){
+  if(!Boss||!Boss->IsBattleAlive())return;
+  const FVector Origin=Boss->GetActorLocation();
+  if(Boss->GetKind()==ETLCFighterKind::Robot){
+    ApplyRadialHit(Origin,340.f,ETLCTeam::Men,34.f,430.f);
+    if(CameraDirector){FTLCCameraInterest I;I.Location=Origin;I.Score=.93f;I.Reason="RobotStomp";I.Subject=Boss;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}
+  }else if(Boss->GetKind()==ETLCFighterKind::Unicorn){
+    FVector Forward=Boss->GetActorForwardVector();
+    ApplyConeHit(Origin,Forward,700.f,20.f,ETLCTeam::Women,28.f,500.f);
+    if(CameraDirector){FTLCCameraInterest I;I.Location=Origin+Forward*300.f;I.Score=.93f;I.Reason="UnicornCharge";I.Subject=Boss;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}
+  }else if(Boss->GetKind()==ETLCFighterKind::MaleGiant||Boss->GetKind()==ETLCFighterKind::FemaleGiant){
+    ApplyRadialHit(Origin,390.f,Boss->GetTeam(),38.f,610.f);
+    if(CameraDirector){FTLCCameraInterest I;I.Location=Origin;I.Score=.91f;I.Reason="GiantStomp";I.Subject=Boss;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}
+  }
+}
+float ATLCBattleSimulationDirector::GetRobotHealthNormalized()const{
+  for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->GetKind()==ETLCFighterKind::Robot)return F->GetHealthNormalized();return -1.f;
+}
+float ATLCBattleSimulationDirector::GetUnicornHealthNormalized()const{
+  for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->GetKind()==ETLCFighterKind::Unicorn)return F->GetHealthNormalized();return -1.f;
+}
+
 float ATLCBattleSimulationDirector::ExecuteAttack(ATLCFighterCharacter* A,ATLCFighterCharacter* T){
   if(!A||!T||!A->IsBattleAlive()||!T->IsBattleAlive()||!WeaponDirector)return 0.f;
   FTLCWeaponTuning Tune=WeaponDirector->GetTuning(A->GetWeapon());
