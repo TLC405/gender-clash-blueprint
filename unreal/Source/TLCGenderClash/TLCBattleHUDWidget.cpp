@@ -131,6 +131,7 @@ void UTLCBattleHUDWidget::BuildUI(){
   UButton* Pause=MakeButton(Center,TEXT("PAUSE / RESUME"),TEXT("Pause"));Pause->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnPause);
   UButton* Reset=MakeButton(Center,TEXT("RESET"),TEXT("Reset"));Reset->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnReset);
   UButton* Special=MakeButton(Center,TEXT("SPECIAL EVENT"),TEXT("Special"));Special->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnSpecialEvent);
+  AddSectionLabel(Center,TEXT("CAMERA"),Chalk);CameraModeCombo=WidgetTree->ConstructWidget<UComboBoxString>();for(const TCHAR* M:{TEXT("Broadcast"),TEXT("Tactical"),TEXT("Close Combat"),TEXT("Hero Follow"),TEXT("Boss Cam"),TEXT("Cinematic")})CameraModeCombo->AddOption(M);CameraModeCombo->SetSelectedOption(TEXT("Broadcast"));CameraModeCombo->OnSelectionChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnCameraModeChanged);Center->AddChildToVerticalBox(CameraModeCombo);
   AddSectionLabel(Center,TEXT("CAMERA ZOOM"),Chalk);CameraZoomSlider=WidgetTree->ConstructWidget<USlider>();CameraZoomSlider->SetValue(.5f);CameraZoomSlider->OnValueChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnCameraZoomChanged);Center->AddChildToVerticalBox(CameraZoomSlider);
   AddSectionLabel(Center,TEXT("CHAOS INTENSITY"),Chalk);ChaosSlider=WidgetTree->ConstructWidget<USlider>();ChaosSlider->SetValue(.5f);ChaosSlider->OnValueChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnChaosChanged);Center->AddChildToVerticalBox(ChaosSlider);
   SlowMoToggle=WidgetTree->ConstructWidget<UCheckBox>();SlowMoToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnSlowMoChanged);UHorizontalBox* SM=WidgetTree->ConstructWidget<UHorizontalBox>();SM->AddChildToHorizontalBox(SlowMoToggle);SM->AddChildToHorizontalBox(MakeLabel(TEXT(" SLOW MOTION"),12,Chalk));Center->AddChildToVerticalBox(SM);
@@ -304,4 +305,15 @@ void UTLCBattleHUDWidget::OnWomenLipstickToggleChanged(bool B){
 void UTLCBattleHUDWidget::OnWomenBombToggleChanged(bool B){
   if(!Simulation||!Simulation->SetWeaponToggle(ETLCTeam::Women,ETLCWeaponType::MakeupBomb,B)){if(B&&WomenBombToggle)WomenBombToggle->SetIsChecked(false);if(B&&EventText)EventText->SetText(FText::FromString(TEXT("MAKEUP BOMB BLOCKED BY BATTLE PRESET")));return;}
   bWomenBomb=B;FString L=TEXT("LOADOUT: FISTS");if(bWomenLipstick)L+=TEXT(" + LIPSTICK");if(bWomenBomb)L+=TEXT(" + BOMBS");if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(L));
+}
+
+void UTLCBattleHUDWidget::OnCameraModeChanged(FString S,ESelectInfo::Type){
+  if(!SpectatorCamera)return;
+  ETLCCameraViewMode Mode=ETLCCameraViewMode::Broadcast;
+  if(S==TEXT("Tactical"))Mode=ETLCCameraViewMode::Tactical;
+  else if(S==TEXT("Close Combat"))Mode=ETLCCameraViewMode::CloseCombat;
+  else if(S==TEXT("Hero Follow"))Mode=ETLCCameraViewMode::HeroFollow;
+  else if(S==TEXT("Boss Cam"))Mode=ETLCCameraViewMode::BossCam;
+  else if(S==TEXT("Cinematic"))Mode=ETLCCameraViewMode::Cinematic;
+  SpectatorCamera->SetViewMode(Mode);
 }
