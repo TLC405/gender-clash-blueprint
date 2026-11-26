@@ -1,0 +1,24 @@
+{
+  "schemaVersion":1,
+  "presets":{
+    "broadcastArena":{
+      "label":"TLC Broadcast Arena",
+      "modernWeaponsAllowed":true,
+      "theme":"sports_broadcast"
+    },
+    "narrowPass":{
+      "label":"Narrow Pass",
+      "modernWeaponsAllowed":false,
+      "theme":"bronze_crimson_ancient",
+      "formationBias":{"men":"ShieldWall","women":"Rush"},
+      "specialRules":["chokePoint","staggeredAttackerWaves"]
+    },
+    "northVsSouth":{
+      "label":"North vs South",
+      "modernWeaponsAllowed":false,
+      "theme":"period_blue_gray_butternut",
+      "weapons":["musket"],
+      "specialRules":["volleyLines","powderSmoke","periodTerrain"]
+    }
+  }
+}
