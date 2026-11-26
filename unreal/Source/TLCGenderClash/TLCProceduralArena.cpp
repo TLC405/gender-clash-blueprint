@@ -24,3 +24,20 @@ void ATLCProceduralArena::BuildArena(){
   AddBox(TEXT("EastWall"),FVector(HX+35,0,90),FVector(.7f,ArenaSize.Y/100.f,2.4f));
   AddBox(TEXT("CenterStripe"),FVector(0,0,-2),FVector(.10f,ArenaSize.Y/100.f,.03f));
 }
+
+void ATLCProceduralArena::ApplyPreset(ETLCBattlePreset Preset){
+  if(Preset==ETLCBattlePreset::NarrowPass){
+    ArenaSize=FVector2D(4200.f,1150.f);
+    CenterMark->SetText(FText::FromString(TEXT("NARROW PASS  •  HOLD THE LINE  •  NO FIREARMS")));
+    CenterMark->SetTextRenderColor(FColor(230,155,45));
+  }else if(Preset==ETLCBattlePreset::NorthVsSouth){
+    ArenaSize=FVector2D(4200.f,2300.f);
+    CenterMark->SetText(FText::FromString(TEXT("NORTH VS SOUTH  •  VOLLEY FIELD")));
+    CenterMark->SetTextRenderColor(FColor(220,195,150));
+  }else{
+    ArenaSize=FVector2D(4200.f,2300.f);
+    CenterMark->SetText(FText::FromString(TEXT("TLC  •  TRUTH  LOVE  COMMUNITY")));
+    CenterMark->SetTextRenderColor(FColor(240,205,80));
+  }
+  BuildArena();
+}
