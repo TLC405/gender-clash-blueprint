@@ -4,6 +4,8 @@
 #include "GameFramework/Character.h"
 #include "TLCCommanderCharacter.generated.h"
 class UAbilitySystemComponent;
+class UStaticMeshComponent;
+class UTextRenderComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTLCCommanderAbility,FName,AbilityName);
 
 UCLASS(Blueprintable)
@@ -19,10 +21,16 @@ public:
   UFUNCTION(BlueprintCallable) bool TriggerShockwaveSlam();
   UFUNCTION(BlueprintCallable) bool TriggerRallyBuff();
   UFUNCTION(BlueprintCallable) void ResetAbilityCooldowns();
+  UFUNCTION(BlueprintPure) float GetCooldownRemaining(FName AbilityName) const;
   UFUNCTION(BlueprintImplementableEvent) void ExecuteAbilityVisuals(FName AbilityName);
 protected:
   UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TObjectPtr<UAbilitySystemComponent> AbilitySystem;
   UPROPERTY(EditAnywhere,BlueprintReadWrite) TMap<FName,float> CooldownSeconds;
+  UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TObjectPtr<UStaticMeshComponent> HeroTorso;
+  UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TObjectPtr<UStaticMeshComponent> HeroHead;
+  UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TObjectPtr<UStaticMeshComponent> LeftShoulder;
+  UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TObjectPtr<UStaticMeshComponent> RightShoulder;
+  UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TObjectPtr<UTextRenderComponent> HeroMarker;
 private:
   TMap<FName,double> LastUsedAt;
   bool TryAbility(FName AbilityName);
