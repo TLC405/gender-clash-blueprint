@@ -186,6 +186,7 @@ private:
   float RecentCasualtyScore = 0.f;
   float SecondsSinceElimination = 0.f;
   float SuddenDeathElapsed = 0.f;
+  ETLCBattlePhase ResumePhaseAfterPause = ETLCBattlePhase::Active;
   int32 BattleGeneration = 0;
   FGuid ActiveMatchId;
 
@@ -236,6 +237,7 @@ public:
   UFUNCTION(BlueprintCallable) void SetMusicState(ETLCMusicState State);
   UFUNCTION(BlueprintCallable) void UpdateMix(const FTLCTacticalSnapshot& Snapshot);
   UFUNCTION(BlueprintCallable) void ResetAudioState();
+  UFUNCTION(BlueprintImplementableEvent) void SetBattlePaused(bool bPaused);
   UFUNCTION(BlueprintImplementableEvent) void ApplyMetaSoundParameters(float Intensity, float MenAdvantage, float WomenAdvantage, bool BossActive, bool FinalTen);
   UFUNCTION(BlueprintImplementableEvent) void TransitionMusicState(ETLCMusicState State);
   UFUNCTION(BlueprintImplementableEvent) void StopBattleAudio();
