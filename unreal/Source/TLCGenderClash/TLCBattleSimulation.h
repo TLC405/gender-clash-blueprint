@@ -36,15 +36,16 @@ public:
   UFUNCTION(BlueprintCallable) bool TriggerUFO(int32 TargetCount=4);
   UFUNCTION(BlueprintCallable) void HandleCommanderAbility(FName AbilityName);
 
-  UFUNCTION(BlueprintPure) ATLCFighterCharacter* FindBestTarget(const ATLCFighterCharacter* Requester)const;
-  UFUNCTION(BlueprintPure) float GetDesiredAttackRange(const ATLCFighterCharacter* Fighter)const;
+  UFUNCTION(BlueprintPure) ATLCFighterCharacter* FindBestTarget(ATLCFighterCharacter* Requester)const;
+  UFUNCTION(BlueprintPure) float GetDesiredAttackRange(ATLCFighterCharacter* Fighter)const;
   UFUNCTION(BlueprintPure) float GetLocalDecisionInterval(int32 AgentId)const;
   UFUNCTION(BlueprintPure) float GetStrategicDecisionInterval(int32 AgentId)const;
   UFUNCTION(BlueprintCallable) float ExecuteAttack(ATLCFighterCharacter* Attacker,ATLCFighterCharacter* Target);
 
   UFUNCTION(BlueprintPure) int32 GetLivingNormalCount(ETLCTeam Team)const;
   UFUNCTION(BlueprintPure) int32 GetActiveProjectileCount()const;
-  UFUNCTION(BlueprintPure) const TArray<ATLCFighterCharacter*>& GetFighters()const{return Fighters;}
+  UFUNCTION(BlueprintPure) bool IsSimulationRunning()const{return bRunning;}
+  const TArray<ATLCFighterCharacter*>& GetFightersNative()const{return Fighters;}
 
 private:
   UPROPERTY() TObjectPtr<ATLCBattleDirector> BattleDirector;
@@ -58,6 +59,9 @@ private:
   int64 NextHitId=1;
   int32 NextAgentId=1;
   bool bRunning=false;
+  bool bSuppressAutoRebuild=false;
+  int32 BuiltMenCount=50;
+  int32 BuiltWomenCount=50;
 
   UFUNCTION() void HandleFighterEliminated(ATLCFighterCharacter* Fighter);
   UFUNCTION() void HandleBattleResetRequested();
@@ -66,6 +70,7 @@ private:
   ATLCFighterCharacter* SpawnFighter(ETLCTeam Team,ETLCFighterKind Kind,int32 TeamIndex,int32 TeamCount);
   FVector SlotToWorld(ETLCTeam Team,int32 TeamIndex,int32 TeamCount,ETLCFormation Formation)const;
   void RefreshFormationGoals(ETLCTeam Team);
+  void SpawnConfiguredFighters();
   void ApplyRadialHit(const FVector& Origin,float Radius,ETLCTeam SourceTeam,float Damage,float Knockback);
   void ApplyConeHit(const FVector& Origin,const FVector& Forward,float Range,float HalfAngleDegrees,ETLCTeam SourceTeam,float Damage,float Knockback);
   void FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime);
