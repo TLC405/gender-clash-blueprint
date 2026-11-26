@@ -242,10 +242,10 @@ private:
   FTLCSpecialEventResult BuildResult(ETLCSpecialEvent EventType) const;
 };
 
-UCLASS(Blueprintable)
 class USoundBase;
 class UAudioComponent;
 
+UCLASS(Blueprintable)
 class TLCGENDERCLASH_API ATLCAudioDirector : public AActor {
   GENERATED_BODY()
 public:
