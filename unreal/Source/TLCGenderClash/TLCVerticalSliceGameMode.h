@@ -13,6 +13,7 @@ class ATLCCameraDirector;
 class ATLCAnnouncerDirector;
 class ATLCPerformanceLODManager;
 class ATLCProceduralArena;
+class ATLCVFXDirector;
 enum class ETLCSpecialEvent : uint8;
 
 UCLASS()
@@ -36,6 +37,7 @@ private:
   UPROPERTY() TObjectPtr<ATLCAnnouncerDirector> AnnouncerDirector;
   UPROPERTY() TObjectPtr<ATLCPerformanceLODManager> PerformanceManager;
   UPROPERTY() TObjectPtr<ATLCProceduralArena> Arena;
+  UPROPERTY() TObjectPtr<ATLCVFXDirector> VFXDirector;
 
   UFUNCTION() void HandleSpecialEvent(ETLCSpecialEvent EventType);
   UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase Phase);
