@@ -16,6 +16,7 @@ void ATLCBattleSimulationDirector::BeginPlay(){
 }
 
 void ATLCBattleSimulationDirector::BindCameraDirector(ATLCCameraDirector* InDirector){CameraDirector=InDirector;}
+void ATLCBattleSimulationDirector::BindPerformanceManager(ATLCPerformanceLODManager* InManager){PerformanceManager=InManager;}
 
 void ATLCBattleSimulationDirector::BindBattleDirector(ATLCBattleDirector* InDirector){
   if(BattleDirector){
@@ -66,7 +67,15 @@ void ATLCBattleSimulationDirector::HandleBattleResetRequested(){
   }
 }
 void ATLCBattleSimulationDirector::HandlePhaseChanged(ETLCBattlePhase Phase){bRunning=Phase==ETLCBattlePhase::Active||Phase==ETLCBattlePhase::SuddenDeath;}
-void ATLCBattleSimulationDirector::Tick(float Dt){Super::Tick(Dt);}
+void ATLCBattleSimulationDirector::Tick(float Dt){
+  Super::Tick(Dt);if(Dt<=0.f)return;
+  FrameSamples.Add(Dt*1000.f);if(FrameSamples.Num()>600)FrameSamples.RemoveAt(0,FrameSamples.Num()-600,false);
+  PerformanceAccumulator+=Dt;if(PerformanceAccumulator<1.f)return;PerformanceAccumulator=0.f;
+  if(FrameSamples.Num()>0){
+    float Sum=0.f;TArray<float> Sorted=FrameSamples;for(float Ms:Sorted)Sum+=Ms;Sorted.Sort();AverageFrameMs=Sum/Sorted.Num();const int32 P99Index=FMath::Clamp(FMath::CeilToInt(Sorted.Num()*.99f)-1,0,Sorted.Num()-1);P99FrameMs=Sorted[P99Index];
+    if(PerformanceManager){const float Pressure=PerformanceManager->ComputeQualityPressure(P99FrameMs,GetLivingNormalCount(ETLCTeam::Men)+GetLivingNormalCount(ETLCTeam::Women),GetActiveProjectileCount());PerformanceManager->ApplyScalabilityPressure(Pressure);if(ProjectilePool)ProjectilePool->SetActiveLimit(FMath::RoundToInt(FMath::Lerp(160.f,70.f,Pressure)));}
+  }
+}
 
 void ATLCBattleSimulationDirector::SpawnConfiguredFighters(){
   for(int32 I=0;I<BuiltMenCount;++I)SpawnFighter(ETLCTeam::Men,ETLCFighterKind::Normal,I,BuiltMenCount);
@@ -157,7 +166,9 @@ float ATLCBattleSimulationDirector::ExecuteAttack(ATLCFighterCharacter* A,ATLCFi
 
   if(Tune.bRanged){
     const FVector Dir=(T->GetActorLocation()-A->GetActorLocation()).GetSafeNormal();
-    FireProjectileFrom(A->GetActorLocation()+Dir*70.f+FVector(0,0,80),T->GetActorLocation()+FVector(0,0,60),A->GetTeam(),Tune.Damage,Tune.Knockback,1450.f,2.2f);
+    if(!FireProjectileFrom(A->GetActorLocation()+Dir*70.f+FVector(0,0,80),T->GetActorLocation()+FVector(0,0,60),A->GetTeam(),Tune.Damage,Tune.Knockback,1450.f,2.2f)){
+      FTLCHitPayload Hit;Hit.HitId=NextHitId++;Hit.SourceTeam=A->GetTeam();Hit.Damage=Tune.Damage;Hit.Knockback=Tune.Knockback;Hit.Direction=Dir;T->ApplyBattleHit(Hit);
+    }
   }else{
     FTLCHitPayload Hit;Hit.HitId=NextHitId++;Hit.SourceTeam=A->GetTeam();Hit.Damage=Tune.Damage;Hit.Knockback=Tune.Knockback;Hit.Direction=(T->GetActorLocation()-A->GetActorLocation()).GetSafeNormal();
     T->ApplyBattleHit(Hit);
@@ -166,10 +177,10 @@ float ATLCBattleSimulationDirector::ExecuteAttack(ATLCFighterCharacter* A,ATLCFi
   return Tune.Cooldown;
 }
 
-void ATLCBattleSimulationDirector::FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime){
-  if(!ProjectilePool)return;ATLCPooledProjectile* P=ProjectilePool->Acquire();if(!P)return;
+bool ATLCBattleSimulationDirector::FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime){
+  if(!ProjectilePool)return false;ATLCPooledProjectile* P=ProjectilePool->Acquire();if(!P)return false;
   const FVector Vel=(Target-Origin).GetSafeNormal()*Speed;
-  P->ActivateProjectile(Origin,Vel,Team,Damage,Knockback,Lifetime,NextHitId++,this);
+  P->ActivateProjectile(Origin,Vel,Team,Damage,Knockback,Lifetime,NextHitId++,this);return true;
 }
 
 void ATLCBattleSimulationDirector::HandleFighterEliminated(ATLCFighterCharacter* F){
