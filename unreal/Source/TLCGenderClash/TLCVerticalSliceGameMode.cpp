@@ -4,6 +4,7 @@
 #include "TLCArcadeRuntime.h"
 #include "TLCProceduralArena.h"
 #include "TLCGenderClashPlayerController.h"
+#include "TLCVFXDirector.h"
 
 ATLCVerticalSliceGameMode::ATLCVerticalSliceGameMode(){PrimaryActorTick.bCanEverTick=false;PlayerControllerClass=ATLCGenderClashPlayerController::StaticClass();}
 
@@ -17,9 +18,10 @@ void ATLCVerticalSliceGameMode::BeginPlay(){
   CameraDirector=GetWorld()->SpawnActor<ATLCCameraDirector>();
   AnnouncerDirector=GetWorld()->SpawnActor<ATLCAnnouncerDirector>();
   PerformanceManager=GetWorld()->SpawnActor<ATLCPerformanceLODManager>();
+  VFXDirector=GetWorld()->SpawnActor<ATLCVFXDirector>();
   RuntimeCoordinator=GetWorld()->SpawnActor<ATLCBattleRuntimeCoordinator>();
 
-  if(Simulation){Simulation->BindBattleDirector(BattleDirector);Simulation->BindCameraDirector(CameraDirector);Simulation->BindPerformanceManager(PerformanceManager);Simulation->BuildBattle(50,50);}
+  if(Simulation){Simulation->BindBattleDirector(BattleDirector);Simulation->BindCameraDirector(CameraDirector);Simulation->BindPerformanceManager(PerformanceManager);Simulation->BindVFXDirector(VFXDirector);Simulation->BuildBattle(50,50);}
   if(SpecialEventDirector)SpecialEventDirector->OnEventTriggered.AddDynamic(this,&ATLCVerticalSliceGameMode::HandleSpecialEvent);
   if(BattleDirector){BattleDirector->OnPhaseChanged.AddDynamic(this,&ATLCVerticalSliceGameMode::HandlePhaseChanged);BattleDirector->OnBattleFinished.AddDynamic(this,&ATLCVerticalSliceGameMode::HandleBattleFinished);}
   if(AnnouncerDirector&&AudioDirector)AnnouncerDirector->OnLineReady.AddDynamic(AudioDirector,&ATLCAudioDirector::HandleAnnouncerLine);
