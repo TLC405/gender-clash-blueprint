@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "cooldowns": {
+    "global": 1.6,
+    "majorEvent": 5,
+    "repeatEvent": 12
+  },
+  "cachedLines": {
+    "battleStart": [
+      "Battle control is live.",
+      "The field is set. Here we go."
+    ],
+    "commanderSpawn": [
+      "TLC Commander is on the field."
+    ],
+    "formationBroken": [
+      "That formation is breaking under pressure."
+    ],
+    "flank": [
+      "A flank is developing. Watch the edge."
+    ],
+    "robotVsUnicorn": [
+      "The robot has found the unicorn."
+    ],
+    "ufo": [
+      "We have an unidentified object over the battlefield."
+    ],
+    "giant": [
+      "That is not a normal-sized fighter."
+    ],
+    "finalTen": [
+      "Ten fighters remain. Every hit matters now."
+    ],
+    "victoryMen": [
+      "The men close it out."
+    ],
+    "victoryWomen": [
+      "The women take the field."
+    ]
+  },
+  "compatibilityVersion": 1,
+  "lastUpdated": "2026-11-25",
+  "source": "unreal/Data/CommentaryBank.json",
+  "localizationKey": "tlc.manifest.commentary_bank"
+}

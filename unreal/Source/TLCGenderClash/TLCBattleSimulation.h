@@ -1,0 +1,127 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "TLCBattleSystems.h"
+#include "TLCArcadeRuntime.h"
+#include "TLCBattleActors.h"
+#include "TLCBattleSimulation.generated.h"
+
+class ATLCCommanderCharacter;
+class ATLCCameraDirector;
+class ATLCVFXDirector;
+
+UCLASS(Blueprintable)
+class TLCGENDERCLASH_API ATLCBattleSimulationDirector : public AActor {
+  GENERATED_BODY()
+public:
+  ATLCBattleSimulationDirector();
+  virtual void BeginPlay() override;
+  virtual void Tick(float DeltaSeconds) override;
+
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) FVector2D ArenaSize=FVector2D(4200.f,2300.f);
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) ETLCFormation MenFormation=ETLCFormation::Ranks;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) ETLCFormation WomenFormation=ETLCFormation::Ranks;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) ETLCWeaponType MenWeapon=ETLCWeaponType::Fists;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite) ETLCWeaponType WomenWeapon=ETLCWeaponType::Fists;
+
+  UFUNCTION(BlueprintCallable) void BindBattleDirector(ATLCBattleDirector* InDirector);
+  UFUNCTION(BlueprintCallable) void BindCameraDirector(ATLCCameraDirector* InDirector);
+  UFUNCTION(BlueprintCallable) void BindPerformanceManager(ATLCPerformanceLODManager* InManager);
+  UFUNCTION(BlueprintCallable) void BindVFXDirector(ATLCVFXDirector* InDirector);
+  UFUNCTION(BlueprintCallable) bool BuildBattle(int32 MenCount=50,int32 WomenCount=50);
+  UFUNCTION(BlueprintCallable) void StartSimulation();
+  UFUNCTION(BlueprintCallable) void ResetSimulation();
+  UFUNCTION(BlueprintCallable) bool SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon);
+  UFUNCTION(BlueprintCallable) bool SetWeaponToggle(ETLCTeam Team,ETLCWeaponType Weapon,bool bEnabled);
+  UFUNCTION(BlueprintCallable) void SetTeamFormation(ETLCTeam Team,ETLCFormation Formation);
+  UFUNCTION(BlueprintCallable) void SetTeamRage(ETLCTeam Team,bool bEnabled);
+  UFUNCTION(BlueprintCallable) void SetMenStrength(float Value);
+  UFUNCTION(BlueprintCallable) void SetWomenSpeed(float Value);
+  UFUNCTION(BlueprintCallable) void SetFuriosaMode(bool bEnabled);
+  UFUNCTION(BlueprintCallable) void ApplyPreset(ETLCBattlePreset Preset);
+  UFUNCTION(BlueprintCallable) void ExecuteSpecialEvent(ETLCSpecialEvent EventType);
+  UFUNCTION(BlueprintCallable) ATLCCommanderCharacter* SpawnCommander();
+  UFUNCTION(BlueprintCallable) ATLCFighterCharacter* SpawnRobot();
+  UFUNCTION(BlueprintCallable) ATLCFighterCharacter* SpawnUnicorn();
+  UFUNCTION(BlueprintCallable) ATLCFighterCharacter* SpawnGiant(ETLCTeam Team);
+  UFUNCTION(BlueprintCallable) bool TriggerUFO(int32 TargetCount=4);
+  UFUNCTION(BlueprintCallable) void HandleCommanderAbility(FName AbilityName);
+
+  UFUNCTION(BlueprintPure) ATLCFighterCharacter* FindBestTarget(ATLCFighterCharacter* Requester)const;
+  UFUNCTION(BlueprintPure) float GetDesiredAttackRange(ATLCFighterCharacter* Fighter)const;
+  UFUNCTION(BlueprintPure) float GetCloseDecisionInterval(int32 AgentId)const;
+  UFUNCTION(BlueprintPure) float GetLocalDecisionInterval(int32 AgentId)const;
+  UFUNCTION(BlueprintPure) float GetStrategicDecisionInterval(int32 AgentId)const;
+  UFUNCTION(BlueprintCallable) float ExecuteAttack(ATLCFighterCharacter* Attacker,ATLCFighterCharacter* Target);
+  UFUNCTION(BlueprintPure) bool ShouldPrioritizeCommander(ATLCFighterCharacter* Requester)const;
+  UFUNCTION(BlueprintPure) FVector GetCommanderLocation()const;
+  UFUNCTION(BlueprintCallable) float ExecuteAttackOnCommander(ATLCFighterCharacter* Attacker);
+  UFUNCTION(BlueprintCallable) void ExecuteBossSpecial(ATLCFighterCharacter* Boss);
+  UFUNCTION(BlueprintCallable) void NotifyImpactVFX(const FVector& Location,bool bProjectile);
+  UFUNCTION(BlueprintPure) float GetRobotHealthNormalized()const;
+  UFUNCTION(BlueprintPure) float GetUnicornHealthNormalized()const;
+
+  UFUNCTION(BlueprintPure) int32 GetLivingNormalCount(ETLCTeam Team)const;
+  UFUNCTION(BlueprintPure) int32 GetActiveProjectileCount()const;
+  UFUNCTION(BlueprintPure) float GetAverageFrameMilliseconds()const{return AverageFrameMs;}
+  UFUNCTION(BlueprintPure) float GetP99FrameMilliseconds()const{return P99FrameMs;}
+  UFUNCTION(BlueprintPure) bool IsSimulationRunning()const{return bRunning;}
+  UFUNCTION(BlueprintPure) ETLCBattlePreset GetCurrentPreset()const{return CurrentPreset;}
+  UFUNCTION(BlueprintPure) ATLCCommanderCharacter* GetCommander()const{return Commander;}
+  const TArray<ATLCFighterCharacter*>& GetFightersNative()const{return Fighters;}
+
+private:
+  UPROPERTY() TObjectPtr<ATLCBattleDirector> BattleDirector;
+  UPROPERTY() TObjectPtr<ATLCWeaponDirector> WeaponDirector;
+  UPROPERTY() TObjectPtr<ATLCCameraDirector> CameraDirector;
+  UPROPERTY() TObjectPtr<ATLCPerformanceLODManager> PerformanceManager;
+  UPROPERTY() TObjectPtr<ATLCVFXDirector> VFXDirector;
+  UPROPERTY() TObjectPtr<ATLCProjectilePool> ProjectilePool;
+  UPROPERTY() TObjectPtr<ATLCCommanderCharacter> Commander;
+  UPROPERTY() TObjectPtr<ATLCUFOActor> UFO;
+  UPROPERTY() TArray<TObjectPtr<ATLCFighterCharacter>> FighterStorage;
+  TArray<ATLCFighterCharacter*> Fighters;
+
+  int64 NextHitId=1;
+  int32 NextAgentId=1;
+  bool bRunning=false;
+  bool bSuppressAutoRebuild=false;
+  int32 BuiltMenCount=50;
+  int32 BuiltWomenCount=50;
+  bool bMenRage=false;
+  bool bWomenRage=false;
+  bool bFuriosaMode=false;
+  bool bMenGunsEnabled=false;
+  bool bMenSwordsEnabled=false;
+  bool bWomenLipstickEnabled=false;
+  bool bWomenBombEnabled=false;
+  float MenStrengthValue=8.f;
+  float WomenSpeedValue=7.f;
+  ETLCBattlePreset CurrentPreset=ETLCBattlePreset::BroadcastArena;
+  TArray<FTimerHandle> ActiveEventTimers;
+  TArray<float> FrameSamples;
+  float AverageFrameMs=0.f;
+  float P99FrameMs=0.f;
+  float PerformanceAccumulator=0.f;
+
+  UFUNCTION() void HandleFighterEliminated(ATLCFighterCharacter* Fighter);
+  UFUNCTION() void HandleBattleResetRequested();
+  UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase Phase);
+  UFUNCTION() void HandleCommanderEliminated();
+
+  ATLCFighterCharacter* SpawnFighter(ETLCTeam Team,ETLCFighterKind Kind,int32 TeamIndex,int32 TeamCount);
+  FVector SlotToWorld(ETLCTeam Team,int32 TeamIndex,int32 TeamCount,ETLCFormation Formation)const;
+  void RefreshFormationGoals(ETLCTeam Team);
+  void SpawnConfiguredFighters();
+  void ClearEventTimers();
+  void ApplyPresetPalette(ATLCFighterCharacter* Fighter)const;
+  int32 SpawnReinforcements(ETLCTeam Team,int32 RequestedCount);
+  bool IsWeaponAllowedByPreset(ETLCWeaponType Weapon)const;
+  ETLCWeaponType ChooseWeaponForFighter(const ATLCFighterCharacter* Fighter)const;
+  void ApplyTeamLoadout(ETLCTeam Team);
+  void ApplyRadialHit(const FVector& Origin,float Radius,ETLCTeam SourceTeam,float Damage,float Knockback);
+  void ApplyConeHit(const FVector& Origin,const FVector& Forward,float Range,float HalfAngleDegrees,ETLCTeam SourceTeam,float Damage,float Knockback);
+  bool FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime);
+  TArray<ATLCFighterCharacter*> CollectLivingEnemies(ETLCTeam Team)const;
+};

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "provider": "ElevenLabs",
+  "runtimeCloudTTSDefault": false,
+  "voices": {
+    "leadAnnouncer": {
+      "name": "Odom - Deep, Confident, Polished",
+      "voiceId": "2rRUaEOGIGalXrcuLN55",
+      "role": "premium American sports-broadcast lead"
+    },
+    "tlcCommander": {
+      "name": "Jerry B. - Heroic Action Protagonist",
+      "voiceId": "NPVegEkwslClHaSZqnyS",
+      "role": "heroic in-game Commander"
+    },
+    "analyst": {
+      "name": "Vivian - Vibrant and Sophisticated",
+      "voiceId": "dkISfGzKxPY4LQm2jnMv",
+      "role": "tactical broadcast analyst"
+    }
+  },
+  "shippingPolicy": {
+    "commonLines": "pre-generate and import WAV assets",
+    "dynamicHighlights": "optional secured backend with cached fallback",
+    "clientSecrets": "never store provider API keys in packaged clients"
+  },
+  "compatibilityVersion": 1,
+  "lastUpdated": "2026-11-25",
+  "source": "unreal/Data/AudioVoiceManifest.json",
+  "localizationKey": "tlc.manifest.audio_voices"
+}

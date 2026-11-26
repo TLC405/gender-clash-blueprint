@@ -1,0 +1,10 @@
+title = "TLC Gender Clash Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "The validator intentionally contains literal private-key header markers used only for local heuristic detection."
+paths = [
+  '''^unreal/scripts/validate_project\.py$'''
+]

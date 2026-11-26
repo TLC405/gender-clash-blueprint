@@ -1,0 +1,49 @@
+name: UE 5.8 Engine Gates
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "unreal/**"
+      - ".github/workflows/unreal-engine-gates.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  unreal-compile:
+    name: UE 5.8 compile + UHT
+    if: ${{ vars.TLC_UE58_RUNNER_ENABLED == 'true' }}
+    runs-on: [self-hosted, Windows, X64, UE58]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Compile TLCGenderClashEditor Development
+        shell: powershell
+        run: |
+          if (-not $env:UE_ROOT) { throw "UE_ROOT is required on the UE58 runner." }
+          & "$env:UE_ROOT\Engine\Build\BatchFiles\Build.bat" TLCGenderClashEditor Win64 Development "-Project=$pwd\unreal\TLCGenderClash.uproject" -WaitMutex -FromMsBuild
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  unreal-automation:
+    name: Unreal Automation tests
+    if: ${{ vars.TLC_UE58_RUNNER_ENABLED == 'true' }}
+    needs: unreal-compile
+    runs-on: [self-hosted, Windows, X64, UE58]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run TLC.GenderClash tests
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File unreal\scripts\run_automation.ps1
+
+  package-verification:
+    name: Cook + package verification
+    if: ${{ vars.TLC_UE58_RUNNER_ENABLED == 'true' }}
+    needs: unreal-automation
+    runs-on: [self-hosted, Windows, X64, UE58, Android]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build release candidate
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File unreal\scripts\build_release_candidate.ps1
+      - name: Verify package artifacts exist
+        shell: powershell
+        run: python unreal\scripts\verify_release_artifacts.py

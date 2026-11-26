@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+import json, pathlib, re, sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+REPO = ROOT.parent
+required = [
+    "TLCGenderClash.uproject",
+    "Source/TLCGenderClash/TLCGenderClash.Build.cs",
+    "Source/TLCGenderClash/TLCBattleSystems.cpp",
+    "Source/TLCGenderClash/TLCCommanderCharacter.cpp",
+    "Source/TLCGenderClash/TLCAIIntegrationGatewaySubsystem.cpp",
+    "Source/TLCGenderClash/TLCArcadeRuntime.cpp",
+    "Source/TLCGenderClash/TLCAIDecisionPolicy.cpp",
+    "Source/TLCGenderClash/TLCDataAssets.cpp",
+    "Source/TLCGenderClash/TLCBattleActors.cpp",
+    "Source/TLCGenderClash/TLCBattleSimulation.cpp",
+    "Source/TLCGenderClash/TLCBattleHUDWidget.cpp",
+    "Source/TLCGenderClash/TLCProceduralArena.cpp",
+    "Source/TLCGenderClash/TLCSpectatorCameraActor.cpp",
+    "Source/TLCGenderClash/TLCGenderClashPlayerController.cpp",
+    "Source/TLCGenderClash/TLCGenderClashGameInstance.cpp",
+    "Source/TLCGenderClash/TLCVerticalSliceGameMode.cpp",
+    "Source/TLCGenderClash/TLCVFXDirector.cpp",
+    "Data/BattleBalance.json",
+    "Data/AudioVoiceManifest.json",
+    "Data/GeneratedAudioManifest.json",
+    "Data/WeaponTuning.json",
+    "Data/PerformanceBudgets.json",
+    "Data/CommentaryBank.json",
+    "Data/BattlePresets.json",
+]
+missing = [p for p in required if not (ROOT / p).exists()]
+if missing:
+    raise SystemExit("Missing required files: " + ", ".join(missing))
+
+parsed = {}
+for path in sorted((ROOT / "Data").glob("*.json")):
+    try:
+        parsed[path.name] = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Invalid JSON {path.relative_to(ROOT)}: {exc}")
+
+for name, manifest in parsed.items():
+    for field in ("schemaVersion","compatibilityVersion","lastUpdated","source","localizationKey"):
+        if field not in manifest:
+            raise SystemExit(f"{name} is missing manifest metadata field: {field}")
+    if manifest["schemaVersion"] != 1 or manifest["compatibilityVersion"] != 1:
+        raise SystemExit(f"{name} has an unsupported manifest version.")
+
+project = json.loads((ROOT / "TLCGenderClash.uproject").read_text())
+if project.get("EngineAssociation") != "5.8":
+    raise SystemExit("Production target must remain UE 5.8 stable.")
+
+if parsed["BattleBalance.json"].get("maxVisibleNormalFighters") != 100:
+    raise SystemExit("Premium battle cap must be 100.")
+if parsed["PerformanceBudgets.json"].get("targets", {}).get("maxNormalFighters") != 100:
+    raise SystemExit("Performance budget and gameplay fighter cap disagree.")
+
+weapons = parsed["WeaponTuning.json"]
+if not {"fists","gun","sword"} <= set(weapons.get("rules",{}).get("men",[])):
+    raise SystemExit("Men weapon manifest is incomplete.")
+if not {"fists","lipstickGun","makeupBomb"} <= set(weapons.get("rules",{}).get("women",[])):
+    raise SystemExit("Women weapon manifest is incomplete.")
+if not {"musket","spear"} <= set(weapons.get("rules",{}).get("historical",[])):
+    raise SystemExit("Historical weapon manifest is incomplete.")
+
+audio = parsed["GeneratedAudioManifest.json"]
+if len(audio.get("assets",{})) < 9:
+    raise SystemExit("Starter generated-audio set is incomplete.")
+if audio.get("policy",{}).get("runtimeCloudDependency") is not False:
+    raise SystemExit("Shipping audio must not depend on cloud availability.")
+
+presets = parsed["BattlePresets.json"].get("presets",{})
+if presets.get("narrowPass",{}).get("modernWeaponsAllowed") is not False:
+    raise SystemExit("Narrow Pass must disallow modern guns.")
+if "northVsSouth" not in presets:
+    raise SystemExit("North vs South preset is missing.")
+if presets.get("narrowPass",{}).get("defaultCounts") != {"men":30,"women":70}:
+    raise SystemExit("Narrow Pass must use the 30/70 premium scaled last-stand ratio.")
+if "musket" not in presets.get("northVsSouth",{}).get("weapons",[]):
+    raise SystemExit("North vs South must use muskets.")
+
+forbidden_suffixes={".p12",".pfx",".pem",".keystore",".jks",".aab",".apk",".exe"}
+for path in REPO.rglob("*"):
+    if not path.is_file():
+        continue
+    if path.suffix.lower() in forbidden_suffixes:
+        raise SystemExit(f"Forbidden binary/signing artifact tracked in source tree: {path.relative_to(REPO)}")
+    if path.name.startswith(".env") and path.name not in {".env.example",".env.sample"}:
+        raise SystemExit(f"Environment file must not be committed: {path.relative_to(REPO)}")
+
+private_key_markers=("-----BEGIN PRIVATE KEY-----","-----BEGIN RSA PRIVATE KEY-----","-----BEGIN EC PRIVATE KEY-----","-----BEGIN OPENSSH PRIVATE KEY-----")
+credential_url=re.compile(r"https?://[^\s/:]+:[^\s/@]+@")
+azure_key=re.compile(r"(?i)(AccountKey|SharedAccessKey)=[A-Za-z0-9+/]{32,}={0,2}")
+simple_secret=re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*['\"][A-Za-z0-9_\-]{20,}")
+for path in REPO.rglob("*"):
+    if not path.is_file() or ".git" in path.parts:
+        continue
+    if path.resolve() == pathlib.Path(__file__).resolve():
+        continue
+    if path.stat().st_size > 2_000_000:
+        continue
+    try: text=path.read_text(errors="ignore")
+    except OSError: continue
+    if any(marker in text for marker in private_key_markers) or credential_url.search(text) or azure_key.search(text) or simple_secret.search(text):
+        raise SystemExit(f"Possible credential material detected in {path.relative_to(REPO)}")
+
+
+feature_contracts = {
+    "Source/TLCGenderClash/TLCBattleSimulation.h": [
+        "SetWeaponToggle", "SetMenStrength", "SetWomenSpeed",
+        "ExecuteAttackOnCommander", "ExecuteBossSpecial", "BindVFXDirector", "ApplyPreset", "ExecuteSpecialEvent"
+    ],
+    "Source/TLCGenderClash/TLCCommanderCharacter.h": [
+        "ApplyHeroDamage", "GetHeroHealthNormalized", "GetCooldownRemaining", "OnCommanderEliminated"
+    ],
+    "Source/TLCGenderClash/TLCBattleHUDWidget.cpp": [
+        "OnMenGunsToggleChanged", "OnWomenBombToggleChanged",
+        "OnMenStrengthChanged", "OnWomenSpeedChanged", "OnCameraModeChanged", "OnPresetChanged"
+    ],
+    "Source/TLCGenderClash/TLCVFXDirector.cpp": [
+        "SpawnSystemAtLocation", "SetQualityPressure", "ResetVFX"
+    ],
+    "Source/TLCGenderClash/TLCSpectatorCameraActor.cpp": [
+        "ETLCCameraViewMode::Tactical", "ETLCCameraViewMode::CloseCombat", "ETLCCameraViewMode::BossCam"
+    ],
+    "Source/TLCGenderClash/TLCGenderClash.cpp": [
+        "TLC.SpecialEvent", "TLC.EventSeed", "TLC.Preset", "TLC.SpawnBoss", "TLC.Reset"
+    ],
+}
+for relative, symbols in feature_contracts.items():
+    source = (ROOT / relative).read_text(errors="ignore")
+    missing_symbols = [symbol for symbol in symbols if symbol not in source]
+    if missing_symbols:
+        raise SystemExit(f"{relative} is missing vertical-slice contracts: {', '.join(missing_symbols)}")
+
+print("TLC Gender Clash source & manifest validation: PASS")
+print("This job validates repository policy only. It does NOT prove Unreal compile, UHT, Automation, cook, package, device, or signing success.")
