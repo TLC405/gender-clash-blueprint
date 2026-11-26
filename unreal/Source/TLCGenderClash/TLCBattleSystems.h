@@ -168,6 +168,8 @@ public:
   UFUNCTION(BlueprintCallable) bool BeginReplay();
   UFUNCTION(BlueprintCallable) void ReportElimination(ETLCTeam EliminatedTeam);
   UFUNCTION(BlueprintCallable) int32 AddReinforcements(ETLCTeam Team,int32 RequestedCount);
+  UFUNCTION(BlueprintCallable) void SetBossAlive(ETLCTeam Team,bool bAlive);
+  UFUNCTION(BlueprintCallable) void SetHeroAlive(ETLCTeam Team,bool bAlive);
   UFUNCTION(BlueprintPure) FTLCTacticalSnapshot GetSnapshot() const;
   UFUNCTION(BlueprintCallable) void SetBattleIntensity(float Value);
   UFUNCTION(BlueprintPure) ETLCBattlePhase GetPhase() const { return Phase; }
