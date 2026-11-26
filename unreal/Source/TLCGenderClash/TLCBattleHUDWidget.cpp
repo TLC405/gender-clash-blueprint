@@ -127,6 +127,12 @@ void UTLCBattleHUDWidget::BuildUI(){
   SlowMoToggle=WidgetTree->ConstructWidget<UCheckBox>();SlowMoToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnSlowMoChanged);UHorizontalBox* SM=WidgetTree->ConstructWidget<UHorizontalBox>();SM->AddChildToHorizontalBox(SlowMoToggle);SM->AddChildToHorizontalBox(MakeLabel(TEXT(" SLOW MOTION"),12,Chalk));Center->AddChildToVerticalBox(SM);
   CinematicToggle=WidgetTree->ConstructWidget<UCheckBox>();CinematicToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnCinematicChanged);UHorizontalBox* CF=WidgetTree->ConstructWidget<UHorizontalBox>();CF->AddChildToHorizontalBox(CinematicToggle);CF->AddChildToHorizontalBox(MakeLabel(TEXT(" CINEMATIC FX"),12,Chalk));Center->AddChildToVerticalBox(CF);
   AddSectionLabel(Center,TEXT("TLC COMMANDER"),Gold);
+  UHorizontalBox* TouchPad=WidgetTree->ConstructWidget<UHorizontalBox>();Center->AddChildToVerticalBox(TouchPad);
+  auto AddTouch=[this,TouchPad](const FString& Label){UButton* B=WidgetTree->ConstructWidget<UButton>();UTextBlock* T=MakeLabel(Label,16,Chalk);T->SetJustification(ETextJustify::Center);B->AddChild(T);UHorizontalBoxSlot* S=TouchPad->AddChildToHorizontalBox(B);if(S){FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;S->SetSize(Fill);}return B;};
+  UButton* Left=AddTouch(TEXT("◀"));Left->OnPressed.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchLeftPressed);Left->OnReleased.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchLeftReleased);
+  UButton* Up=AddTouch(TEXT("▲"));Up->OnPressed.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchForwardPressed);Up->OnReleased.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchForwardReleased);
+  UButton* Down=AddTouch(TEXT("▼"));Down->OnPressed.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchBackPressed);Down->OnReleased.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchBackReleased);
+  UButton* Right=AddTouch(TEXT("▶"));Right->OnPressed.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchRightPressed);Right->OnReleased.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchRightReleased);
   NukeButton=MakeButton(Center,TEXT("NUKE"),TEXT("Nuke"));NukeButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnNuke);
   WaterButton=MakeButton(Center,TEXT("WATER CANNON"),TEXT("Water"));WaterButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnWaterCannon);
   LipstickShotButton=MakeButton(Center,TEXT("LIPSTICK SHOT"),TEXT("LipstickShot"));LipstickShotButton->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnLipstickShot);
@@ -145,7 +151,7 @@ void UTLCBattleHUDWidget::ApplyResponsiveLayout(){
   CenterPanelSlot->SetAnchors(FAnchors(.36f,Bottom,.64f,.985f));CenterPanelSlot->SetOffsets(FMargin(0));
 }
 
-void UTLCBattleHUDWidget::NativeTick(const FGeometry& G,float Dt){Super::NativeTick(G,Dt);RefreshRuntimeText();UpdateCommanderButtons();}
+void UTLCBattleHUDWidget::NativeTick(const FGeometry& G,float Dt){Super::NativeTick(G,Dt);RefreshRuntimeText();UpdateCommanderButtons();ApplyTouchCommanderMovement();}
 
 void UTLCBattleHUDWidget::RefreshRuntimeText(){
   if(!BattleDirector)return;const auto S=BattleDirector->GetSnapshot();
@@ -218,7 +224,7 @@ void UTLCBattleHUDWidget::SetButtonText(UButton* Button,const FString& Text){
 }
 void UTLCBattleHUDWidget::UpdateCommanderButtons(){
   if(!Simulation)return;ATLCCommanderCharacter* C=Simulation->GetCommander();
-  TArray<TPair<UButton*,FName>> Buttons={{NukeButton,"Nuke"},{WaterButton,"WaterCannon"},{LipstickShotButton,"LipstickShot"},{ShockwaveButton,"ShockwaveSlam"},{RallyButton,"RallyBuff"}};
+  TArray<TPair<UButton*,FName>> Buttons={{NukeButton,FName(TEXT("Nuke"))},{WaterButton,FName(TEXT("WaterCannon"))},{LipstickShotButton,FName(TEXT("LipstickShot"))},{ShockwaveButton,FName(TEXT("ShockwaveSlam"))},{RallyButton,FName(TEXT("RallyBuff"))}};
   for(const auto& Pair:Buttons){
     if(!Pair.Key)continue;
     if(!C){Pair.Key->SetIsEnabled(false);SetButtonText(Pair.Key,Pair.Value.ToString()+TEXT(" • SPAWN HERO"));continue;}
@@ -226,3 +232,19 @@ void UTLCBattleHUDWidget::UpdateCommanderButtons(){
     SetButtonText(Pair.Key,Remaining>.01f?FString::Printf(TEXT("%s • %.1fs"),*Pair.Value.ToString(),Remaining):Pair.Value.ToString());
   }
 }
+
+void UTLCBattleHUDWidget::ApplyTouchCommanderMovement(){
+  if(!Simulation)return;ATLCCommanderCharacter* C=Simulation->GetCommander();if(!C)return;
+  const float Forward=(bTouchForward?1.f:0.f)-(bTouchBack?1.f:0.f);
+  const float Right=(bTouchRight?1.f:0.f)-(bTouchLeft?1.f:0.f);
+  if(!FMath::IsNearlyZero(Forward))C->AddMovementInput(FVector::ForwardVector,Forward);
+  if(!FMath::IsNearlyZero(Right))C->AddMovementInput(FVector::RightVector,Right);
+}
+void UTLCBattleHUDWidget::OnTouchForwardPressed(){bTouchForward=true;}
+void UTLCBattleHUDWidget::OnTouchForwardReleased(){bTouchForward=false;}
+void UTLCBattleHUDWidget::OnTouchBackPressed(){bTouchBack=true;}
+void UTLCBattleHUDWidget::OnTouchBackReleased(){bTouchBack=false;}
+void UTLCBattleHUDWidget::OnTouchLeftPressed(){bTouchLeft=true;}
+void UTLCBattleHUDWidget::OnTouchLeftReleased(){bTouchLeft=false;}
+void UTLCBattleHUDWidget::OnTouchRightPressed(){bTouchRight=true;}
+void UTLCBattleHUDWidget::OnTouchRightReleased(){bTouchRight=false;}
