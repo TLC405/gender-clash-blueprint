@@ -200,6 +200,16 @@ void ATLCBattleDirector::ReportElimination(ETLCTeam T){
   CheckWinnerOrStalemate();
 }
 
+int32 ATLCBattleDirector::AddReinforcements(ETLCTeam Team,int32 RequestedCount){
+  if((Phase!=ETLCBattlePhase::Active&&Phase!=ETLCBattlePhase::SuddenDeath)||RequestedCount<=0)return 0;
+  const int32 Total=MenState.Alive+WomenState.Alive;
+  const int32 Accepted=FMath::Clamp(RequestedCount,0,FMath::Max(0,MaxVisibleFighters-Total));
+  if(Accepted<=0)return 0;
+  FTLCTeamRuntimeState* S=Team==ETLCTeam::Men?&MenState:Team==ETLCTeam::Women?&WomenState:nullptr;
+  if(!S)return 0;
+  S->Alive+=Accepted;OnTeamCountChanged.Broadcast(Team,S->Alive);return Accepted;
+}
+
 FTLCTacticalSnapshot ATLCBattleDirector::GetSnapshot()const{
   FTLCTacticalSnapshot S;
   S.Men=MenState;S.Women=WomenState;S.ElapsedSeconds=ElapsedSeconds;S.BattleIntensity=BattleIntensity;
