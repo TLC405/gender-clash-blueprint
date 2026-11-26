@@ -11,8 +11,7 @@ ATLCProceduralArena::ATLCProceduralArena(){
 UStaticMeshComponent* ATLCProceduralArena::AddBox(FName Name,const FVector& Location,const FVector& Scale){
   UStaticMeshComponent* C=NewObject<UStaticMeshComponent>(this,Name);
   if(!C)return nullptr;
-  static ConstructorHelpers::FObjectFinder<UStaticMesh> Cube(TEXT("/Engine/BasicShapes/Cube.Cube"));
-  if(Cube.Succeeded())C->SetStaticMesh(Cube.Object);
+  if(UStaticMesh* Cube=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cube.Cube")))C->SetStaticMesh(Cube);
   C->SetupAttachment(GetRootComponent());C->RegisterComponent();C->SetRelativeLocation(Location);C->SetRelativeScale3D(Scale);GeneratedPieces.Add(C);return C;
 }
 void ATLCProceduralArena::BuildArena(){
