@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "TLCBattleSystems.h"
 #include "TLCArcadeRuntime.h"
+#include "TLCAIDecisionPolicy.h"
 #include "TLCBattleActors.generated.h"
 
 class USphereComponent;
@@ -109,6 +110,7 @@ private:
   FLinearColor BodyTintOverride=FLinearColor::Transparent;
   FLinearColor MarkerTintOverride=FLinearColor::Transparent;
   float RallyEndsAt=-1.f;
+  float NextCloseDecisionAt=0.f;
   float NextLocalDecisionAt=0.f;
   float NextStrategicDecisionAt=0.f;
   float NextAttackAt=0.f;
@@ -117,6 +119,7 @@ private:
   bool bAbducting=false;
   bool bCountsTowardNormalTeam=true;
   TSet<int64> RecentHitIds;
+  FTLCAgentDecisionState DecisionState;
 
   void ConfigureKind();
   void ApplyTeamVisuals();
