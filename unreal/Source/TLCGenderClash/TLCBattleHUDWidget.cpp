@@ -86,8 +86,9 @@ void UTLCBattleHUDWidget::BuildUI(){
 
   StateText=MakeLabel(TEXT("READY"),15,Gold);StateText->SetJustification(ETextJustify::Center);
   UCanvasPanelSlot* StateSlot=RootCanvas->AddChildToCanvas(StateText);StateSlot->SetAnchors(FAnchors(.43f,.095f,.57f,.13f));StateSlot->SetOffsets(FMargin(0));
-  EventText=MakeLabel(TEXT("FIELD CLEAR"),13,Chalk);EventText->SetJustification(ETextJustify::Center);
-  UCanvasPanelSlot* EventSlot=RootCanvas->AddChildToCanvas(EventText);EventSlot->SetAnchors(FAnchors(.35f,.13f,.65f,.17f));EventSlot->SetOffsets(FMargin(0));
+  EventText=MakeLabel(TEXT("PRESS START • DIRECT CONTROLS ARE LIVE"),13,Chalk);EventText->SetJustification(ETextJustify::Center);
+  UCanvasPanelSlot* EventSlot=RootCanvas->AddChildToCanvas(EventText);EventSlot->SetAnchors(FAnchors(.31f,.13f,.69f,.17f));EventSlot->SetOffsets(FMargin(0));
+  BossStatusText=MakeLabel(TEXT("BOSSES: NONE"),12,Gold);BossStatusText->SetJustification(ETextJustify::Center);UCanvasPanelSlot* BossSlot=RootCanvas->AddChildToCanvas(BossStatusText);BossSlot->SetAnchors(FAnchors(.34f,.17f,.66f,.20f));BossSlot->SetOffsets(FMargin(0));
 
   MenPanel=WidgetTree->ConstructWidget<UBorder>();MenPanel->SetBrushColor(FLinearColor(.02f,.08f,.25f,.97f));
   WomenPanel=WidgetTree->ConstructWidget<UBorder>();WomenPanel->SetBrushColor(FLinearColor(.28f,.015f,.07f,.97f));
@@ -173,6 +174,7 @@ void UTLCBattleHUDWidget::RefreshRuntimeText(){
   if(MenScore)MenScore->SetText(FText::FromString(FString::Printf(TEXT("MEN %d"),S.Men.Alive)));
   if(WomenScore)WomenScore->SetText(FText::FromString(FString::Printf(TEXT("WOMEN %d"),S.Women.Alive)));
   if(CommanderHealthText){if(Simulation&&Simulation->GetCommander()){ATLCCommanderCharacter* C=Simulation->GetCommander();CommanderHealthText->SetText(FText::FromString(C->IsHeroAlive()?FString::Printf(TEXT("HERO HP %.0f%%"),C->GetHeroHealthNormalized()*100.f):TEXT("HERO DOWN")));}else CommanderHealthText->SetText(FText::FromString(TEXT("HERO: NOT DEPLOYED")));}
+  if(BossStatusText&&Simulation){const float R=Simulation->GetRobotHealthNormalized(),U=Simulation->GetUnicornHealthNormalized();FString B=TEXT("BOSSES: ");if(R<0.f&&U<0.f)B+=TEXT("NONE");else{if(R>=0.f)B+=FString::Printf(TEXT("ROBOT %.0f%%"),R*100.f);if(R>=0.f&&U>=0.f)B+=TEXT("  VS  ");if(U>=0.f)B+=FString::Printf(TEXT("UNICORN %.0f%%"),U*100.f);}BossStatusText->SetText(FText::FromString(B));}
   const int32 Sec=FMath::FloorToInt(S.ElapsedSeconds);if(TimerText)TimerText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"),Sec/60,Sec%60)));
 }
 void UTLCBattleHUDWidget::RefreshPendingCountLabels(){if(MenCountText)MenCountText->SetText(FText::FromString(FString::Printf(TEXT("FIGHTERS %d"),PendingMen)));if(WomenCountText)WomenCountText->SetText(FText::FromString(FString::Printf(TEXT("FIGHTERS %d"),PendingWomen)));}
