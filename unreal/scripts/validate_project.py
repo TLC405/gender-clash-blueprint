@@ -104,5 +104,28 @@ for path in REPO.rglob("*"):
     if any(marker in text for marker in private_key_markers) or credential_url.search(text) or azure_key.search(text) or simple_secret.search(text):
         raise SystemExit(f"Possible credential material detected in {path.relative_to(REPO)}")
 
+
+feature_contracts = {
+    "Source/TLCGenderClash/TLCBattleSimulation.h": [
+        "SetWeaponToggle", "SetMenStrength", "SetWomenSpeed",
+        "ExecuteAttackOnCommander", "ApplyPreset", "ExecuteSpecialEvent"
+    ],
+    "Source/TLCGenderClash/TLCCommanderCharacter.h": [
+        "ApplyHeroDamage", "GetHeroHealthNormalized", "GetCooldownRemaining"
+    ],
+    "Source/TLCGenderClash/TLCBattleHUDWidget.cpp": [
+        "OnMenGunsToggleChanged", "OnWomenBombToggleChanged",
+        "OnMenStrengthChanged", "OnWomenSpeedChanged", "OnPresetChanged"
+    ],
+    "Source/TLCGenderClash/TLCGenderClash.cpp": [
+        "TLC.SpecialEvent", "TLC.EventSeed", "TLC.Preset", "TLC.SpawnBoss", "TLC.Reset"
+    ],
+}
+for relative, symbols in feature_contracts.items():
+    source = (ROOT / relative).read_text(errors="ignore")
+    missing_symbols = [symbol for symbol in symbols if symbol not in source]
+    if missing_symbols:
+        raise SystemExit(f"{relative} is missing vertical-slice contracts: {', '.join(missing_symbols)}")
+
 print("TLC Gender Clash source & manifest validation: PASS")
 print("This job validates repository policy only. It does NOT prove Unreal compile, UHT, Automation, cook, package, device, or signing success.")
