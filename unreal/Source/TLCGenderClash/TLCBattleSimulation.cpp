@@ -100,10 +100,10 @@ void ATLCBattleSimulationDirector::RefreshFormationGoals(ETLCTeam Team){
   const ETLCFormation Formation=Team==ETLCTeam::Men?MenFormation:WomenFormation;
   for(int32 I=0;I<TeamFighters.Num();++I)TeamFighters[I]->SetFormationGoal(SlotToWorld(Team,I,TeamFighters.Num(),Formation));
 }
-void ATLCBattleSimulationDirector::SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon){
-  if(!WeaponDirector||!WeaponDirector->CanTeamUse(Team,Weapon))return;
-  if(Team==ETLCTeam::Men)MenWeapon=Weapon;else if(Team==ETLCTeam::Women)WomenWeapon=Weapon;
-  for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==Team&&F->CountsTowardNormalTeam())F->SetWeapon(Weapon);
+bool ATLCBattleSimulationDirector::SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon){
+  if(!WeaponDirector||!WeaponDirector->CanTeamUse(Team,Weapon)||!IsWeaponAllowedByPreset(Weapon))return false;
+  if(Team==ETLCTeam::Men)MenWeapon=Weapon;else if(Team==ETLCTeam::Women)WomenWeapon=Weapon;else return false;
+  for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==Team&&F->CountsTowardNormalTeam())F->SetWeapon(Weapon);return true;
 }
 void ATLCBattleSimulationDirector::SetTeamFormation(ETLCTeam Team,ETLCFormation Formation){
   if(Team==ETLCTeam::Men)MenFormation=Formation;else if(Team==ETLCTeam::Women)WomenFormation=Formation;
@@ -271,6 +271,12 @@ void ATLCBattleSimulationDirector::ApplyPresetPalette(ATLCFighterCharacter* F)co
     if(F->GetTeam()==ETLCTeam::Men)F->SetVisualPalette(FLinearColor(.05f,.24f,.82f,1.f),FLinearColor(.20f,.55f,1.f,1.f));
     else if(F->GetTeam()==ETLCTeam::Women)F->SetVisualPalette(FLinearColor(.82f,.04f,.24f,1.f),FLinearColor(1.f,.30f,.48f,1.f));
   }
+}
+
+bool ATLCBattleSimulationDirector::IsWeaponAllowedByPreset(ETLCWeaponType Weapon)const{
+  if(CurrentPreset==ETLCBattlePreset::NarrowPass)return Weapon==ETLCWeaponType::Fists||Weapon==ETLCWeaponType::Sword||Weapon==ETLCWeaponType::Spear;
+  if(CurrentPreset==ETLCBattlePreset::NorthVsSouth)return Weapon==ETLCWeaponType::Fists||Weapon==ETLCWeaponType::Musket;
+  return Weapon!=ETLCWeaponType::Musket&&Weapon!=ETLCWeaponType::Spear;
 }
 
 void ATLCBattleSimulationDirector::ApplyPreset(ETLCBattlePreset Preset){
