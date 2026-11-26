@@ -109,7 +109,7 @@ void ATLCBattleSimulationDirector::RefreshFormationGoals(ETLCTeam Team){
   TArray<ATLCFighterCharacter*> TeamFighters;
   for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->GetTeam()==Team&&F->CountsTowardNormalTeam())TeamFighters.Add(F);
   const ETLCFormation Formation=Team==ETLCTeam::Men?MenFormation:WomenFormation;
-  for(int32 I=0;I<TeamFighters.Num();++I)TeamFighters[I]->SetFormationGoal(SlotToWorld(Team,I,TeamFighters.Num(),Formation));
+  for(int32 I=0;I<TeamFighters.Num();++I){TeamFighters[I]->SetFormationType(Formation);TeamFighters[I]->SetFormationGoal(SlotToWorld(Team,I,TeamFighters.Num(),Formation));}
 }
 bool ATLCBattleSimulationDirector::SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon){
   if(!WeaponDirector||!WeaponDirector->CanTeamUse(Team,Weapon)||!IsWeaponAllowedByPreset(Weapon))return false;
