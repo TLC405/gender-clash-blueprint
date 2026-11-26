@@ -117,6 +117,7 @@ void UTLCBattleHUDWidget::BuildUI(){
 
   UVerticalBox* Center=WidgetTree->ConstructWidget<UVerticalBox>();CenterPanel->SetContent(Center);
   AddSectionLabel(Center,TEXT("TLC GENDER CLASH"),Gold);
+  PresetCombo=WidgetTree->ConstructWidget<UComboBoxString>();PresetCombo->AddOption(TEXT("Broadcast Arena"));PresetCombo->AddOption(TEXT("Narrow Pass"));PresetCombo->AddOption(TEXT("North vs South"));PresetCombo->SetSelectedOption(TEXT("Broadcast Arena"));PresetCombo->OnSelectionChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnPresetChanged);Center->AddChildToVerticalBox(PresetCombo);
   UButton* Start=MakeButton(Center,TEXT("START BATTLE"),TEXT("Start"));Start->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnStart);
   UButton* Pause=MakeButton(Center,TEXT("PAUSE / RESUME"),TEXT("Pause"));Pause->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnPause);
   UButton* Reset=MakeButton(Center,TEXT("RESET"),TEXT("Reset"));Reset->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnReset);
@@ -193,3 +194,16 @@ void UTLCBattleHUDWidget::OnSlowMoChanged(bool B){UGameplayStatics::SetGlobalTim
 void UTLCBattleHUDWidget::OnCinematicChanged(bool B){if(SpectatorCamera)SpectatorCamera->SetCinematicFX(B);}
 void UTLCBattleHUDWidget::OnMenFormationChanged(FString S,ESelectInfo::Type){if(Simulation)Simulation->SetTeamFormation(ETLCTeam::Men,ParseFormation(S));}
 void UTLCBattleHUDWidget::OnWomenFormationChanged(FString S,ESelectInfo::Type){if(Simulation)Simulation->SetTeamFormation(ETLCTeam::Women,ParseFormation(S));}
+
+void UTLCBattleHUDWidget::OnPresetChanged(FString S,ESelectInfo::Type){
+  if(!Simulation||!BattleDirector||BattleDirector->GetPhase()!=ETLCBattlePhase::Ready)return;
+  ETLCBattlePreset P=ETLCBattlePreset::BroadcastArena;
+  if(S==TEXT("Narrow Pass")){P=ETLCBattlePreset::NarrowPass;PendingMen=30;PendingWomen=70;}
+  else if(S==TEXT("North vs South")){P=ETLCBattlePreset::NorthVsSouth;PendingMen=50;PendingWomen=50;}
+  else {PendingMen=50;PendingWomen=50;}
+  Simulation->ApplyPreset(P);
+  if(MenCountSlider)MenCountSlider->SetValue(PendingMen/100.f);
+  if(WomenCountSlider)WomenCountSlider->SetValue(PendingWomen/100.f);
+  RefreshPendingCountLabels();
+  Simulation->BuildBattle(PendingMen,PendingWomen);
+}
