@@ -1,5 +1,7 @@
 #include "TLCBattleSystems.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
 
 FTLCBattleConfigurationResult UTLCBattleRulesLibrary::ValidateConfiguration(const FTLCBattleConfiguration& Config, int32 PremiumCap) {
   FTLCBattleConfigurationResult R;
@@ -373,4 +375,8 @@ void ATLCAudioDirector::UpdateMix(const FTLCTacticalSnapshot& S){
   const int32 Alive=S.Men.Alive+S.Women.Alive;const float Total=FMath::Max(1.f,(float)Alive);
   const float M=(S.Men.Alive-S.Women.Alive)/Total;ApplyMetaSoundParameters(FMath::Clamp(S.BattleIntensity,0.f,1.f),FMath::Clamp(M,-1.f,1.f),FMath::Clamp(-M,-1.f,1.f),S.Men.bBossAlive||S.Women.bBossAlive,Alive<=10);
 }
-void ATLCAudioDirector::ResetAudioState(){CurrentState=ETLCMusicState::PreBattle;StopBattleAudio();}
+bool ATLCAudioDirector::PlayLocalCue(FName CueId){
+  if(TSoftObjectPtr<USoundBase>* Ref=LocalCues.Find(CueId)){if(USoundBase* Sound=Ref->LoadSynchronous()){UGameplayStatics::PlaySound2D(this,Sound);return true;}}return false;
+}
+void ATLCAudioDirector::HandleAnnouncerLine(FName EventName,const FString&){PlayLocalCue(EventName);}
+void ATLCAudioDirector::ResetAudioState(){CurrentState=ETLCMusicState::PreBattle;if(MusicComponent)MusicComponent->Stop();StopBattleAudio();}
