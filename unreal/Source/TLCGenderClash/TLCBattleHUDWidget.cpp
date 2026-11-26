@@ -71,8 +71,12 @@ void UTLCBattleHUDWidget::BuildUI(){
   UBorder* ScoreBorder=WidgetTree->ConstructWidget<UBorder>();ScoreBorder->SetBrushColor(FLinearColor(.015f,.018f,.025f,.96f));
   UHorizontalBox* ScoreRow=WidgetTree->ConstructWidget<UHorizontalBox>();ScoreBorder->SetContent(ScoreRow);
   MenScore=MakeLabel(TEXT("MEN 50"),24,FLinearColor(.22f,.55f,1.f,1));TimerText=MakeLabel(TEXT("00:00"),24,Gold);WomenScore=MakeLabel(TEXT("WOMEN 50"),24,FLinearColor(1.f,.30f,.48f,1));
-  ScoreRow->AddChildToHorizontalBox(MenScore);ScoreRow->AddChildToHorizontalBox(TimerText);ScoreRow->AddChildToHorizontalBox(WomenScore);
-  for(int32 I=0;I<3;++I){if(UHorizontalBoxSlot* S=Cast<UHorizontalBoxSlot>(ScoreRow->GetSlots()[I])){S->SetSize(FSlateChildSize(ESlateSizeRule::Fill));S->SetHorizontalAlignment(I==0?HAlign_Left:I==2?HAlign_Right:HAlign_Center);}}
+  UHorizontalBoxSlot* MenScoreSlot=ScoreRow->AddChildToHorizontalBox(MenScore);
+  UHorizontalBoxSlot* TimerSlot=ScoreRow->AddChildToHorizontalBox(TimerText);
+  UHorizontalBoxSlot* WomenScoreSlot=ScoreRow->AddChildToHorizontalBox(WomenScore);
+  if(MenScoreSlot){FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;MenScoreSlot->SetSize(Fill);MenScoreSlot->SetHorizontalAlignment(HAlign_Left);}
+  if(TimerSlot){FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;TimerSlot->SetSize(Fill);TimerSlot->SetHorizontalAlignment(HAlign_Center);}
+  if(WomenScoreSlot){FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;WomenScoreSlot->SetSize(Fill);WomenScoreSlot->SetHorizontalAlignment(HAlign_Right);}
   UCanvasPanelSlot* ScoreSlot=RootCanvas->AddChildToCanvas(ScoreBorder);ScoreSlot->SetAnchors(FAnchors(.04f,.015f,.96f,.09f));ScoreSlot->SetOffsets(FMargin(0));
 
   StateText=MakeLabel(TEXT("READY"),15,Gold);StateText->SetJustification(ETextJustify::Center);
