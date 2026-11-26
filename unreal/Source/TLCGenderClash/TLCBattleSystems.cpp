@@ -331,6 +331,7 @@ FTLCSpecialEventResult ATLCSpecialEventDirector::BuildResult(ETLCSpecialEvent Ty
 }
 
 FTLCSpecialEventResult ATLCSpecialEventDirector::TriggerEvent(const FTLCTacticalSnapshot& S){
+  if(S.Phase!=ETLCBattlePhase::Active&&S.Phase!=ETLCBattlePhase::SuddenDeath)return FTLCSpecialEventResult();
   const double Now=GetWorld()?GetWorld()->GetTimeSeconds():0.0;
   if(Now-LastEventAt<EventCooldownSeconds) return FTLCSpecialEventResult();
 
