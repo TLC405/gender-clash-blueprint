@@ -193,7 +193,8 @@ void ATLCBattleDirector::ReportElimination(ETLCTeam T){
   FTLCTeamRuntimeState* S=T==ETLCTeam::Men?&MenState:T==ETLCTeam::Women?&WomenState:nullptr;
   if(!S||S->Alive<=0)return;
   S->Alive--;
-  S->Eliminations++;
+  FTLCTeamRuntimeState* Opponent=T==ETLCTeam::Men?&WomenState:T==ETLCTeam::Women?&MenState:nullptr;
+  if(Opponent)Opponent->Eliminations++;
   RecentCasualtyScore += 1.f;
   SecondsSinceElimination=0.f;
   OnTeamCountChanged.Broadcast(T,S->Alive);
@@ -208,6 +209,13 @@ int32 ATLCBattleDirector::AddReinforcements(ETLCTeam Team,int32 RequestedCount){
   FTLCTeamRuntimeState* S=Team==ETLCTeam::Men?&MenState:Team==ETLCTeam::Women?&WomenState:nullptr;
   if(!S)return 0;
   S->Alive+=Accepted;OnTeamCountChanged.Broadcast(Team,S->Alive);return Accepted;
+}
+
+void ATLCBattleDirector::SetBossAlive(ETLCTeam Team,bool bAlive){
+  if(Team==ETLCTeam::Men)MenState.bBossAlive=bAlive;else if(Team==ETLCTeam::Women)WomenState.bBossAlive=bAlive;
+}
+void ATLCBattleDirector::SetHeroAlive(ETLCTeam Team,bool bAlive){
+  if(Team==ETLCTeam::Men)MenState.bHeroAlive=bAlive;else if(Team==ETLCTeam::Women)WomenState.bHeroAlive=bAlive;
 }
 
 FTLCTacticalSnapshot ATLCBattleDirector::GetSnapshot()const{
