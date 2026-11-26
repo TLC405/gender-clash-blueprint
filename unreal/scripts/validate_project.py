@@ -12,6 +12,14 @@ required = [
     "Source/TLCGenderClash/TLCArcadeRuntime.cpp",
     "Source/TLCGenderClash/TLCAIDecisionPolicy.cpp",
     "Source/TLCGenderClash/TLCDataAssets.cpp",
+    "Source/TLCGenderClash/TLCBattleActors.cpp",
+    "Source/TLCGenderClash/TLCBattleSimulation.cpp",
+    "Source/TLCGenderClash/TLCBattleHUDWidget.cpp",
+    "Source/TLCGenderClash/TLCProceduralArena.cpp",
+    "Source/TLCGenderClash/TLCSpectatorCameraActor.cpp",
+    "Source/TLCGenderClash/TLCGenderClashPlayerController.cpp",
+    "Source/TLCGenderClash/TLCGenderClashGameInstance.cpp",
+    "Source/TLCGenderClash/TLCVerticalSliceGameMode.cpp",
     "Data/BattleBalance.json",
     "Data/AudioVoiceManifest.json",
     "Data/GeneratedAudioManifest.json",
@@ -52,6 +60,8 @@ if not {"fists","gun","sword"} <= set(weapons.get("rules",{}).get("men",[])):
     raise SystemExit("Men weapon manifest is incomplete.")
 if not {"fists","lipstickGun","makeupBomb"} <= set(weapons.get("rules",{}).get("women",[])):
     raise SystemExit("Women weapon manifest is incomplete.")
+if not {"musket","spear"} <= set(weapons.get("rules",{}).get("historical",[])):
+    raise SystemExit("Historical weapon manifest is incomplete.")
 
 audio = parsed["GeneratedAudioManifest.json"]
 if len(audio.get("assets",{})) < 9:
@@ -64,6 +74,10 @@ if presets.get("narrowPass",{}).get("modernWeaponsAllowed") is not False:
     raise SystemExit("Narrow Pass must disallow modern guns.")
 if "northVsSouth" not in presets:
     raise SystemExit("North vs South preset is missing.")
+if presets.get("narrowPass",{}).get("defaultCounts") != {"men":30,"women":70}:
+    raise SystemExit("Narrow Pass must use the 30/70 premium scaled last-stand ratio.")
+if "musket" not in presets.get("northVsSouth",{}).get("weapons",[]):
+    raise SystemExit("North vs South must use muskets.")
 
 forbidden_suffixes={".p12",".pfx",".pem",".keystore",".jks",".aab",".apk",".exe"}
 for path in REPO.rglob("*"):
