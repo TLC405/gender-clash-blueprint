@@ -12,6 +12,9 @@ UENUM(BlueprintType)
 enum class ETLCFormation : uint8 { Ranks, Line, Wedge, ShieldWall, Columns, Spread, Circle, Rush };
 
 UENUM(BlueprintType)
+enum class ETLCBattlePreset : uint8 { BroadcastArena, NarrowPass, NorthVsSouth };
+
+UENUM(BlueprintType)
 enum class ETLCBattlePhase : uint8 {
   Ready,
   Active,
@@ -164,6 +167,7 @@ public:
   UFUNCTION(BlueprintCallable) bool ResetBattle();
   UFUNCTION(BlueprintCallable) bool BeginReplay();
   UFUNCTION(BlueprintCallable) void ReportElimination(ETLCTeam EliminatedTeam);
+  UFUNCTION(BlueprintCallable) int32 AddReinforcements(ETLCTeam Team,int32 RequestedCount);
   UFUNCTION(BlueprintPure) FTLCTacticalSnapshot GetSnapshot() const;
   UFUNCTION(BlueprintCallable) void SetBattleIntensity(float Value);
   UFUNCTION(BlueprintPure) ETLCBattlePhase GetPhase() const { return Phase; }
