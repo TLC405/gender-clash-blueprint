@@ -52,6 +52,9 @@ public:
   UFUNCTION(BlueprintPure) float GetLocalDecisionInterval(int32 AgentId)const;
   UFUNCTION(BlueprintPure) float GetStrategicDecisionInterval(int32 AgentId)const;
   UFUNCTION(BlueprintCallable) float ExecuteAttack(ATLCFighterCharacter* Attacker,ATLCFighterCharacter* Target);
+  UFUNCTION(BlueprintPure) bool ShouldPrioritizeCommander(ATLCFighterCharacter* Requester)const;
+  UFUNCTION(BlueprintPure) FVector GetCommanderLocation()const;
+  UFUNCTION(BlueprintCallable) float ExecuteAttackOnCommander(ATLCFighterCharacter* Attacker);
 
   UFUNCTION(BlueprintPure) int32 GetLivingNormalCount(ETLCTeam Team)const;
   UFUNCTION(BlueprintPure) int32 GetActiveProjectileCount()const;
@@ -98,6 +101,7 @@ private:
   UFUNCTION() void HandleFighterEliminated(ATLCFighterCharacter* Fighter);
   UFUNCTION() void HandleBattleResetRequested();
   UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase Phase);
+  UFUNCTION() void HandleCommanderEliminated();
 
   ATLCFighterCharacter* SpawnFighter(ETLCTeam Team,ETLCFighterKind Kind,int32 TeamIndex,int32 TeamCount);
   FVector SlotToWorld(ETLCTeam Team,int32 TeamIndex,int32 TeamCount,ETLCFormation Formation)const;
