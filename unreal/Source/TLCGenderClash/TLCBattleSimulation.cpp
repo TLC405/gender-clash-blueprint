@@ -2,6 +2,8 @@
 #include "TLCCommanderCharacter.h"
 #include "TLCAIDecisionPolicy.h"
 #include "Kismet/GameplayStatics.h"
+#include "TLCProceduralArena.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ATLCBattleSimulationDirector::ATLCBattleSimulationDirector(){PrimaryActorTick.bCanEverTick=true;}
 
@@ -12,6 +14,8 @@ void ATLCBattleSimulationDirector::BeginPlay(){
   if(ProjectilePool)ProjectilePool->WarmPool();
   UFO=GetWorld()->SpawnActor<ATLCUFOActor>();
 }
+
+void ATLCBattleSimulationDirector::BindCameraDirector(ATLCCameraDirector* InDirector){CameraDirector=InDirector;}
 
 void ATLCBattleSimulationDirector::BindBattleDirector(ATLCBattleDirector* InDirector){
   if(BattleDirector){
@@ -47,6 +51,7 @@ bool ATLCBattleSimulationDirector::BuildBattle(int32 MenCount,int32 WomenCount){
 void ATLCBattleSimulationDirector::StartSimulation(){bRunning=true;if(BattleDirector)BattleDirector->StartBattle();}
 void ATLCBattleSimulationDirector::ResetSimulation(){
   bRunning=false;
+  ClearEventTimers();
   if(UFO)UFO->CancelAbduction();
   if(ProjectilePool)ProjectilePool->ResetPool();
   if(Commander){Commander->Destroy();Commander=nullptr;}
@@ -83,6 +88,7 @@ ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnFighter(ETLCTeam Team,E
   F->SetRage(Team==ETLCTeam::Men?bMenRage:bWomenRage);
   F->SetWeapon(Team==ETLCTeam::Men?MenWeapon:WomenWeapon);
   F->SetFormationGoal(Spawn);
+  ApplyPresetPalette(F);
   F->OnEliminated.AddDynamic(this,&ATLCBattleSimulationDirector::HandleFighterEliminated);
   FighterStorage.Add(F);Fighters.Add(F);return F;
 }
@@ -183,14 +189,14 @@ ATLCCommanderCharacter* ATLCBattleSimulationDirector::SpawnCommander(){
 }
 
 ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnRobot(){
-  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Men,ETLCFighterKind::Robot,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);}return F;
+  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Men,ETLCFighterKind::Robot,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);if(CameraDirector){FTLCCameraInterest I;I.Location=F->GetActorLocation();I.Score=.82f;I.Reason="RobotSpawn";I.Subject=F;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}return F;
 }
 ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnUnicorn(){
-  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Women,ETLCFighterKind::Unicorn,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);}return F;
+  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Women,ETLCFighterKind::Unicorn,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);if(CameraDirector){FTLCCameraInterest I;I.Location=F->GetActorLocation();I.Score=.84f;I.Reason="UnicornSpawn";I.Subject=F;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}return F;
 }
 ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnGiant(ETLCTeam Team){
   const ETLCFighterKind K=Team==ETLCTeam::Women?ETLCFighterKind::FemaleGiant:ETLCFighterKind::MaleGiant;
-  ATLCFighterCharacter* F=SpawnFighter(Team,K,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);}return F;
+  ATLCFighterCharacter* F=SpawnFighter(Team,K,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);if(CameraDirector){FTLCCameraInterest I;I.Location=F->GetActorLocation();I.Score=.9f;I.Reason="GiantSpawn";I.Subject=F;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}return F;
 }
 
 TArray<ATLCFighterCharacter*> ATLCBattleSimulationDirector::CollectLivingEnemies(ETLCTeam Team)const{
@@ -206,7 +212,7 @@ bool ATLCBattleSimulationDirector::TriggerUFO(int32 TargetCount){
   const int32 Count=FMath::Min(TargetCount,Pool.Num());
   const int32 Step=FMath::Max(1,Pool.Num()/Count);
   for(int32 I=0;I<Count;++I)Targets.Add(Pool[(I*Step+7)%Pool.Num()]);
-  UFO->StartAbduction(Targets,this);return true;
+  UFO->StartAbduction(Targets,this);if(CameraDirector){FTLCCameraInterest I;I.Location=UFO->GetActorLocation();I.Score=.96f;I.Reason="UFO";I.Subject=UFO;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}return true;
 }
 
 void ATLCBattleSimulationDirector::ApplyRadialHit(const FVector& Origin,float Radius,ETLCTeam SourceTeam,float Damage,float Knockback){
@@ -231,7 +237,7 @@ void ATLCBattleSimulationDirector::HandleCommanderAbility(FName AbilityName){
   if(!Commander)return;
   const FVector Origin=Commander->GetActorLocation();const FVector Forward=Commander->GetActorForwardVector();
   if(AbilityName==FName(TEXT("Nuke"))){
-    FTimerHandle Handle;GetWorldTimerManager().SetTimer(Handle,[this,Origin](){ApplyRadialHit(Origin+FVector(650,0,0),720.f,ETLCTeam::Men,72.f,620.f);},1.5f,false);
+    FTimerHandle Handle;GetWorldTimerManager().SetTimer(Handle,[this,Origin](){ApplyRadialHit(Origin+FVector(650,0,0),720.f,ETLCTeam::Men,72.f,620.f);},1.5f,false);ActiveEventTimers.Add(Handle);if(CameraDirector){FTLCCameraInterest I;I.Location=Origin+FVector(650,0,0);I.Score=.98f;I.Reason="NukeTelegraph";I.Subject=Commander;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}
   }else if(AbilityName==FName(TEXT("WaterCannon"))){
     ApplyConeHit(Origin,Forward,1100.f,28.f,ETLCTeam::Men,16.f,520.f);
   }else if(AbilityName==FName(TEXT("LipstickShot"))){
@@ -240,5 +246,113 @@ void ATLCBattleSimulationDirector::HandleCommanderAbility(FName AbilityName){
     ApplyRadialHit(Origin,460.f,ETLCTeam::Men,34.f,560.f);
   }else if(AbilityName==FName(TEXT("RallyBuff"))){
     for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->GetTeam()==ETLCTeam::Men&&FVector::Dist2D(Origin,F->GetActorLocation())<=900.f)F->ApplyRallyBuff(1.18f,8.f);
+  }
+}
+
+
+void ATLCBattleSimulationDirector::ClearEventTimers(){
+  if(!GetWorld())return;
+  for(FTimerHandle& H:ActiveEventTimers)GetWorldTimerManager().ClearTimer(H);
+  ActiveEventTimers.Reset();
+}
+
+void ATLCBattleSimulationDirector::ApplyPresetPalette(ATLCFighterCharacter* F)const{
+  if(!F)return;
+  if(CurrentPreset==ETLCBattlePreset::NarrowPass){
+    if(F->GetTeam()==ETLCTeam::Men)F->SetVisualPalette(FLinearColor(.58f,.32f,.10f,1.f),FLinearColor(1.f,.70f,.20f,1.f));
+    else if(F->GetTeam()==ETLCTeam::Women)F->SetVisualPalette(FLinearColor(.42f,.02f,.04f,1.f),FLinearColor(.95f,.18f,.12f,1.f));
+  }else if(CurrentPreset==ETLCBattlePreset::NorthVsSouth){
+    if(F->GetTeam()==ETLCTeam::Men)F->SetVisualPalette(FLinearColor(.08f,.22f,.52f,1.f),FLinearColor(.25f,.55f,1.f,1.f));
+    else if(F->GetTeam()==ETLCTeam::Women)F->SetVisualPalette(FLinearColor(.33f,.31f,.27f,1.f),FLinearColor(.78f,.58f,.32f,1.f));
+  }else{
+    if(F->GetTeam()==ETLCTeam::Men)F->SetVisualPalette(FLinearColor(.05f,.24f,.82f,1.f),FLinearColor(.20f,.55f,1.f,1.f));
+    else if(F->GetTeam()==ETLCTeam::Women)F->SetVisualPalette(FLinearColor(.82f,.04f,.24f,1.f),FLinearColor(1.f,.30f,.48f,1.f));
+  }
+}
+
+void ATLCBattleSimulationDirector::ApplyPreset(ETLCBattlePreset Preset){
+  if(BattleDirector&&(BattleDirector->GetPhase()!=ETLCBattlePhase::Ready))return;
+  CurrentPreset=Preset;
+  if(Preset==ETLCBattlePreset::NarrowPass){
+    ArenaSize=FVector2D(4200.f,1150.f);MenFormation=ETLCFormation::ShieldWall;WomenFormation=ETLCFormation::Rush;MenWeapon=ETLCWeaponType::Spear;WomenWeapon=ETLCWeaponType::Spear;
+  }else if(Preset==ETLCBattlePreset::NorthVsSouth){
+    ArenaSize=FVector2D(4200.f,2300.f);MenFormation=ETLCFormation::Line;WomenFormation=ETLCFormation::Line;MenWeapon=ETLCWeaponType::Musket;WomenWeapon=ETLCWeaponType::Musket;
+  }else{
+    ArenaSize=FVector2D(4200.f,2300.f);MenFormation=ETLCFormation::Ranks;WomenFormation=ETLCFormation::Ranks;MenWeapon=ETLCWeaponType::Fists;WomenWeapon=ETLCWeaponType::Fists;
+  }
+  if(ATLCProceduralArena* A=Cast<ATLCProceduralArena>(UGameplayStatics::GetActorOfClass(this,ATLCProceduralArena::StaticClass())))A->ApplyPreset(Preset);
+  for(ATLCFighterCharacter* F:Fighters){if(F){ApplyPresetPalette(F);F->SetWeapon(F->GetTeam()==ETLCTeam::Men?MenWeapon:WomenWeapon);}}
+  RefreshFormationGoals(ETLCTeam::Men);RefreshFormationGoals(ETLCTeam::Women);
+}
+
+int32 ATLCBattleSimulationDirector::SpawnReinforcements(ETLCTeam Team,int32 RequestedCount){
+  if(!BattleDirector)return 0;
+  const int32 Accepted=BattleDirector->AddReinforcements(Team,RequestedCount);
+  if(Accepted<=0)return 0;
+  const int32 Existing=GetLivingNormalCount(Team)-Accepted;
+  const int32 NewTotal=Existing+Accepted;
+  for(int32 I=0;I<Accepted;++I)SpawnFighter(Team,ETLCFighterKind::Normal,Existing+I,NewTotal);
+  RefreshFormationGoals(Team);return Accepted;
+}
+
+void ATLCBattleSimulationDirector::ExecuteSpecialEvent(ETLCSpecialEvent E){
+  if(!GetWorld()||!BattleDirector)return;
+  const FVector Center=GetActorLocation()+FVector(0,0,95.f);
+  if(E==ETLCSpecialEvent::UFOAbduction){TriggerUFO(4);return;}
+  if(E==ETLCSpecialEvent::MaleGiant){SpawnGiant(ETLCTeam::Men);return;}
+  if(E==ETLCSpecialEvent::FemaleGiant){SpawnGiant(ETLCTeam::Women);return;}
+
+  if(E==ETLCSpecialEvent::LightningStrike){
+    TArray<ATLCFighterCharacter*> Living;for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->CountsTowardNormalTeam())Living.Add(F);
+    if(Living.Num()){ATLCFighterCharacter* T=Living[(NextHitId*7)%Living.Num()];FTLCHitPayload H;H.HitId=NextHitId++;H.SourceTeam=ETLCTeam::Neutral;H.Damage=54.f;H.Knockback=260.f;H.Direction=FVector::UpVector;T->ApplyBattleHit(H);if(CameraDirector){FTLCCameraInterest I;I.Location=T->GetActorLocation();I.Score=.9f;I.Reason="Lightning";I.Subject=T;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}
+    return;
+  }
+
+  if(E==ETLCSpecialEvent::Meteor){
+    FTimerHandle H;GetWorldTimerManager().SetTimer(H,[this,Center](){ApplyRadialHit(Center,620.f,ETLCTeam::Neutral,42.f,620.f);},1.5f,false);ActiveEventTimers.Add(H);
+    if(CameraDirector){FTLCCameraInterest I;I.Location=Center;I.Score=.94f;I.Reason="Meteor";CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}return;
+  }
+
+  if(E==ETLCSpecialEvent::LowGravity){
+    for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive())F->GetCharacterMovement()->GravityScale=.28f;
+    FTimerHandle H;GetWorldTimerManager().SetTimer(H,[this](){for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive())F->GetCharacterMovement()->GravityScale=1.f;},6.f,false);ActiveEventTimers.Add(H);return;
+  }
+
+  if(E==ETLCSpecialEvent::ReinforcementDrop){
+    const auto S=BattleDirector->GetSnapshot();const ETLCTeam Trailing=S.Men.Alive<=S.Women.Alive?ETLCTeam::Men:ETLCTeam::Women;SpawnReinforcements(Trailing,5);return;
+  }
+
+  if(E==ETLCSpecialEvent::Stampede){
+    ApplyConeHit(Center+FVector(-ArenaSize.X*.48f,0,0),FVector::ForwardVector,ArenaSize.X*.95f,18.f,ETLCTeam::Neutral,14.f,440.f);return;
+  }
+
+  if(E==ETLCSpecialEvent::Tornado){
+    ApplyRadialHit(Center,850.f,ETLCTeam::Neutral,8.f,760.f);return;
+  }
+
+  if(E==ETLCSpecialEvent::RobotMalfunction){
+    for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->GetKind()==ETLCFighterKind::Robot){FTLCHitPayload H;H.HitId=NextHitId++;H.SourceTeam=ETLCTeam::Neutral;H.Damage=135.f;H.Knockback=180.f;H.Direction=FVector::RightVector;F->ApplyBattleHit(H);break;}return;
+  }
+
+  if(E==ETLCSpecialEvent::UnicornRage){
+    for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->GetKind()==ETLCFighterKind::Unicorn){F->SetRage(true);FTimerHandle H;TWeakObjectPtr<ATLCFighterCharacter> W=F;GetWorldTimerManager().SetTimer(H,[W](){if(W.IsValid())W->SetRage(false);},7.f,false);ActiveEventTimers.Add(H);break;}return;
+  }
+
+  if(E==ETLCSpecialEvent::GiantBeachBall){ApplyRadialHit(Center,760.f,ETLCTeam::Neutral,0.f,520.f);return;}
+
+  if(E==ETLCSpecialEvent::HealingZone){
+    for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&FVector::Dist2D(Center,F->GetActorLocation())<=850.f)F->Heal(28.f);return;
+  }
+
+  if(E==ETLCSpecialEvent::SuddenFog){
+    BattleDirector->SetBattleIntensity(.22f);FTimerHandle H;GetWorldTimerManager().SetTimer(H,[this](){if(BattleDirector)BattleDirector->SetBattleIntensity(.55f);},6.f,false);ActiveEventTimers.Add(H);return;
+  }
+
+  if(E==ETLCSpecialEvent::BattlefieldBlackout){
+    UGameplayStatics::SetGlobalTimeDilation(this,.82f);FTimerHandle H;GetWorldTimerManager().SetTimer(H,[this](){UGameplayStatics::SetGlobalTimeDilation(this,1.f);},4.f,false);ActiveEventTimers.Add(H);return;
+  }
+
+  if(E==ETLCSpecialEvent::MascotInvasion){
+    ATLCFighterCharacter* M=SpawnFighter(ETLCTeam::Neutral,ETLCFighterKind::MaleGiant,0,1);if(M){M->SetCountsTowardNormalTeam(false);M->SetMaxHealth(420.f);}return;
   }
 }
