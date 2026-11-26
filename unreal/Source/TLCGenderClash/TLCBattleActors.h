@@ -57,6 +57,8 @@ public:
   UFUNCTION(BlueprintCallable) void SetFormationGoal(const FVector& Goal);
   UFUNCTION(BlueprintCallable) void SetWeapon(ETLCWeaponType NewWeapon);
   UFUNCTION(BlueprintCallable) void SetRage(bool bEnabled);
+  UFUNCTION(BlueprintCallable) void SetStrengthTuning(float Multiplier);
+  UFUNCTION(BlueprintCallable) void SetSpeedTuning(float Multiplier);
   UFUNCTION(BlueprintCallable) void SetFuriosaState(bool bEnabled);
   UFUNCTION(BlueprintCallable) void ApplyRallyBuff(float Multiplier,float DurationSeconds);
   UFUNCTION(BlueprintCallable) void Heal(float Amount);
@@ -73,7 +75,7 @@ public:
   UFUNCTION(BlueprintPure) ETLCFighterKind GetKind()const{return Kind;}
   UFUNCTION(BlueprintPure) float GetHealthNormalized()const{return MaxHealth>0.f?Health/MaxHealth:0.f;}
   UFUNCTION(BlueprintPure) ETLCWeaponType GetWeapon()const{return Weapon;}
-  UFUNCTION(BlueprintPure) float GetDamageMultiplier()const{return DamageScale*(bRage?1.16f:1.f)*RallyMultiplier;}
+  UFUNCTION(BlueprintPure) float GetDamageMultiplier()const{return DamageScale*TeamStrengthMultiplier*(bRage?1.16f:1.f)*RallyMultiplier;}
   UFUNCTION(BlueprintPure) bool CountsTowardNormalTeam()const{return bCountsTowardNormalTeam;}
 
   void SetCountsTowardNormalTeam(bool bValue){bCountsTowardNormalTeam=bValue;}
@@ -106,6 +108,8 @@ private:
   float Health=100.f;
   float DamageScale=1.f;
   float MovementScale=1.f;
+  float TeamStrengthMultiplier=1.f;
+  float TeamSpeedMultiplier=1.f;
   float RallyMultiplier=1.f;
   FLinearColor BodyTintOverride=FLinearColor::Transparent;
   FLinearColor MarkerTintOverride=FLinearColor::Transparent;
