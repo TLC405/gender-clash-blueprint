@@ -380,7 +380,24 @@ FTLCSpecialEventResult ATLCSpecialEventDirector::ForceEvent(ETLCSpecialEvent Typ
   OnEventTriggered.Broadcast(Type);ExecuteEvent(Type,S,R);return R;
 }
 
-void ATLCAudioDirector::SetMusicState(ETLCMusicState S){if(CurrentState==S)return;CurrentState=S;TransitionMusicState(S);}
+ATLCAudioDirector::ATLCAudioDirector(){
+  PrimaryActorTick.bCanEverTick=false;
+  BattleMusic=TSoftObjectPtr<USoundBase>(FSoftObjectPath(TEXT("/Game/Audio/TLC/Music/MX_BattleCore.MX_BattleCore")));
+  LocalCues.Add(FName(TEXT("battleStart")),TSoftObjectPtr<USoundBase>(FSoftObjectPath(TEXT("/Game/Audio/TLC/VO/VO_BattleStart.VO_BattleStart"))));
+  LocalCues.Add(FName(TEXT("victoryMen")),TSoftObjectPtr<USoundBase>(FSoftObjectPath(TEXT("/Game/Audio/TLC/VO/VO_VictoryMen.VO_VictoryMen"))));
+  LocalCues.Add(FName(TEXT("victoryWomen")),TSoftObjectPtr<USoundBase>(FSoftObjectPath(TEXT("/Game/Audio/TLC/VO/VO_VictoryWomen.VO_VictoryWomen"))));
+  LocalCues.Add(FName(TEXT("ufo")),TSoftObjectPtr<USoundBase>(FSoftObjectPath(TEXT("/Game/Audio/TLC/SFX/SFX_UFOBeam.SFX_UFOBeam"))));
+  LocalCues.Add(FName(TEXT("giant")),TSoftObjectPtr<USoundBase>(FSoftObjectPath(TEXT("/Game/Audio/TLC/SFX/SFX_GiantStomp.SFX_GiantStomp"))));
+}
+void ATLCAudioDirector::BeginPlay(){Super::BeginPlay();}
+void ATLCAudioDirector::EnsureMusicPlaying(){
+  if(MusicComponent&&MusicComponent->IsPlaying())return;
+  if(USoundBase* Sound=BattleMusic.LoadSynchronous())MusicComponent=UGameplayStatics::SpawnSound2D(this,Sound,MusicBaseVolume,1.f,0.f,nullptr,false,false);
+}
+void ATLCAudioDirector::SetBattlePaused_Implementation(bool bPaused){if(MusicComponent)MusicComponent->SetPaused(bPaused);}
+void ATLCAudioDirector::StopBattleAudio_Implementation(){if(MusicComponent){MusicComponent->Stop();MusicComponent=nullptr;}}
+
+void ATLCAudioDirector::SetMusicState(ETLCMusicState S){if(CurrentState==S&&MusicComponent)return;CurrentState=S;if(S!=ETLCMusicState::PreBattle&&S!=ETLCMusicState::Victory&&S!=ETLCMusicState::Defeat)EnsureMusicPlaying();TransitionMusicState(S);}
 void ATLCAudioDirector::UpdateMix(const FTLCTacticalSnapshot& S){
   const int32 Alive=S.Men.Alive+S.Women.Alive;const float Total=FMath::Max(1.f,(float)Alive);
   const float M=(S.Men.Alive-S.Women.Alive)/Total;ApplyMetaSoundParameters(FMath::Clamp(S.BattleIntensity,0.f,1.f),FMath::Clamp(M,-1.f,1.f),FMath::Clamp(-M,-1.f,1.f),S.Men.bBossAlive||S.Women.bBossAlive,Alive<=10);
@@ -388,5 +405,7 @@ void ATLCAudioDirector::UpdateMix(const FTLCTacticalSnapshot& S){
 bool ATLCAudioDirector::PlayLocalCue(FName CueId){
   if(TSoftObjectPtr<USoundBase>* Ref=LocalCues.Find(CueId)){if(USoundBase* Sound=Ref->LoadSynchronous()){UGameplayStatics::PlaySound2D(this,Sound);return true;}}return false;
 }
-void ATLCAudioDirector::HandleAnnouncerLine(FName EventName,const FString&){PlayLocalCue(EventName);}
-void ATLCAudioDirector::ResetAudioState(){CurrentState=ETLCMusicState::PreBattle;if(MusicComponent)MusicComponent->Stop();StopBattleAudio();}
+void ATLCAudioDirector::HandleAnnouncerLine(FName EventName,const FString&){
+  PlayLocalCue(EventName);if(!MusicComponent||!GetWorld())return;MusicComponent->SetVolumeMultiplier(.30f);GetWorldTimerManager().ClearTimer(DuckRestoreHandle);GetWorldTimerManager().SetTimer(DuckRestoreHandle,[this](){if(MusicComponent)MusicComponent->SetVolumeMultiplier(MusicBaseVolume);},2.2f,false);
+}
+void ATLCAudioDirector::ResetAudioState(){CurrentState=ETLCMusicState::PreBattle;if(GetWorld())GetWorldTimerManager().ClearTimer(DuckRestoreHandle);StopBattleAudio();}
