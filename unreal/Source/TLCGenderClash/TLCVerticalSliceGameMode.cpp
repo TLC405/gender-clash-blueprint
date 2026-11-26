@@ -19,19 +19,9 @@ void ATLCVerticalSliceGameMode::BeginPlay(){
   PerformanceManager=GetWorld()->SpawnActor<ATLCPerformanceLODManager>();
   RuntimeCoordinator=GetWorld()->SpawnActor<ATLCBattleRuntimeCoordinator>();
 
-  if(Simulation){Simulation->BindBattleDirector(BattleDirector);Simulation->BuildBattle(50,50);}
+  if(Simulation){Simulation->BindBattleDirector(BattleDirector);Simulation->BindCameraDirector(CameraDirector);Simulation->BuildBattle(50,50);}
   if(SpecialEventDirector)SpecialEventDirector->OnEventTriggered.AddDynamic(this,&ATLCVerticalSliceGameMode::HandleSpecialEvent);
   if(RuntimeCoordinator)RuntimeCoordinator->RebindRuntimeSystems();
 }
 
-void ATLCVerticalSliceGameMode::HandleSpecialEvent(ETLCSpecialEvent EventType){
-  if(!Simulation)return;
-  switch(EventType){
-    case ETLCSpecialEvent::UFOAbduction: Simulation->TriggerUFO(4); break;
-    case ETLCSpecialEvent::MaleGiant: Simulation->SpawnGiant(ETLCTeam::Men); break;
-    case ETLCSpecialEvent::FemaleGiant: Simulation->SpawnGiant(ETLCTeam::Women); break;
-    case ETLCSpecialEvent::RobotMalfunction: break;
-    case ETLCSpecialEvent::UnicornRage: break;
-    default: break;
-  }
-}
+void ATLCVerticalSliceGameMode::HandleSpecialEvent(ETLCSpecialEvent EventType){if(Simulation)Simulation->ExecuteSpecialEvent(EventType);}
