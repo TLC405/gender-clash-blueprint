@@ -33,6 +33,11 @@ void UTLCBattleHUDWidget::NativeConstruct(){
   BuildUI();
 }
 
+void UTLCBattleHUDWidget::BindAnnouncer(ATLCAnnouncerDirector* InAnnouncer){
+  if(AnnouncerDirector)AnnouncerDirector->OnLineReady.RemoveDynamic(this,&UTLCBattleHUDWidget::HandleAnnouncerLine);
+  AnnouncerDirector=InAnnouncer;if(AnnouncerDirector)AnnouncerDirector->OnLineReady.AddDynamic(this,&UTLCBattleHUDWidget::HandleAnnouncerLine);
+}
+
 void UTLCBattleHUDWidget::BindRuntime(ATLCBattleDirector* InBattleDirector,ATLCBattleSimulationDirector* InSimulation,ATLCSpecialEventDirector* InEventDirector,ATLCSpectatorCameraActor* InCamera){
   if(BattleDirector){
     BattleDirector->OnTeamCountChanged.RemoveDynamic(this,&UTLCBattleHUDWidget::HandleTeamCountChanged);
@@ -169,6 +174,7 @@ void UTLCBattleHUDWidget::HandleTeamCountChanged(ETLCTeam,int32){RefreshRuntimeT
 void UTLCBattleHUDWidget::HandlePhaseChanged(ETLCBattlePhase P){if(StateText)StateText->SetText(FText::FromString(UEnum::GetValueAsString(P).Replace(TEXT("ETLCBattlePhase::"),TEXT(""))));}
 void UTLCBattleHUDWidget::HandleBattleFinished(ETLCTeam W,FName Reason){if(EventText)EventText->SetText(FText::FromString(FString::Printf(TEXT("FINAL • %s • %s"),*UEnum::GetValueAsString(W),*Reason.ToString())));}
 void UTLCBattleHUDWidget::HandleSpecialEvent(ETLCSpecialEvent E){if(EventText)EventText->SetText(FText::FromString(FString::Printf(TEXT("EVENT • %s"),*UEnum::GetValueAsString(E).Replace(TEXT("ETLCSpecialEvent::"),TEXT("")))));}
+void UTLCBattleHUDWidget::HandleAnnouncerLine(FName,const FString& Line){if(EventText&&!Line.IsEmpty())EventText->SetText(FText::FromString(Line));}
 
 void UTLCBattleHUDWidget::OnStart(){ApplyPendingConfig();if(Simulation)Simulation->StartSimulation();}
 void UTLCBattleHUDWidget::OnPause(){if(BattleDirector)BattleDirector->PauseBattle();}
