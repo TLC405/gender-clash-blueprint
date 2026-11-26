@@ -35,6 +35,20 @@
       "cooldown": 2.4,
       "knockback": 230,
       "ranged": true
+    },
+    "musket": {
+      "damage": 34,
+      "range": 1550,
+      "cooldown": 2.35,
+      "knockback": 45,
+      "ranged": true
+    },
+    "spear": {
+      "damage": 29,
+      "range": 255,
+      "cooldown": 0.88,
+      "knockback": 145,
+      "ranged": false
     }
   },
   "rules": {
@@ -47,6 +61,11 @@
       "fists",
       "lipstickGun",
       "makeupBomb"
+    ],
+    "historical": [
+      "fists",
+      "musket",
+      "spear"
     ]
   },
   "compatibilityVersion": 1,
