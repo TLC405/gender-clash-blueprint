@@ -143,6 +143,7 @@ float ATLCBattleSimulationDirector::GetDesiredAttackRange(ATLCFighterCharacter* 
   return WeaponDirector->GetTuning(F->GetWeapon()).Range;
 }
 
+float ATLCBattleSimulationDirector::GetCloseDecisionInterval(int32 AgentId)const{return UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::CloseCombat,AgentId);}
 float ATLCBattleSimulationDirector::GetLocalDecisionInterval(int32 AgentId)const{return UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::LocalTactical,AgentId);}
 float ATLCBattleSimulationDirector::GetStrategicDecisionInterval(int32 AgentId)const{return UTLCAIDecisionPolicy::GetDecisionIntervalSeconds(ETLCDecisionCadence::Strategic,AgentId);}
 
