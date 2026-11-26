@@ -1,5 +1,6 @@
 #include "TLCBattleActors.h"
 #include "TLCBattleSimulation.h"
+#include "TLCCommanderCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -184,6 +185,12 @@ void ATLCFighterCharacter::Tick(float Dt){
 
 void ATLCFighterCharacter::UpdateDecision(float Now){
   if(!Simulation)return;
+  if(Simulation->ShouldPrioritizeCommander(this)){
+    const float HeroScore=.92f;
+    const bool bCanSwitch=DecisionState.CurrentAction==FName(TEXT("AttackHero"))||DecisionState.CurrentAction.IsNone()||(Now-DecisionState.BehaviorEntryTime)>=DecisionState.MinimumCommitmentSeconds&&HeroScore>=DecisionState.CurrentScore*(1.f+DecisionState.HysteresisRatio);
+    if(bCanSwitch){CurrentTarget=nullptr;DecisionState.CurrentTarget=nullptr;DecisionState.CurrentAction=FName(TEXT("AttackHero"));DecisionState.CurrentScore=HeroScore;DecisionState.BehaviorEntryTime=Now;}
+    if(DecisionState.CurrentAction==FName(TEXT("AttackHero")))return;
+  }
   if(CurrentTarget&&!CurrentTarget->IsBattleAlive()){
     CurrentTarget=nullptr;DecisionState.CurrentTarget=nullptr;DecisionState.CurrentAction=NAME_None;DecisionState.LastTargetLossTime=Now;
   }
@@ -221,7 +228,8 @@ void ATLCFighterCharacter::UpdateDecision(float Now){
 
 void ATLCFighterCharacter::UpdateMovement(float Dt){
   FVector Destination=FormationGoal;
-  if(CurrentTarget&&CurrentTarget->IsBattleAlive())Destination=CurrentTarget->GetActorLocation();
+  if(DecisionState.CurrentAction==FName(TEXT("AttackHero"))&&Simulation->ShouldPrioritizeCommander(this))Destination=Simulation->GetCommanderLocation();
+  else if(CurrentTarget&&CurrentTarget->IsBattleAlive())Destination=CurrentTarget->GetActorLocation();
   FVector Dir=Destination-GetActorLocation();Dir.Z=0.f;
   const float Dist=Dir.Size();
   const float StopDistance=Simulation?Simulation->GetDesiredAttackRange(this):130.f;
@@ -233,7 +241,11 @@ void ATLCFighterCharacter::UpdateMovement(float Dt){
 }
 
 void ATLCFighterCharacter::UpdateCombat(float Now){
-  if(!CurrentTarget||!CurrentTarget->IsBattleAlive()||Now<NextAttackAt||!Simulation)return;
+  if(!Simulation||Now<NextAttackAt)return;
+  if(DecisionState.CurrentAction==FName(TEXT("AttackHero"))&&Simulation->ShouldPrioritizeCommander(this)){
+    const float Dist=FVector::Dist2D(GetActorLocation(),Simulation->GetCommanderLocation());const float Range=Simulation->GetDesiredAttackRange(this);if(Dist<=Range){const float CD=Simulation->ExecuteAttackOnCommander(this);if(CD>0.f)NextAttackAt=Now+CD;}return;
+  }
+  if(!CurrentTarget||!CurrentTarget->IsBattleAlive())return;
   const float Range=Simulation->GetDesiredAttackRange(this);
   const float Dist=FVector::Dist2D(GetActorLocation(),CurrentTarget->GetActorLocation());
   if(Dist>Range)return;
@@ -310,7 +322,10 @@ void ATLCPooledProjectile::HandleOverlap(UPrimitiveComponent*,AActor* Other,UPri
   if(ATLCFighterCharacter* Fighter=Cast<ATLCFighterCharacter>(Other)){
     if(Fighter->GetTeam()==Team)return;
     FTLCHitPayload Hit;Hit.HitId=HitId;Hit.SourceTeam=Team;Hit.Damage=Damage;Hit.Knockback=Knockback;Hit.Direction=Velocity.GetSafeNormal();
-    Fighter->ApplyBattleHit(Hit);DeactivateProjectile();
+    Fighter->ApplyBattleHit(Hit);DeactivateProjectile();return;
+  }
+  if(ATLCCommanderCharacter* Hero=Cast<ATLCCommanderCharacter>(Other)){
+    if(Team==ETLCTeam::Men)return;Hero->ApplyHeroDamage(Damage,Knockback,Velocity.GetSafeNormal());DeactivateProjectile();
   }
 }
 
