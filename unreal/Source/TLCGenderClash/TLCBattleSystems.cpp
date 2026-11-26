@@ -213,6 +213,7 @@ int32 ATLCBattleDirector::AddReinforcements(ETLCTeam Team,int32 RequestedCount){
 
 void ATLCBattleDirector::SetBossAlive(ETLCTeam Team,bool bAlive){
   if(Team==ETLCTeam::Men)MenState.bBossAlive=bAlive;else if(Team==ETLCTeam::Women)WomenState.bBossAlive=bAlive;
+  if(!bAlive&&(Phase==ETLCBattlePhase::Active||Phase==ETLCBattlePhase::SuddenDeath))CheckWinnerOrStalemate();
 }
 void ATLCBattleDirector::SetHeroAlive(ETLCTeam Team,bool bAlive){
   if(Team==ETLCTeam::Men)MenState.bHeroAlive=bAlive;else if(Team==ETLCTeam::Women)WomenState.bHeroAlive=bAlive;
@@ -250,14 +251,18 @@ bool ATLCBattleDirector::SetPhase(ETLCBattlePhase P,bool bForce){
 }
 
 void ATLCBattleDirector::CheckWinnerOrStalemate(){
-  if(MenState.Alive<=0 || WomenState.Alive<=0){
-    if(MenState.Alive<=0 && WomenState.Alive<=0) FinalizeMatch(ETLCTeam::Neutral,TEXT("DoubleElimination"));
-    else FinalizeMatch(MenState.Alive>0?ETLCTeam::Men:ETLCTeam::Women,TEXT("Elimination"));
+  const bool MenCombatPower=MenState.Alive>0||MenState.bBossAlive;
+  const bool WomenCombatPower=WomenState.Alive>0||WomenState.bBossAlive;
+  if(!MenCombatPower || !WomenCombatPower){
+    if(!MenCombatPower&&!WomenCombatPower)FinalizeMatch(ETLCTeam::Neutral,TEXT("DoubleElimination"));
+    else FinalizeMatch(MenCombatPower?ETLCTeam::Men:ETLCTeam::Women,TEXT("Elimination"));
     return;
   }
 
   if(Phase==ETLCBattlePhase::SuddenDeath && SuddenDeathElapsed>=SuddenDeathTimeoutSeconds){
-    FinalizeMatch(MenState.Alive>WomenState.Alive?ETLCTeam::Men:WomenState.Alive>MenState.Alive?ETLCTeam::Women:ETLCTeam::Neutral,TEXT("SuddenDeathTimeout"));
+    const int32 MenScore=MenState.Alive+(MenState.bBossAlive?1:0);
+    const int32 WomenScore=WomenState.Alive+(WomenState.bBossAlive?1:0);
+    FinalizeMatch(MenScore>WomenScore?ETLCTeam::Men:WomenScore>MenScore?ETLCTeam::Women:ETLCTeam::Neutral,TEXT("SuddenDeathTimeout"));
     return;
   }
 
@@ -268,8 +273,10 @@ void ATLCBattleDirector::CheckWinnerOrStalemate(){
 }
 
 void ATLCBattleDirector::ResolveStalemate(){
-  if(MenState.Alive!=WomenState.Alive){
-    FinalizeMatch(MenState.Alive>WomenState.Alive?ETLCTeam::Men:ETLCTeam::Women,TEXT("StalemateCountTiebreak"));
+  const int32 MenScore=MenState.Alive+(MenState.bBossAlive?1:0);
+  const int32 WomenScore=WomenState.Alive+(WomenState.bBossAlive?1:0);
+  if(MenScore!=WomenScore){
+    FinalizeMatch(MenScore>WomenScore?ETLCTeam::Men:ETLCTeam::Women,TEXT("StalemateCountTiebreak"));
     return;
   }
   if(bUseSuddenDeathOnTie){
