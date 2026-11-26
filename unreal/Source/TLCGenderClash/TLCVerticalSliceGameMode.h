@@ -38,4 +38,7 @@ private:
   UPROPERTY() TObjectPtr<ATLCProceduralArena> Arena;
 
   UFUNCTION() void HandleSpecialEvent(ETLCSpecialEvent EventType);
+  UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase Phase);
+  UFUNCTION() void HandleBattleFinished(ETLCTeam Winner,FName Reason);
+  void QueueAnnouncer(FName EventName,int32 Priority,const FString& Line,float Cooldown=5.f);
 };
