@@ -55,6 +55,7 @@ public:
     ATLCBattleSimulationDirector* InSimulation);
 
   UFUNCTION(BlueprintCallable) void SetFormationGoal(const FVector& Goal);
+  UFUNCTION(BlueprintCallable) void SetFormationType(ETLCFormation NewFormation){Formation=NewFormation;}
   UFUNCTION(BlueprintCallable) void SetWeapon(ETLCWeaponType NewWeapon);
   UFUNCTION(BlueprintCallable) void SetRage(bool bEnabled);
   UFUNCTION(BlueprintCallable) void SetStrengthTuning(float Multiplier);
@@ -131,6 +132,9 @@ private:
   void UpdateMovement(float DeltaSeconds);
   void UpdateCombat(float Now);
   float GetDesiredMoveSpeed()const;
+  float GetFormationDamageMultiplier()const;
+  float GetFormationDamageTakenMultiplier(const FVector& IncomingDirection)const;
+  bool ShouldHoldFormation(float Now)const;
   void Eliminate();
 };
 
