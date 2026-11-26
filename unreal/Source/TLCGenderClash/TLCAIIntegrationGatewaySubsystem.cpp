@@ -65,8 +65,10 @@ void UTLCAIIntegrationGatewaySubsystem::HandleResponse(FHttpRequestPtr Request,F
   if(Response->GetContentLength()>MaxResponseBytes){OnGatewayError.Broadcast(TEXT("Commentary response exceeded size limit."));return;}
   TSharedPtr<FJsonObject>J;auto Reader=TJsonReaderFactory<>::Create(Response->GetContentAsString());
   if(!FJsonSerializer::Deserialize(Reader,J)||!J.IsValid()){OnGatewayError.Broadcast(TEXT("Invalid commentary response."));return;}
-  FString ResponseMatch;int32 ResponseGeneration=-1;FString C;
+  FString ResponseMatch;double ResponseGenerationNumber=-1.0;FString C;
   if(!J->TryGetStringField(TEXT("match_id"),ResponseMatch)||ResponseMatch!=CurrentMatchId)return;
-  if(!J->TryGetNumberField(TEXT("battle_generation"),ResponseGeneration)||ResponseGeneration!=CurrentBattleGeneration)return;
+  if(!J->TryGetNumberField(TEXT("battle_generation"),ResponseGenerationNumber))return;
+  const int32 ResponseGeneration=FMath::RoundToInt(ResponseGenerationNumber);
+  if(ResponseGeneration!=CurrentBattleGeneration)return;
   if(J->TryGetStringField(TEXT("commentary"),C)&&!C.IsEmpty())OnCommentaryReady.Broadcast(C.Left(MaxCommentaryCharacters));
 }
