@@ -165,7 +165,42 @@ void ATLCFighterCharacter::ApplyRallyBuff(float Multiplier,float DurationSeconds
 
 float ATLCFighterCharacter::GetDesiredMoveSpeed()const{
   const float Rage=bRage?1.18f:1.f;
-  return 420.f*MovementScale*TeamSpeedMultiplier*Rage*RallyMultiplier;
+  float FormationSpeed=1.f;
+  if(Formation==ETLCFormation::ShieldWall)FormationSpeed=.76f;
+  else if(Formation==ETLCFormation::Wedge)FormationSpeed=1.08f;
+  else if(Formation==ETLCFormation::Rush)FormationSpeed=1.22f;
+  else if(Formation==ETLCFormation::Circle)FormationSpeed=.90f;
+  else if(Formation==ETLCFormation::Columns)FormationSpeed=1.03f;
+  return 420.f*MovementScale*TeamSpeedMultiplier*Rage*RallyMultiplier*FormationSpeed;
+}
+float ATLCFighterCharacter::GetFormationDamageMultiplier()const{
+  if(Formation==ETLCFormation::Wedge)return 1.10f;
+  if(Formation==ETLCFormation::Rush)return 1.08f;
+  if(Formation==ETLCFormation::ShieldWall)return .90f;
+  if(Formation==ETLCFormation::Spread)return .94f;
+  return 1.f;
+}
+float ATLCFighterCharacter::GetFormationDamageTakenMultiplier(const FVector& IncomingDirection)const{
+  if(Formation==ETLCFormation::Spread&&IncomingDirection.Z>0.25f)return .72f;
+  if(Formation==ETLCFormation::Circle)return .86f;
+  if(Formation==ETLCFormation::ShieldWall){
+    const FVector Incoming=(-IncomingDirection).GetSafeNormal2D();
+    const float Facing=FVector::DotProduct(GetActorForwardVector().GetSafeNormal2D(),Incoming);
+    return Facing>.35f?.62f:1.42f;
+  }
+  if(Formation==ETLCFormation::Wedge)return 1.08f;
+  return 1.f;
+}
+bool ATLCFighterCharacter::ShouldHoldFormation(float Now)const{
+  if(bRage||Kind!=ETLCFighterKind::Normal)return false;
+  const float TargetDistance=CurrentTarget?FVector::Dist2D(GetActorLocation(),CurrentTarget->GetActorLocation()):MAX_flt;
+  if(Formation==ETLCFormation::ShieldWall)return TargetDistance>520.f;
+  if(Formation==ETLCFormation::Ranks)return (AgentId%3)!=0&&TargetDistance>680.f;
+  if(Formation==ETLCFormation::Circle){
+    const int32 Wave=(FMath::FloorToInt(Now/2.2f)+(AgentId/4))%3;
+    return Wave!=0&&TargetDistance>420.f;
+  }
+  return false;
 }
 
 void ATLCFighterCharacter::Tick(float Dt){
@@ -260,7 +295,7 @@ bool ATLCFighterCharacter::ApplyBattleHit(const FTLCHitPayload& Hit){
     RecentHitIds.Add(Hit.HitId);
     if(RecentHitIds.Num()>32)RecentHitIds.Reset();
   }
-  Health-=FMath::Max(0.f,Hit.Damage);
+  Health-=FMath::Max(0.f,Hit.Damage)*GetFormationDamageTakenMultiplier(Hit.Direction);
   if(Hit.Knockback>0.f){
     FVector Launch=Hit.Direction.GetSafeNormal()*FMath::Min(Hit.Knockback,Kind==ETLCFighterKind::Robot?540.f:980.f);
     Launch.Z=FMath::Min(260.f,Hit.Knockback*.22f);
