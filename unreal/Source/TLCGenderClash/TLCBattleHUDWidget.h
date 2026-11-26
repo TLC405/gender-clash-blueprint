@@ -78,6 +78,10 @@ private:
   bool bMenSword=false;
   bool bWomenLipstick=false;
   bool bWomenBomb=false;
+  bool bTouchForward=false;
+  bool bTouchBack=false;
+  bool bTouchLeft=false;
+  bool bTouchRight=false;
 
   void BuildUI();
   UTextBlock* MakeLabel(const FString& Text,int32 Size,const FLinearColor& Color);
@@ -90,6 +94,7 @@ private:
   void ApplyResponsiveLayout();
   void UpdateCommanderButtons();
   void SetButtonText(UButton* Button,const FString& Text);
+  void ApplyTouchCommanderMovement();
 
   UFUNCTION() void HandleTeamCountChanged(ETLCTeam Team,int32 Alive);
   UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase Phase);
@@ -114,6 +119,14 @@ private:
   UFUNCTION() void OnLipstickShot();
   UFUNCTION() void OnShockwave();
   UFUNCTION() void OnRally();
+  UFUNCTION() void OnTouchForwardPressed();
+  UFUNCTION() void OnTouchForwardReleased();
+  UFUNCTION() void OnTouchBackPressed();
+  UFUNCTION() void OnTouchBackReleased();
+  UFUNCTION() void OnTouchLeftPressed();
+  UFUNCTION() void OnTouchLeftReleased();
+  UFUNCTION() void OnTouchRightPressed();
+  UFUNCTION() void OnTouchRightReleased();
 
   UFUNCTION() void OnMenCountChanged(float Value);
   UFUNCTION() void OnWomenCountChanged(float Value);
