@@ -29,7 +29,10 @@ bool ATLCBattleSimulationDirector::BuildBattle(int32 MenCount,int32 WomenCount){
   FTLCBattleConfiguration Config;Config.MenCount=MenCount;Config.WomenCount=WomenCount;
   const FTLCBattleConfigurationResult Valid=UTLCBattleRulesLibrary::ValidateConfiguration(Config,100);
   if(!Valid.bSuccess||!GetWorld())return false;
+  bSuppressAutoRebuild=true;
   ResetSimulation();
+  bSuppressAutoRebuild=false;
+  BuiltMenCount=MenCount;BuiltWomenCount=WomenCount;
 
   if(BattleDirector){
     if(BattleDirector->GetPhase()!=ETLCBattlePhase::Ready)BattleDirector->ResetBattle();
@@ -37,9 +40,7 @@ bool ATLCBattleSimulationDirector::BuildBattle(int32 MenCount,int32 WomenCount){
     if(!Result.bSuccess)return false;
   }
 
-  for(int32 I=0;I<MenCount;++I)SpawnFighter(ETLCTeam::Men,ETLCFighterKind::Normal,I,MenCount);
-  for(int32 I=0;I<WomenCount;++I)SpawnFighter(ETLCTeam::Women,ETLCFighterKind::Normal,I,WomenCount);
-  RefreshFormationGoals(ETLCTeam::Men);RefreshFormationGoals(ETLCTeam::Women);
+  SpawnConfiguredFighters();
   return true;
 }
 
@@ -52,9 +53,20 @@ void ATLCBattleSimulationDirector::ResetSimulation(){
   for(ATLCFighterCharacter* F:Fighters)if(F)F->Destroy();
   Fighters.Reset();FighterStorage.Reset();NextAgentId=1;NextHitId=1;
 }
-void ATLCBattleSimulationDirector::HandleBattleResetRequested(){ResetSimulation();}
+void ATLCBattleSimulationDirector::HandleBattleResetRequested(){
+  ResetSimulation();
+  if(!bSuppressAutoRebuild&&GetWorld()){
+    GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this,[this](){SpawnConfiguredFighters();}));
+  }
+}
 void ATLCBattleSimulationDirector::HandlePhaseChanged(ETLCBattlePhase Phase){bRunning=Phase==ETLCBattlePhase::Active||Phase==ETLCBattlePhase::SuddenDeath;}
 void ATLCBattleSimulationDirector::Tick(float Dt){Super::Tick(Dt);}
+
+void ATLCBattleSimulationDirector::SpawnConfiguredFighters(){
+  for(int32 I=0;I<BuiltMenCount;++I)SpawnFighter(ETLCTeam::Men,ETLCFighterKind::Normal,I,BuiltMenCount);
+  for(int32 I=0;I<BuiltWomenCount;++I)SpawnFighter(ETLCTeam::Women,ETLCFighterKind::Normal,I,BuiltWomenCount);
+  RefreshFormationGoals(ETLCTeam::Men);RefreshFormationGoals(ETLCTeam::Women);
+}
 
 FVector ATLCBattleSimulationDirector::SlotToWorld(ETLCTeam Team,int32 TeamIndex,int32 TeamCount,ETLCFormation Formation)const{
   const FVector2D Slot=UTLCFormationLibrary::CalculateSlot(Formation,Team,TeamIndex,TeamCount,ArenaSize,140.f);
@@ -89,7 +101,7 @@ void ATLCBattleSimulationDirector::SetTeamFormation(ETLCTeam Team,ETLCFormation 
   RefreshFormationGoals(Team);
 }
 
-ATLCFighterCharacter* ATLCBattleSimulationDirector::FindBestTarget(const ATLCFighterCharacter* R)const{
+ATLCFighterCharacter* ATLCBattleSimulationDirector::FindBestTarget(ATLCFighterCharacter* R)const{
   if(!R||!R->IsBattleAlive())return nullptr;
   ATLCFighterCharacter* Best=nullptr;float BestScore=MAX_flt;
   const bool bRequesterBoss=R->GetKind()==ETLCFighterKind::Robot||R->GetKind()==ETLCFighterKind::Unicorn;
@@ -108,7 +120,7 @@ ATLCFighterCharacter* ATLCBattleSimulationDirector::FindBestTarget(const ATLCFig
   return Best;
 }
 
-float ATLCBattleSimulationDirector::GetDesiredAttackRange(const ATLCFighterCharacter* F)const{
+float ATLCBattleSimulationDirector::GetDesiredAttackRange(ATLCFighterCharacter* F)const{
   if(!F||!WeaponDirector)return 145.f;
   if(F->GetKind()==ETLCFighterKind::Robot||F->GetKind()==ETLCFighterKind::MaleGiant||F->GetKind()==ETLCFighterKind::FemaleGiant)return 245.f;
   if(F->GetKind()==ETLCFighterKind::Unicorn)return 210.f;
