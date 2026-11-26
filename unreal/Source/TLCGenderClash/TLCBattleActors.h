@@ -175,10 +175,12 @@ public:
   UFUNCTION(BlueprintCallable) void WarmPool();
   UFUNCTION(BlueprintCallable) ATLCPooledProjectile* Acquire();
   UFUNCTION(BlueprintCallable) void ResetPool();
+  UFUNCTION(BlueprintCallable) void SetActiveLimit(int32 NewLimit);
   UFUNCTION(BlueprintPure) int32 ActiveCount()const;
 
 private:
   UPROPERTY() TArray<TObjectPtr<ATLCPooledProjectile>> Projectiles;
+  int32 ActiveLimit=160;
 };
 
 UCLASS(Blueprintable)
