@@ -58,6 +58,8 @@ public:
   UFUNCTION(BlueprintCallable) void SetRage(bool bEnabled);
   UFUNCTION(BlueprintCallable) void SetFuriosaState(bool bEnabled);
   UFUNCTION(BlueprintCallable) void ApplyRallyBuff(float Multiplier,float DurationSeconds);
+  UFUNCTION(BlueprintCallable) void Heal(float Amount);
+  UFUNCTION(BlueprintCallable) void SetVisualPalette(const FLinearColor& BodyColor,const FLinearColor& MarkerColor);
   UFUNCTION(BlueprintCallable) bool ApplyBattleHit(const FTLCHitPayload& Hit);
   UFUNCTION(BlueprintCallable) bool BeginAbduction(float LiftSeconds);
   UFUNCTION(BlueprintCallable) bool FinishAbduction();
@@ -87,6 +89,7 @@ protected:
   UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> LeftLeg;
   UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> RightLeg;
   UPROPERTY(VisibleAnywhere) TObjectPtr<UTextRenderComponent> TeamMarker;
+  UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Hair;
 
 private:
   UPROPERTY() TObjectPtr<ATLCBattleSimulationDirector> Simulation;
@@ -103,6 +106,8 @@ private:
   float DamageScale=1.f;
   float MovementScale=1.f;
   float RallyMultiplier=1.f;
+  FLinearColor BodyTintOverride=FLinearColor::Transparent;
+  FLinearColor MarkerTintOverride=FLinearColor::Transparent;
   float RallyEndsAt=-1.f;
   float NextLocalDecisionAt=0.f;
   float NextStrategicDecisionAt=0.f;
