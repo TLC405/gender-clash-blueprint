@@ -55,6 +55,9 @@ public:
   UFUNCTION(BlueprintPure) bool ShouldPrioritizeCommander(ATLCFighterCharacter* Requester)const;
   UFUNCTION(BlueprintPure) FVector GetCommanderLocation()const;
   UFUNCTION(BlueprintCallable) float ExecuteAttackOnCommander(ATLCFighterCharacter* Attacker);
+  UFUNCTION(BlueprintCallable) void ExecuteBossSpecial(ATLCFighterCharacter* Boss);
+  UFUNCTION(BlueprintPure) float GetRobotHealthNormalized()const;
+  UFUNCTION(BlueprintPure) float GetUnicornHealthNormalized()const;
 
   UFUNCTION(BlueprintPure) int32 GetLivingNormalCount(ETLCTeam Team)const;
   UFUNCTION(BlueprintPure) int32 GetActiveProjectileCount()const;
