@@ -37,10 +37,20 @@ void ATLCVerticalSliceGameMode::HandleSpecialEvent(ETLCSpecialEvent EventType){
   QueueAnnouncer(FName(*UEnum::GetValueAsString(EventType)),Priority,Line,8.f);
 }
 void ATLCVerticalSliceGameMode::HandlePhaseChanged(ETLCBattlePhase Phase){
-  if(Phase==ETLCBattlePhase::Active)QueueAnnouncer(FName(TEXT("battleStart")),65,TEXT("The field is set. Here we go."),10.f);
-  if(Phase==ETLCBattlePhase::SuddenDeath)QueueAnnouncer(FName(TEXT("suddenDeath")),92,TEXT("Sudden death. The next exchange could decide it."),12.f);
+  if(Phase==ETLCBattlePhase::Active){
+    if(AudioDirector){AudioDirector->SetBattlePaused(false);AudioDirector->SetMusicState(ETLCMusicState::ActiveBattle);}
+    QueueAnnouncer(FName(TEXT("battleStart")),65,TEXT("The field is set. Here we go."),10.f);
+  }else if(Phase==ETLCBattlePhase::Paused){
+    if(AudioDirector)AudioDirector->SetBattlePaused(true);
+  }else if(Phase==ETLCBattlePhase::SuddenDeath){
+    if(AudioDirector){AudioDirector->SetBattlePaused(false);AudioDirector->SetMusicState(ETLCMusicState::FinalTen);}
+    QueueAnnouncer(FName(TEXT("suddenDeath")),92,TEXT("Sudden death. The next exchange could decide it."),12.f);
+  }else if(Phase==ETLCBattlePhase::Ready){
+    if(AudioDirector)AudioDirector->ResetAudioState();
+  }
 }
 void ATLCVerticalSliceGameMode::HandleBattleFinished(ETLCTeam Winner,FName){
+  if(AudioDirector)AudioDirector->SetMusicState(Winner==ETLCTeam::Neutral?ETLCMusicState::Defeat:ETLCMusicState::Victory);
   if(Winner==ETLCTeam::Men)QueueAnnouncer(FName(TEXT("victoryMen")),100,TEXT("The men close it out."),30.f);
   else if(Winner==ETLCTeam::Women)QueueAnnouncer(FName(TEXT("victoryWomen")),100,TEXT("The women take the field."),30.f);
   else QueueAnnouncer(FName(TEXT("draw")),100,TEXT("No winner. The field ends level."),30.f);
