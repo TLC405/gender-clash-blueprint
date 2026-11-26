@@ -78,7 +78,9 @@ ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnFighter(ETLCTeam Team,E
   const FVector Spawn=SlotToWorld(Team,TeamIndex,TeamCount,Formation);
   ATLCFighterCharacter* F=GetWorld()->SpawnActor<ATLCFighterCharacter>(ATLCFighterCharacter::StaticClass(),Spawn,FRotator::ZeroRotator);
   if(!F)return nullptr;
+  if(Team==ETLCTeam::Women&&Kind==ETLCFighterKind::Normal&&bFuriosaMode)Kind=ETLCFighterKind::Furiosa;
   F->InitializeFighter(Team,NextAgentId++,Kind,Formation,this);
+  F->SetRage(Team==ETLCTeam::Men?bMenRage:bWomenRage);
   F->SetWeapon(Team==ETLCTeam::Men?MenWeapon:WomenWeapon);
   F->SetFormationGoal(Spawn);
   F->OnEliminated.AddDynamic(this,&ATLCBattleSimulationDirector::HandleFighterEliminated);
@@ -99,6 +101,13 @@ void ATLCBattleSimulationDirector::SetTeamWeapon(ETLCTeam Team,ETLCWeaponType We
 void ATLCBattleSimulationDirector::SetTeamFormation(ETLCTeam Team,ETLCFormation Formation){
   if(Team==ETLCTeam::Men)MenFormation=Formation;else if(Team==ETLCTeam::Women)WomenFormation=Formation;
   RefreshFormationGoals(Team);
+}
+void ATLCBattleSimulationDirector::SetTeamRage(ETLCTeam Team,bool bEnabled){
+  if(Team==ETLCTeam::Men)bMenRage=bEnabled;else if(Team==ETLCTeam::Women)bWomenRage=bEnabled;
+  for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==Team&&F->CountsTowardNormalTeam())F->SetRage(bEnabled);
+}
+void ATLCBattleSimulationDirector::SetFuriosaMode(bool bEnabled){
+  bFuriosaMode=bEnabled;for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==ETLCTeam::Women&&F->CountsTowardNormalTeam())F->SetFuriosaState(bEnabled);
 }
 
 ATLCFighterCharacter* ATLCBattleSimulationDirector::FindBestTarget(ATLCFighterCharacter* R)const{
@@ -133,6 +142,7 @@ float ATLCBattleSimulationDirector::GetStrategicDecisionInterval(int32 AgentId)c
 float ATLCBattleSimulationDirector::ExecuteAttack(ATLCFighterCharacter* A,ATLCFighterCharacter* T){
   if(!A||!T||!A->IsBattleAlive()||!T->IsBattleAlive()||!WeaponDirector)return 0.f;
   FTLCWeaponTuning Tune=WeaponDirector->GetTuning(A->GetWeapon());
+  Tune.Damage*=A->GetDamageMultiplier();
   if(A->GetKind()==ETLCFighterKind::Robot){Tune.Damage=48.f;Tune.Knockback=320.f;Tune.Cooldown=1.05f;Tune.Range=245.f;Tune.bRanged=false;}
   if(A->GetKind()==ETLCFighterKind::Unicorn){Tune.Damage=39.f;Tune.Knockback=370.f;Tune.Cooldown=.82f;Tune.Range=210.f;Tune.bRanged=false;}
   if(A->GetKind()==ETLCFighterKind::MaleGiant||A->GetKind()==ETLCFighterKind::FemaleGiant){Tune.Damage=62.f;Tune.Knockback=520.f;Tune.Cooldown=1.3f;Tune.Range=280.f;Tune.bRanged=false;}
