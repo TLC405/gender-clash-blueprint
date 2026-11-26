@@ -320,10 +320,12 @@ void ATLCProjectilePool::WarmPool(){
   }
 }
 ATLCPooledProjectile* ATLCProjectilePool::Acquire(){
+  if(ActiveCount()>=ActiveLimit)return nullptr;
   for(ATLCPooledProjectile* P:Projectiles)if(P&&!P->IsActiveProjectile())return P;
   return nullptr;
 }
 void ATLCProjectilePool::ResetPool(){for(ATLCPooledProjectile* P:Projectiles)if(P)P->DeactivateProjectile();}
+void ATLCProjectilePool::SetActiveLimit(int32 NewLimit){ActiveLimit=FMath::Clamp(NewLimit,1,PoolSize);}
 int32 ATLCProjectilePool::ActiveCount()const{int32 N=0;for(const ATLCPooledProjectile* P:Projectiles)if(P&&P->IsActiveProjectile())++N;return N;}
 
 ATLCUFOActor::ATLCUFOActor(){
