@@ -98,7 +98,7 @@ ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnFighter(ETLCTeam Team,E
   F->SetRage(Team==ETLCTeam::Men?bMenRage:bWomenRage);
   F->SetStrengthTuning(Team==ETLCTeam::Men?(.85f+MenStrengthValue*.04f):1.f);
   F->SetSpeedTuning(Team==ETLCTeam::Women?(.78f+WomenSpeedValue*.04f):1.f);
-  F->SetWeapon(Team==ETLCTeam::Men?MenWeapon:WomenWeapon);
+  F->SetWeapon(ChooseWeaponForFighter(F));
   F->SetFormationGoal(Spawn);
   ApplyPresetPalette(F);
   F->OnEliminated.AddDynamic(this,&ATLCBattleSimulationDirector::HandleFighterEliminated);
@@ -113,8 +113,31 @@ void ATLCBattleSimulationDirector::RefreshFormationGoals(ETLCTeam Team){
 }
 bool ATLCBattleSimulationDirector::SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon){
   if(!WeaponDirector||!WeaponDirector->CanTeamUse(Team,Weapon)||!IsWeaponAllowedByPreset(Weapon))return false;
-  if(Team==ETLCTeam::Men)MenWeapon=Weapon;else if(Team==ETLCTeam::Women)WomenWeapon=Weapon;else return false;
-  for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==Team&&F->CountsTowardNormalTeam())F->SetWeapon(Weapon);return true;
+  if(Team==ETLCTeam::Men){
+    MenWeapon=Weapon;
+    if(Weapon==ETLCWeaponType::Fists){bMenGunsEnabled=false;bMenSwordsEnabled=false;}
+    else if(Weapon==ETLCWeaponType::Gun){bMenGunsEnabled=true;bMenSwordsEnabled=false;}
+    else if(Weapon==ETLCWeaponType::Sword){bMenGunsEnabled=false;bMenSwordsEnabled=true;}
+  }else if(Team==ETLCTeam::Women){
+    WomenWeapon=Weapon;
+    if(Weapon==ETLCWeaponType::Fists){bWomenLipstickEnabled=false;bWomenBombEnabled=false;}
+    else if(Weapon==ETLCWeaponType::LipstickGun){bWomenLipstickEnabled=true;bWomenBombEnabled=false;}
+    else if(Weapon==ETLCWeaponType::MakeupBomb){bWomenLipstickEnabled=false;bWomenBombEnabled=true;}
+  }else return false;
+  ApplyTeamLoadout(Team);return true;
+}
+bool ATLCBattleSimulationDirector::SetWeaponToggle(ETLCTeam Team,ETLCWeaponType Weapon,bool bEnabled){
+  if(CurrentPreset!=ETLCBattlePreset::BroadcastArena)return false;
+  if(Team==ETLCTeam::Men){
+    if(Weapon==ETLCWeaponType::Gun)bMenGunsEnabled=bEnabled;
+    else if(Weapon==ETLCWeaponType::Sword)bMenSwordsEnabled=bEnabled;
+    else return false;
+  }else if(Team==ETLCTeam::Women){
+    if(Weapon==ETLCWeaponType::LipstickGun)bWomenLipstickEnabled=bEnabled;
+    else if(Weapon==ETLCWeaponType::MakeupBomb)bWomenBombEnabled=bEnabled;
+    else return false;
+  }else return false;
+  ApplyTeamLoadout(Team);return true;
 }
 void ATLCBattleSimulationDirector::SetTeamFormation(ETLCTeam Team,ETLCFormation Formation){
   if(Team==ETLCTeam::Men)MenFormation=Formation;else if(Team==ETLCTeam::Women)WomenFormation=Formation;
@@ -297,6 +320,23 @@ void ATLCBattleSimulationDirector::ApplyPresetPalette(ATLCFighterCharacter* F)co
   }
 }
 
+ETLCWeaponType ATLCBattleSimulationDirector::ChooseWeaponForFighter(const ATLCFighterCharacter* Fighter)const{
+  if(!Fighter)return ETLCWeaponType::Fists;
+  if(CurrentPreset!=ETLCBattlePreset::BroadcastArena)return Fighter->GetTeam()==ETLCTeam::Men?MenWeapon:WomenWeapon;
+  TArray<ETLCWeaponType> Choices;Choices.Add(ETLCWeaponType::Fists);
+  if(Fighter->GetTeam()==ETLCTeam::Men){
+    if(bMenGunsEnabled)Choices.Add(ETLCWeaponType::Gun);
+    if(bMenSwordsEnabled)Choices.Add(ETLCWeaponType::Sword);
+  }else if(Fighter->GetTeam()==ETLCTeam::Women){
+    if(bWomenLipstickEnabled)Choices.Add(ETLCWeaponType::LipstickGun);
+    if(bWomenBombEnabled)Choices.Add(ETLCWeaponType::MakeupBomb);
+  }
+  return Choices[FMath::Abs(Fighter->GetAgentId())%Choices.Num()];
+}
+void ATLCBattleSimulationDirector::ApplyTeamLoadout(ETLCTeam Team){
+  for(ATLCFighterCharacter* F:Fighters)if(F&&F->IsBattleAlive()&&F->GetTeam()==Team&&F->CountsTowardNormalTeam())F->SetWeapon(ChooseWeaponForFighter(F));
+}
+
 bool ATLCBattleSimulationDirector::IsWeaponAllowedByPreset(ETLCWeaponType Weapon)const{
   if(CurrentPreset==ETLCBattlePreset::NarrowPass)return Weapon==ETLCWeaponType::Fists||Weapon==ETLCWeaponType::Sword||Weapon==ETLCWeaponType::Spear;
   if(CurrentPreset==ETLCBattlePreset::NorthVsSouth)return Weapon==ETLCWeaponType::Fists||Weapon==ETLCWeaponType::Musket;
@@ -307,8 +347,10 @@ void ATLCBattleSimulationDirector::ApplyPreset(ETLCBattlePreset Preset){
   if(BattleDirector&&(BattleDirector->GetPhase()!=ETLCBattlePhase::Ready))return;
   CurrentPreset=Preset;
   if(Preset==ETLCBattlePreset::NarrowPass){
+    bMenGunsEnabled=bMenSwordsEnabled=bWomenLipstickEnabled=bWomenBombEnabled=false;
     ArenaSize=FVector2D(4200.f,1150.f);MenFormation=ETLCFormation::ShieldWall;WomenFormation=ETLCFormation::Rush;MenWeapon=ETLCWeaponType::Spear;WomenWeapon=ETLCWeaponType::Spear;
   }else if(Preset==ETLCBattlePreset::NorthVsSouth){
+    bMenGunsEnabled=bMenSwordsEnabled=bWomenLipstickEnabled=bWomenBombEnabled=false;
     ArenaSize=FVector2D(4200.f,2300.f);MenFormation=ETLCFormation::Line;WomenFormation=ETLCFormation::Line;MenWeapon=ETLCWeaponType::Musket;WomenWeapon=ETLCWeaponType::Musket;
   }else{
     ArenaSize=FVector2D(4200.f,2300.f);MenFormation=ETLCFormation::Ranks;WomenFormation=ETLCFormation::Ranks;MenWeapon=ETLCWeaponType::Fists;WomenWeapon=ETLCWeaponType::Fists;
