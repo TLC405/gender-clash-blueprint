@@ -31,6 +31,7 @@ public:
   UFUNCTION(BlueprintCallable) void StartSimulation();
   UFUNCTION(BlueprintCallable) void ResetSimulation();
   UFUNCTION(BlueprintCallable) bool SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon);
+  UFUNCTION(BlueprintCallable) bool SetWeaponToggle(ETLCTeam Team,ETLCWeaponType Weapon,bool bEnabled);
   UFUNCTION(BlueprintCallable) void SetTeamFormation(ETLCTeam Team,ETLCFormation Formation);
   UFUNCTION(BlueprintCallable) void SetTeamRage(ETLCTeam Team,bool bEnabled);
   UFUNCTION(BlueprintCallable) void SetMenStrength(float Value);
@@ -81,6 +82,10 @@ private:
   bool bMenRage=false;
   bool bWomenRage=false;
   bool bFuriosaMode=false;
+  bool bMenGunsEnabled=false;
+  bool bMenSwordsEnabled=false;
+  bool bWomenLipstickEnabled=false;
+  bool bWomenBombEnabled=false;
   float MenStrengthValue=8.f;
   float WomenSpeedValue=7.f;
   ETLCBattlePreset CurrentPreset=ETLCBattlePreset::BroadcastArena;
@@ -102,6 +107,8 @@ private:
   void ApplyPresetPalette(ATLCFighterCharacter* Fighter)const;
   int32 SpawnReinforcements(ETLCTeam Team,int32 RequestedCount);
   bool IsWeaponAllowedByPreset(ETLCWeaponType Weapon)const;
+  ETLCWeaponType ChooseWeaponForFighter(const ATLCFighterCharacter* Fighter)const;
+  void ApplyTeamLoadout(ETLCTeam Team);
   void ApplyRadialHit(const FVector& Origin,float Radius,ETLCTeam SourceTeam,float Damage,float Knockback);
   void ApplyConeHit(const FVector& Origin,const FVector& Forward,float Range,float HalfAngleDegrees,ETLCTeam SourceTeam,float Damage,float Knockback);
   bool FireProjectileFrom(const FVector& Origin,const FVector& Target,ETLCTeam Team,float Damage,float Knockback,float Speed,float Lifetime);
