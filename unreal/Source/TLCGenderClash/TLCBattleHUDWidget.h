@@ -54,6 +54,7 @@ private:
   UPROPERTY() TObjectPtr<UTextBlock> MenWeaponText;
   UPROPERTY() TObjectPtr<UTextBlock> WomenWeaponText;
   UPROPERTY() TObjectPtr<UTextBlock> CommanderHealthText;
+  UPROPERTY() TObjectPtr<UTextBlock> BossStatusText;
   UPROPERTY() TObjectPtr<USlider> MenCountSlider;
   UPROPERTY() TObjectPtr<USlider> WomenCountSlider;
   UPROPERTY() TObjectPtr<USlider> MenStrengthSlider;
