@@ -97,3 +97,30 @@ public:
   UFUNCTION(BlueprintPure) float ComputeQualityPressure(float FrameMilliseconds,int32 ActiveFighters,int32 ActiveProjectiles) const;
   UFUNCTION(BlueprintImplementableEvent) void ApplyScalabilityPressure(float Pressure);
 };
+
+
+UCLASS(Blueprintable)
+class TLCGENDERCLASH_API ATLCBattleRuntimeCoordinator : public AActor {
+  GENERATED_BODY()
+public:
+  ATLCBattleRuntimeCoordinator();
+  virtual void BeginPlay() override;
+
+  UFUNCTION(BlueprintCallable) void RebindRuntimeSystems();
+
+  UFUNCTION(BlueprintImplementableEvent, Category="TLC|Reset")
+  void ResetPoolsAndPresentation();
+
+private:
+  UPROPERTY() TObjectPtr<ATLCBattleDirector> BattleDirector;
+  UPROPERTY() TObjectPtr<ATLCSpecialEventDirector> SpecialEventDirector;
+  UPROPERTY() TObjectPtr<ATLCAudioDirector> AudioDirector;
+  UPROPERTY() TObjectPtr<ATLCCameraDirector> CameraDirector;
+  UPROPERTY() TObjectPtr<ATLCAnnouncerDirector> AnnouncerDirector;
+  UPROPERTY() TObjectPtr<ATLCCommanderCharacter> Commander;
+  UPROPERTY() TObjectPtr<UTLCAIIntegrationGatewaySubsystem> Gateway;
+
+  UFUNCTION() void HandleResetRequested();
+  UFUNCTION() void HandlePauseChanged(bool bPaused);
+  UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase NewPhase);
+};
