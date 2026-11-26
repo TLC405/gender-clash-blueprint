@@ -76,7 +76,7 @@ void ATLCBattleSimulationDirector::Tick(float Dt){
   PerformanceAccumulator+=Dt;if(PerformanceAccumulator<1.f)return;PerformanceAccumulator=0.f;
   if(FrameSamples.Num()>0){
     float Sum=0.f;TArray<float> Sorted=FrameSamples;for(float Ms:Sorted)Sum+=Ms;Sorted.Sort();AverageFrameMs=Sum/Sorted.Num();const int32 P99Index=FMath::Clamp(FMath::CeilToInt(Sorted.Num()*.99f)-1,0,Sorted.Num()-1);P99FrameMs=Sorted[P99Index];
-    if(PerformanceManager){const float Pressure=PerformanceManager->ComputeQualityPressure(P99FrameMs,GetLivingNormalCount(ETLCTeam::Men)+GetLivingNormalCount(ETLCTeam::Women),GetActiveProjectileCount());PerformanceManager->ApplyScalabilityPressure(Pressure);if(ProjectilePool)ProjectilePool->SetActiveLimit(FMath::RoundToInt(FMath::Lerp(160.f,70.f,Pressure)));}
+    if(PerformanceManager){const float Pressure=PerformanceManager->ComputeQualityPressure(P99FrameMs,GetLivingNormalCount(ETLCTeam::Men)+GetLivingNormalCount(ETLCTeam::Women),GetActiveProjectileCount());PerformanceManager->ApplyScalabilityPressure(Pressure);if(VFXDirector)VFXDirector->SetQualityPressure(Pressure);if(ProjectilePool)ProjectilePool->SetActiveLimit(FMath::RoundToInt(FMath::Lerp(160.f,70.f,Pressure)));}
   }
 }
 
