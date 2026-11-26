@@ -63,6 +63,11 @@ private:
   UPROPERTY() TObjectPtr<UBorder> MenPanel;
   UPROPERTY() TObjectPtr<UBorder> WomenPanel;
   UPROPERTY() TObjectPtr<UBorder> CenterPanel;
+  UPROPERTY() TObjectPtr<UButton> NukeButton;
+  UPROPERTY() TObjectPtr<UButton> WaterButton;
+  UPROPERTY() TObjectPtr<UButton> LipstickShotButton;
+  UPROPERTY() TObjectPtr<UButton> ShockwaveButton;
+  UPROPERTY() TObjectPtr<UButton> RallyButton;
   UPROPERTY() TObjectPtr<UCanvasPanelSlot> MenPanelSlot;
   UPROPERTY() TObjectPtr<UCanvasPanelSlot> WomenPanelSlot;
   UPROPERTY() TObjectPtr<UCanvasPanelSlot> CenterPanelSlot;
@@ -83,6 +88,8 @@ private:
   void ApplyPendingConfig();
   void RefreshRuntimeText();
   void ApplyResponsiveLayout();
+  void UpdateCommanderButtons();
+  void SetButtonText(UButton* Button,const FString& Text);
 
   UFUNCTION() void HandleTeamCountChanged(ETLCTeam Team,int32 Alive);
   UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase Phase);
