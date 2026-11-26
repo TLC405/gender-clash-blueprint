@@ -91,8 +91,10 @@ void ATLCFighterCharacter::InitializeFighter(ETLCTeam InTeam,int32 InAgentId,ETL
   bCountsTowardNormalTeam=(Kind==ETLCFighterKind::Normal||Kind==ETLCFighterKind::Furiosa);
   ConfigureKind();ResetForBattle();ApplyTeamVisuals();
   const float Offset=(AgentId%11)*.013f;
+  NextCloseDecisionAt=Offset;
   NextLocalDecisionAt=Offset;
   NextStrategicDecisionAt=Offset*4.f;
+  DecisionState=FTLCAgentDecisionState();DecisionState.AgentId=AgentId;DecisionState.MinimumCommitmentSeconds=.85f;DecisionState.HysteresisRatio=.15f;
 }
 
 void ATLCFighterCharacter::ConfigureKind(){
@@ -167,17 +169,49 @@ void ATLCFighterCharacter::Tick(float Dt){
   if(!bAlive||bAbducting||!Simulation||!Simulation->IsSimulationRunning())return;
   const float Now=GetWorld()?GetWorld()->GetTimeSeconds():0.f;
   if(RallyEndsAt>0.f&&Now>=RallyEndsAt){RallyEndsAt=-1.f;RallyMultiplier=1.f;}
-  if(Now>=NextLocalDecisionAt){
+  const bool bClose=CurrentTarget&&CurrentTarget->IsBattleAlive()&&FVector::DistSquared2D(GetActorLocation(),CurrentTarget->GetActorLocation())<FMath::Square(520.f);
+  if((bClose&&Now>=NextCloseDecisionAt)||(!bClose&&Now>=NextLocalDecisionAt)){
     UpdateDecision(Now);
-    NextLocalDecisionAt=Now+Simulation->GetLocalDecisionInterval(AgentId);
+    if(bClose)NextCloseDecisionAt=Now+Simulation->GetCloseDecisionInterval(AgentId);
+    else NextLocalDecisionAt=Now+Simulation->GetLocalDecisionInterval(AgentId);
   }
   UpdateMovement(Dt);
   UpdateCombat(Now);
 }
 
 void ATLCFighterCharacter::UpdateDecision(float Now){
-  CurrentTarget=Simulation?Simulation->FindBestTarget(this):nullptr;
+  if(!Simulation)return;
+  if(CurrentTarget&&!CurrentTarget->IsBattleAlive()){
+    CurrentTarget=nullptr;DecisionState.CurrentTarget=nullptr;DecisionState.CurrentAction=NAME_None;DecisionState.LastTargetLossTime=Now;
+  }
+
+  ATLCFighterCharacter* CandidateTarget=Simulation->FindBestTarget(this);
+  if(CandidateTarget){
+    const float Distance=FVector::Dist2D(GetActorLocation(),CandidateTarget->GetActorLocation());
+    FTLCDecisionCandidate Candidate;
+    Candidate.Target=CandidateTarget;
+    Candidate.Destination=CandidateTarget->GetActorLocation();
+    Candidate.ExpectedRange=Simulation->GetDesiredAttackRange(this);
+    Candidate.Score=FMath::Clamp(1.f/(1.f+Distance/1200.f),.05f,1.f);
+    Candidate.FormationDisruptionRisk=FMath::Clamp(FVector::Dist2D(FormationGoal,Candidate.Destination)/4200.f,0.f,1.f);
+    Candidate.bNavigationFeasible=true;
+    Candidate.ValidForSeconds=Distance<Candidate.ExpectedRange*2.f?.20f:.65f;
+    const bool bBoss=CandidateTarget->GetKind()==ETLCFighterKind::Robot||CandidateTarget->GetKind()==ETLCFighterKind::Unicorn||CandidateTarget->GetKind()==ETLCFighterKind::MaleGiant||CandidateTarget->GetKind()==ETLCFighterKind::FemaleGiant;
+    Candidate.Action=bBoss?FName(TEXT("AttackBoss")):(Simulation->GetDesiredAttackRange(CandidateTarget)>500.f?FName(TEXT("AttackRanged")):FName(TEXT("Advance")));
+    Candidate.AlternateAction=FName(TEXT("HoldFormation"));
+    Candidate.bSurvivalCritical=GetHealthNormalized()<.18f;
+
+    if(!CurrentTarget||UTLCAIDecisionPolicy::ShouldSwitchBehavior(DecisionState,Candidate,Now)){
+      CurrentTarget=CandidateTarget;
+      DecisionState.CurrentTarget=CurrentTarget;
+      DecisionState.CurrentAction=Candidate.Action;
+      DecisionState.CurrentScore=Candidate.Score;
+      DecisionState.BehaviorEntryTime=Now;
+    }
+  }
+
   if(!CurrentTarget&&Now>=NextStrategicDecisionAt){
+    DecisionState.CurrentAction=FName(TEXT("FormUp"));DecisionState.CurrentScore=.25f;DecisionState.BehaviorEntryTime=Now;
     NextStrategicDecisionAt=Now+Simulation->GetStrategicDecisionInterval(AgentId);
   }
 }
