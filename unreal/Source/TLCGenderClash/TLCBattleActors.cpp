@@ -147,6 +147,8 @@ void ATLCFighterCharacter::ResetForBattle(){
 void ATLCFighterCharacter::SetFormationGoal(const FVector& Goal){FormationGoal=Goal;}
 void ATLCFighterCharacter::SetWeapon(ETLCWeaponType NewWeapon){Weapon=NewWeapon;}
 void ATLCFighterCharacter::SetRage(bool bEnabled){bRage=bEnabled;}
+void ATLCFighterCharacter::SetStrengthTuning(float Multiplier){TeamStrengthMultiplier=FMath::Clamp(Multiplier,.55f,1.75f);}
+void ATLCFighterCharacter::SetSpeedTuning(float Multiplier){TeamSpeedMultiplier=FMath::Clamp(Multiplier,.60f,1.65f);}
 void ATLCFighterCharacter::SetFuriosaState(bool bEnabled){
   if(Team!=ETLCTeam::Women||(Kind!=ETLCFighterKind::Normal&&Kind!=ETLCFighterKind::Furiosa))return;
   const float HealthRatio=MaxHealth>0.f?FMath::Clamp(Health/MaxHealth,0.f,1.f):1.f;
@@ -162,7 +164,7 @@ void ATLCFighterCharacter::ApplyRallyBuff(float Multiplier,float DurationSeconds
 
 float ATLCFighterCharacter::GetDesiredMoveSpeed()const{
   const float Rage=bRage?1.18f:1.f;
-  return 420.f*MovementScale*Rage*RallyMultiplier;
+  return 420.f*MovementScale*TeamSpeedMultiplier*Rage*RallyMultiplier;
 }
 
 void ATLCFighterCharacter::Tick(float Dt){
