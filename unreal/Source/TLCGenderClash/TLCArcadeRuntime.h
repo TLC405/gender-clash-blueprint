@@ -7,7 +7,7 @@
 
 UENUM(BlueprintType)
 enum class ETLCWeaponType : uint8 {
-  Fists, Gun, Sword, LipstickGun, MakeupBomb
+  Fists, Gun, Sword, LipstickGun, MakeupBomb, Musket, Spear
 };
 
 USTRUCT(BlueprintType)
