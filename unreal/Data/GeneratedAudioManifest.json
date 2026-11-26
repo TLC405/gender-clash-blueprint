@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-25",
+  "provider": "ElevenLabs",
+  "policy": {
+    "shipping": "download, review, normalize, convert to WAV, import into Unreal, then ship locally",
+    "runtimeCloudDependency": false,
+    "dynamicCloudCommentary": "optional secured backend only"
+  },
+  "assets": {
+    "leadAnnouncerIntro": {
+      "flowId": "FFmmOovIKxfTYz1WIin7",
+      "generationId": "eBtiqW9cmz91PVaA2QIm",
+      "durationSeconds": 8.24,
+      "voiceId": "2rRUaEOGIGalXrcuLN55"
+    },
+    "tlcCommanderBarks": {
+      "flowId": "xT27t43X49ssI8I1Ez7m",
+      "generationId": "iQws1xJ7fieT1bXjNTX2",
+      "durationSeconds": 7.84,
+      "voiceId": "NPVegEkwslClHaSZqnyS"
+    },
+    "tacticalAnalyst": {
+      "flowId": "fgPZjJ4QXiauBHOqAkaF",
+      "generationId": "zR8z95iEz6UA1je2YR4V",
+      "durationSeconds": 6.64,
+      "voiceId": "dkISfGzKxPY4LQm2jnMv"
+    },
+    "battleMusicCore": {
+      "flowId": "GvgJ750AFjYfPzROngpE",
+      "generationId": "smAb0Sj6q5jOfvc16GaR",
+      "durationSeconds": 45.0,
+      "model": "eleven_music_v2"
+    },
+    "meleeHit": {
+      "flowId": "xQARsDIfKMOEGnDyjLGf",
+      "generationId": "VWmw6NlwJRp8BIaXOKRj",
+      "durationSeconds": 1.0
+    },
+    "lipstickShot": {
+      "flowId": "dvIiP59lTUK1UGrfdZ3a",
+      "generationId": "Y43EnTa16fA6cjKIQZSc",
+      "durationSeconds": 0.48
+    },
+    "makeupBomb": {
+      "flowId": "9LvflZ5hdMkqvc3gVTMf",
+      "generationId": "NyZE2xWhJbgZpAUhesfd",
+      "durationSeconds": 0.48
+    },
+    "ufoBeam": {
+      "flowId": "NHGLKA3uxeoRijihlJsY",
+      "generationId": "OlVePNgL7GTo7wyRFr8e",
+      "durationSeconds": 2.0
+    },
+    "giantStomp": {
+      "flowId": "iIaOyg1HfMehzhuKAoN7",
+      "generationId": "gRyby3eY7CiQhBNdw7iU",
+      "durationSeconds": 2.0
+    }
+  }
+}
