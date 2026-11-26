@@ -20,6 +20,7 @@ required = [
     "Source/TLCGenderClash/TLCGenderClashPlayerController.cpp",
     "Source/TLCGenderClash/TLCGenderClashGameInstance.cpp",
     "Source/TLCGenderClash/TLCVerticalSliceGameMode.cpp",
+    "Source/TLCGenderClash/TLCVFXDirector.cpp",
     "Data/BattleBalance.json",
     "Data/AudioVoiceManifest.json",
     "Data/GeneratedAudioManifest.json",
@@ -108,14 +109,20 @@ for path in REPO.rglob("*"):
 feature_contracts = {
     "Source/TLCGenderClash/TLCBattleSimulation.h": [
         "SetWeaponToggle", "SetMenStrength", "SetWomenSpeed",
-        "ExecuteAttackOnCommander", "ApplyPreset", "ExecuteSpecialEvent"
+        "ExecuteAttackOnCommander", "ExecuteBossSpecial", "BindVFXDirector", "ApplyPreset", "ExecuteSpecialEvent"
     ],
     "Source/TLCGenderClash/TLCCommanderCharacter.h": [
-        "ApplyHeroDamage", "GetHeroHealthNormalized", "GetCooldownRemaining"
+        "ApplyHeroDamage", "GetHeroHealthNormalized", "GetCooldownRemaining", "OnCommanderEliminated"
     ],
     "Source/TLCGenderClash/TLCBattleHUDWidget.cpp": [
         "OnMenGunsToggleChanged", "OnWomenBombToggleChanged",
-        "OnMenStrengthChanged", "OnWomenSpeedChanged", "OnPresetChanged"
+        "OnMenStrengthChanged", "OnWomenSpeedChanged", "OnCameraModeChanged", "OnPresetChanged"
+    ],
+    "Source/TLCGenderClash/TLCVFXDirector.cpp": [
+        "SpawnSystemAtLocation", "SetQualityPressure", "ResetVFX"
+    ],
+    "Source/TLCGenderClash/TLCSpectatorCameraActor.cpp": [
+        "ETLCCameraViewMode::Tactical", "ETLCCameraViewMode::CloseCombat", "ETLCCameraViewMode::BossCam"
     ],
     "Source/TLCGenderClash/TLCGenderClash.cpp": [
         "TLC.SpecialEvent", "TLC.EventSeed", "TLC.Preset", "TLC.SpawnBoss", "TLC.Reset"
