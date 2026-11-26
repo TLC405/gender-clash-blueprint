@@ -29,6 +29,8 @@ public:
   UFUNCTION(BlueprintCallable) void ResetSimulation();
   UFUNCTION(BlueprintCallable) void SetTeamWeapon(ETLCTeam Team,ETLCWeaponType Weapon);
   UFUNCTION(BlueprintCallable) void SetTeamFormation(ETLCTeam Team,ETLCFormation Formation);
+  UFUNCTION(BlueprintCallable) void SetTeamRage(ETLCTeam Team,bool bEnabled);
+  UFUNCTION(BlueprintCallable) void SetFuriosaMode(bool bEnabled);
   UFUNCTION(BlueprintCallable) ATLCCommanderCharacter* SpawnCommander();
   UFUNCTION(BlueprintCallable) ATLCFighterCharacter* SpawnRobot();
   UFUNCTION(BlueprintCallable) ATLCFighterCharacter* SpawnUnicorn();
@@ -62,6 +64,9 @@ private:
   bool bSuppressAutoRebuild=false;
   int32 BuiltMenCount=50;
   int32 BuiltWomenCount=50;
+  bool bMenRage=false;
+  bool bWomenRage=false;
+  bool bFuriosaMode=false;
 
   UFUNCTION() void HandleFighterEliminated(ATLCFighterCharacter* Fighter);
   UFUNCTION() void HandleBattleResetRequested();
