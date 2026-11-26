@@ -103,9 +103,9 @@ void UTLCBattleHUDWidget::BuildUI(){
   MenRageToggle=WidgetTree->ConstructWidget<UCheckBox>();MenRageToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenRageChanged);UHorizontalBox* MR=WidgetTree->ConstructWidget<UHorizontalBox>();MR->AddChildToHorizontalBox(MenRageToggle);MR->AddChildToHorizontalBox(MakeLabel(TEXT(" RAGE"),13,Chalk));Men->AddChildToVerticalBox(MR);
   MenFormationCombo=WidgetTree->ConstructWidget<UComboBoxString>();for(const TCHAR* F:{TEXT("Ranks"),TEXT("Line"),TEXT("Wedge"),TEXT("Shield Wall"),TEXT("Columns"),TEXT("Spread"),TEXT("Circle"),TEXT("Rush")})MenFormationCombo->AddOption(F);MenFormationCombo->SetSelectedOption(TEXT("Ranks"));MenFormationCombo->OnSelectionChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenFormationChanged);Men->AddChildToVerticalBox(MenFormationCombo);
   MenWeaponText=MakeLabel(TEXT("WEAPON: FISTS"),12,Gold);Men->AddChildToVerticalBox(MenWeaponText);
-  UButton* MF=MakeButton(Men,TEXT("FISTS"),TEXT("MenFists"));MF->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnMenFists);
-  UButton* MG=MakeButton(Men,TEXT("GUNS"),TEXT("MenGun"));MG->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnMenGun);
-  UButton* MS=MakeButton(Men,TEXT("SWORDS"),TEXT("MenSword"));MS->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnMenSword);
+  UButton* MF=MakeButton(Men,TEXT("RESET TO FISTS"),TEXT("MenFists"));MF->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnMenFists);
+  MenGunsToggle=WidgetTree->ConstructWidget<UCheckBox>();MenGunsToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenGunsToggleChanged);UHorizontalBox* MGRow=WidgetTree->ConstructWidget<UHorizontalBox>();MGRow->AddChildToHorizontalBox(MenGunsToggle);MGRow->AddChildToHorizontalBox(MakeLabel(TEXT(" GUNS"),13,Chalk));Men->AddChildToVerticalBox(MGRow);
+  MenSwordsToggle=WidgetTree->ConstructWidget<UCheckBox>();MenSwordsToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnMenSwordsToggleChanged);UHorizontalBox* MSRow=WidgetTree->ConstructWidget<UHorizontalBox>();MSRow->AddChildToHorizontalBox(MenSwordsToggle);MSRow->AddChildToHorizontalBox(MakeLabel(TEXT(" SWORDS"),13,Chalk));Men->AddChildToVerticalBox(MSRow);
   UButton* MC=MakeButton(Men,TEXT("SPAWN TLC COMMANDER"),TEXT("Commander"));MC->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnSpawnCommander);
   UButton* MRobo=MakeButton(Men,TEXT("DEPLOY ROBOT"),TEXT("Robot"));MRobo->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnSpawnRobot);
 
@@ -119,9 +119,9 @@ void UTLCBattleHUDWidget::BuildUI(){
   FuriosaToggle=WidgetTree->ConstructWidget<UCheckBox>();FuriosaToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnFuriosaChanged);UHorizontalBox* FR=WidgetTree->ConstructWidget<UHorizontalBox>();FR->AddChildToHorizontalBox(FuriosaToggle);FR->AddChildToHorizontalBox(MakeLabel(TEXT(" FURIOSA"),13,Chalk));Women->AddChildToVerticalBox(FR);
   WomenFormationCombo=WidgetTree->ConstructWidget<UComboBoxString>();for(const TCHAR* F:{TEXT("Ranks"),TEXT("Line"),TEXT("Wedge"),TEXT("Shield Wall"),TEXT("Columns"),TEXT("Spread"),TEXT("Circle"),TEXT("Rush")})WomenFormationCombo->AddOption(F);WomenFormationCombo->SetSelectedOption(TEXT("Ranks"));WomenFormationCombo->OnSelectionChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenFormationChanged);Women->AddChildToVerticalBox(WomenFormationCombo);
   WomenWeaponText=MakeLabel(TEXT("WEAPON: FISTS"),12,Gold);Women->AddChildToVerticalBox(WomenWeaponText);
-  UButton* WF=MakeButton(Women,TEXT("FISTS"),TEXT("WomenFists"));WF->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenFists);
-  UButton* WL=MakeButton(Women,TEXT("LIPSTICK GUN"),TEXT("Lipstick"));WL->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenLipstick);
-  UButton* WB=MakeButton(Women,TEXT("MAKEUP BOMB"),TEXT("Bomb"));WB->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenBomb);
+  UButton* WF=MakeButton(Women,TEXT("RESET TO FISTS"),TEXT("WomenFists"));WF->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenFists);
+  WomenLipstickToggle=WidgetTree->ConstructWidget<UCheckBox>();WomenLipstickToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenLipstickToggleChanged);UHorizontalBox* WLRow=WidgetTree->ConstructWidget<UHorizontalBox>();WLRow->AddChildToHorizontalBox(WomenLipstickToggle);WLRow->AddChildToHorizontalBox(MakeLabel(TEXT(" LIPSTICK GUN"),13,Chalk));Women->AddChildToVerticalBox(WLRow);
+  WomenBombToggle=WidgetTree->ConstructWidget<UCheckBox>();WomenBombToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnWomenBombToggleChanged);UHorizontalBox* WBRow=WidgetTree->ConstructWidget<UHorizontalBox>();WBRow->AddChildToHorizontalBox(WomenBombToggle);WBRow->AddChildToHorizontalBox(MakeLabel(TEXT(" MAKEUP BOMB"),13,Chalk));Women->AddChildToVerticalBox(WBRow);
   UButton* WU=MakeButton(Women,TEXT("BATTLE UNICORN"),TEXT("Unicorn"));WU->OnClicked.AddDynamic(this,&UTLCBattleHUDWidget::OnSpawnUnicorn);
 
   UVerticalBox* Center=WidgetTree->ConstructWidget<UVerticalBox>();CenterPanel->SetContent(Center);
@@ -185,17 +185,17 @@ void UTLCBattleHUDWidget::OnPause(){if(BattleDirector)BattleDirector->PauseBattl
 void UTLCBattleHUDWidget::OnReset(){
   UGameplayStatics::SetGlobalTimeDilation(this,1.f);
   if(SlowMoToggle)SlowMoToggle->SetIsChecked(false);if(MenRageToggle)MenRageToggle->SetIsChecked(false);if(WomenRageToggle)WomenRageToggle->SetIsChecked(false);if(FuriosaToggle)FuriosaToggle->SetIsChecked(false);
-  bMenGun=bMenSword=bWomenLipstick=bWomenBomb=false;if(MenWeaponText)MenWeaponText->SetText(FText::FromString(TEXT("WEAPON: FISTS")));if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: FISTS")));if(EventText)EventText->SetText(FText::FromString(TEXT("FIELD CLEAR")));
+  bMenGun=bMenSword=bWomenLipstick=bWomenBomb=false;if(MenGunsToggle)MenGunsToggle->SetIsChecked(false);if(MenSwordsToggle)MenSwordsToggle->SetIsChecked(false);if(WomenLipstickToggle)WomenLipstickToggle->SetIsChecked(false);if(WomenBombToggle)WomenBombToggle->SetIsChecked(false);if(MenWeaponText)MenWeaponText->SetText(FText::FromString(TEXT("LOADOUT: FISTS")));if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(TEXT("LOADOUT: FISTS")));if(EventText)EventText->SetText(FText::FromString(TEXT("FIELD CLEAR")));
   if(BattleDirector)BattleDirector->ResetBattle();
 }
 void UTLCBattleHUDWidget::OnSpawnCommander(){if(Simulation)Simulation->SpawnCommander();}
 void UTLCBattleHUDWidget::OnSpawnRobot(){if(Simulation)Simulation->SpawnRobot();}
 void UTLCBattleHUDWidget::OnSpawnUnicorn(){if(Simulation)Simulation->SpawnUnicorn();}
 void UTLCBattleHUDWidget::OnSpecialEvent(){if(EventDirector&&BattleDirector)EventDirector->TriggerEvent(BattleDirector->GetSnapshot());}
-void UTLCBattleHUDWidget::OnMenFists(){bMenGun=bMenSword=false;if(Simulation)Simulation->SetTeamWeapon(ETLCTeam::Men,ETLCWeaponType::Fists);MenWeaponText->SetText(FText::FromString(TEXT("WEAPON: FISTS")));}
+void UTLCBattleHUDWidget::OnMenFists(){bMenGun=bMenSword=false;if(MenGunsToggle)MenGunsToggle->SetIsChecked(false);if(MenSwordsToggle)MenSwordsToggle->SetIsChecked(false);if(Simulation)Simulation->SetTeamWeapon(ETLCTeam::Men,ETLCWeaponType::Fists);MenWeaponText->SetText(FText::FromString(TEXT("LOADOUT: FISTS")));}
 void UTLCBattleHUDWidget::OnMenGun(){if(Simulation&&Simulation->SetTeamWeapon(ETLCTeam::Men,ETLCWeaponType::Gun)){bMenGun=true;bMenSword=false;MenWeaponText->SetText(FText::FromString(TEXT("WEAPON: GUNS")));}else if(EventText)EventText->SetText(FText::FromString(TEXT("GUNS BLOCKED BY BATTLE PRESET")));}
 void UTLCBattleHUDWidget::OnMenSword(){if(Simulation&&Simulation->SetTeamWeapon(ETLCTeam::Men,ETLCWeaponType::Sword)){bMenSword=true;bMenGun=false;MenWeaponText->SetText(FText::FromString(TEXT("WEAPON: SWORDS")));}else if(EventText)EventText->SetText(FText::FromString(TEXT("SWORDS BLOCKED BY BATTLE PRESET")));}
-void UTLCBattleHUDWidget::OnWomenFists(){bWomenLipstick=bWomenBomb=false;if(Simulation)Simulation->SetTeamWeapon(ETLCTeam::Women,ETLCWeaponType::Fists);WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: FISTS")));}
+void UTLCBattleHUDWidget::OnWomenFists(){bWomenLipstick=bWomenBomb=false;if(WomenLipstickToggle)WomenLipstickToggle->SetIsChecked(false);if(WomenBombToggle)WomenBombToggle->SetIsChecked(false);if(Simulation)Simulation->SetTeamWeapon(ETLCTeam::Women,ETLCWeaponType::Fists);WomenWeaponText->SetText(FText::FromString(TEXT("LOADOUT: FISTS")));}
 void UTLCBattleHUDWidget::OnWomenLipstick(){if(Simulation&&Simulation->SetTeamWeapon(ETLCTeam::Women,ETLCWeaponType::LipstickGun)){bWomenLipstick=true;bWomenBomb=false;WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: LIPSTICK GUN")));}else if(EventText)EventText->SetText(FText::FromString(TEXT("LIPSTICK GUN BLOCKED BY BATTLE PRESET")));}
 void UTLCBattleHUDWidget::OnWomenBomb(){if(Simulation&&Simulation->SetTeamWeapon(ETLCTeam::Women,ETLCWeaponType::MakeupBomb)){bWomenBomb=true;bWomenLipstick=false;WomenWeaponText->SetText(FText::FromString(TEXT("WEAPON: MAKEUP BOMB")));}else if(EventText)EventText->SetText(FText::FromString(TEXT("MAKEUP BOMB BLOCKED BY BATTLE PRESET")));}
 void UTLCBattleHUDWidget::OnNuke(){if(Simulation&&Simulation->GetCommander())Simulation->GetCommander()->TriggerNuke();else if(EventText)EventText->SetText(FText::FromString(TEXT("SPAWN TLC COMMANDER FIRST")));}
@@ -268,4 +268,21 @@ void UTLCBattleHUDWidget::OnWomenSpeedChanged(float V){
   const float Value=1.f+FMath::Clamp(V,0.f,1.f)*9.f;
   if(WomenSpeedText)WomenSpeedText->SetText(FText::FromString(FString::Printf(TEXT("SPEED %.0f"),Value)));
   if(Simulation)Simulation->SetWomenSpeed(Value);
+}
+
+void UTLCBattleHUDWidget::OnMenGunsToggleChanged(bool B){
+  if(!Simulation||!Simulation->SetWeaponToggle(ETLCTeam::Men,ETLCWeaponType::Gun,B)){if(B&&MenGunsToggle)MenGunsToggle->SetIsChecked(false);if(B&&EventText)EventText->SetText(FText::FromString(TEXT("GUNS BLOCKED BY BATTLE PRESET")));return;}
+  bMenGun=B;FString L=TEXT("LOADOUT: FISTS");if(bMenGun)L+=TEXT(" + GUNS");if(bMenSword)L+=TEXT(" + SWORDS");if(MenWeaponText)MenWeaponText->SetText(FText::FromString(L));
+}
+void UTLCBattleHUDWidget::OnMenSwordsToggleChanged(bool B){
+  if(!Simulation||!Simulation->SetWeaponToggle(ETLCTeam::Men,ETLCWeaponType::Sword,B)){if(B&&MenSwordsToggle)MenSwordsToggle->SetIsChecked(false);if(B&&EventText)EventText->SetText(FText::FromString(TEXT("SWORDS BLOCKED BY BATTLE PRESET")));return;}
+  bMenSword=B;FString L=TEXT("LOADOUT: FISTS");if(bMenGun)L+=TEXT(" + GUNS");if(bMenSword)L+=TEXT(" + SWORDS");if(MenWeaponText)MenWeaponText->SetText(FText::FromString(L));
+}
+void UTLCBattleHUDWidget::OnWomenLipstickToggleChanged(bool B){
+  if(!Simulation||!Simulation->SetWeaponToggle(ETLCTeam::Women,ETLCWeaponType::LipstickGun,B)){if(B&&WomenLipstickToggle)WomenLipstickToggle->SetIsChecked(false);if(B&&EventText)EventText->SetText(FText::FromString(TEXT("LIPSTICK GUN BLOCKED BY BATTLE PRESET")));return;}
+  bWomenLipstick=B;FString L=TEXT("LOADOUT: FISTS");if(bWomenLipstick)L+=TEXT(" + LIPSTICK");if(bWomenBomb)L+=TEXT(" + BOMBS");if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(L));
+}
+void UTLCBattleHUDWidget::OnWomenBombToggleChanged(bool B){
+  if(!Simulation||!Simulation->SetWeaponToggle(ETLCTeam::Women,ETLCWeaponType::MakeupBomb,B)){if(B&&WomenBombToggle)WomenBombToggle->SetIsChecked(false);if(B&&EventText)EventText->SetText(FText::FromString(TEXT("MAKEUP BOMB BLOCKED BY BATTLE PRESET")));return;}
+  bWomenBomb=B;FString L=TEXT("LOADOUT: FISTS");if(bWomenLipstick)L+=TEXT(" + LIPSTICK");if(bWomenBomb)L+=TEXT(" + BOMBS");if(WomenWeaponText)WomenWeaponText->SetText(FText::FromString(L));
 }
