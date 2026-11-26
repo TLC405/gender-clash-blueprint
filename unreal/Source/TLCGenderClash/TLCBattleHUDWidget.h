@@ -61,6 +61,7 @@ private:
   UPROPERTY() TObjectPtr<USlider> CameraZoomSlider;
   UPROPERTY() TObjectPtr<USlider> ChaosSlider;
   UPROPERTY() TObjectPtr<UComboBoxString> PresetCombo;
+  UPROPERTY() TObjectPtr<UComboBoxString> CameraModeCombo;
   UPROPERTY() TObjectPtr<UComboBoxString> MenFormationCombo;
   UPROPERTY() TObjectPtr<UComboBoxString> WomenFormationCombo;
   UPROPERTY() TObjectPtr<UCheckBox> MenRageToggle;
@@ -158,6 +159,7 @@ private:
   UFUNCTION() void OnSlowMoChanged(bool bChecked);
   UFUNCTION() void OnCinematicChanged(bool bChecked);
   UFUNCTION() void OnPresetChanged(FString Selected,ESelectInfo::Type Type);
+  UFUNCTION() void OnCameraModeChanged(FString Selected,ESelectInfo::Type Type);
   UFUNCTION() void OnMenFormationChanged(FString Selected,ESelectInfo::Type Type);
   UFUNCTION() void OnWomenFormationChanged(FString Selected,ESelectInfo::Type Type);
 };
