@@ -136,6 +136,7 @@ void UTLCBattleHUDWidget::BuildUI(){
   SlowMoToggle=WidgetTree->ConstructWidget<UCheckBox>();SlowMoToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnSlowMoChanged);UHorizontalBox* SM=WidgetTree->ConstructWidget<UHorizontalBox>();SM->AddChildToHorizontalBox(SlowMoToggle);SM->AddChildToHorizontalBox(MakeLabel(TEXT(" SLOW MOTION"),12,Chalk));Center->AddChildToVerticalBox(SM);
   CinematicToggle=WidgetTree->ConstructWidget<UCheckBox>();CinematicToggle->OnCheckStateChanged.AddDynamic(this,&UTLCBattleHUDWidget::OnCinematicChanged);UHorizontalBox* CF=WidgetTree->ConstructWidget<UHorizontalBox>();CF->AddChildToHorizontalBox(CinematicToggle);CF->AddChildToHorizontalBox(MakeLabel(TEXT(" CINEMATIC FX"),12,Chalk));Center->AddChildToVerticalBox(CF);
   AddSectionLabel(Center,TEXT("TLC COMMANDER"),Gold);
+  CommanderHealthText=MakeLabel(TEXT("HERO: NOT DEPLOYED"),12,Chalk);Center->AddChildToVerticalBox(CommanderHealthText);
   UHorizontalBox* TouchPad=WidgetTree->ConstructWidget<UHorizontalBox>();Center->AddChildToVerticalBox(TouchPad);
   auto AddTouch=[this,TouchPad](const FString& Label){UButton* B=WidgetTree->ConstructWidget<UButton>();UTextBlock* T=MakeLabel(Label,16,Chalk);T->SetJustification(ETextJustify::Center);B->AddChild(T);UHorizontalBoxSlot* S=TouchPad->AddChildToHorizontalBox(B);if(S){FSlateChildSize Fill;Fill.SizeRule=ESlateSizeRule::Fill;S->SetSize(Fill);}return B;};
   UButton* Left=AddTouch(TEXT("◀"));Left->OnPressed.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchLeftPressed);Left->OnReleased.AddDynamic(this,&UTLCBattleHUDWidget::OnTouchLeftReleased);
@@ -166,6 +167,7 @@ void UTLCBattleHUDWidget::RefreshRuntimeText(){
   if(!BattleDirector)return;const auto S=BattleDirector->GetSnapshot();
   if(MenScore)MenScore->SetText(FText::FromString(FString::Printf(TEXT("MEN %d"),S.Men.Alive)));
   if(WomenScore)WomenScore->SetText(FText::FromString(FString::Printf(TEXT("WOMEN %d"),S.Women.Alive)));
+  if(CommanderHealthText){if(Simulation&&Simulation->GetCommander()){ATLCCommanderCharacter* C=Simulation->GetCommander();CommanderHealthText->SetText(FText::FromString(C->IsHeroAlive()?FString::Printf(TEXT("HERO HP %.0f%%"),C->GetHeroHealthNormalized()*100.f):TEXT("HERO DOWN")));}else CommanderHealthText->SetText(FText::FromString(TEXT("HERO: NOT DEPLOYED")));}
   const int32 Sec=FMath::FloorToInt(S.ElapsedSeconds);if(TimerText)TimerText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"),Sec/60,Sec%60)));
 }
 void UTLCBattleHUDWidget::RefreshPendingCountLabels(){if(MenCountText)MenCountText->SetText(FText::FromString(FString::Printf(TEXT("FIGHTERS %d"),PendingMen)));if(WomenCountText)WomenCountText->SetText(FText::FromString(FString::Printf(TEXT("FIGHTERS %d"),PendingWomen)));}
