@@ -4,7 +4,11 @@
     "broadcastArena": {
       "label": "TLC Broadcast Arena",
       "modernWeaponsAllowed": true,
-      "theme": "sports_broadcast"
+      "theme": "sports_broadcast",
+      "defaultCounts": {
+        "men": 50,
+        "women": 50
+      }
     },
     "narrowPass": {
       "label": "Narrow Pass",
@@ -17,7 +21,19 @@
       "specialRules": [
         "chokePoint",
         "staggeredAttackerWaves"
-      ]
+      ],
+      "defaultCounts": {
+        "men": 30,
+        "women": 70
+      },
+      "weapons": [
+        "spear",
+        "fists"
+      ],
+      "arena": {
+        "width": 4200,
+        "height": 1150
+      }
     },
     "northVsSouth": {
       "label": "North vs South",
@@ -30,7 +46,15 @@
         "volleyLines",
         "powderSmoke",
         "periodTerrain"
-      ]
+      ],
+      "defaultCounts": {
+        "men": 50,
+        "women": 50
+      },
+      "arena": {
+        "width": 4200,
+        "height": 2300
+      }
     }
   },
   "compatibilityVersion": 1,
