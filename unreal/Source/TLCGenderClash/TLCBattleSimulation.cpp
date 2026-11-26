@@ -35,14 +35,14 @@ bool ATLCBattleSimulationDirector::BuildBattle(int32 MenCount,int32 WomenCount){
   if(!Valid.bSuccess||!GetWorld())return false;
   bSuppressAutoRebuild=true;
   ResetSimulation();
-  bSuppressAutoRebuild=false;
   BuiltMenCount=MenCount;BuiltWomenCount=WomenCount;
 
   if(BattleDirector){
     if(BattleDirector->GetPhase()!=ETLCBattlePhase::Ready)BattleDirector->ResetBattle();
     const auto Result=BattleDirector->ConfigureBattle(Config);
-    if(!Result.bSuccess)return false;
+    if(!Result.bSuccess){bSuppressAutoRebuild=false;return false;}
   }
+  bSuppressAutoRebuild=false;
 
   SpawnConfiguredFighters();
   return true;
@@ -52,6 +52,7 @@ void ATLCBattleSimulationDirector::StartSimulation(){bRunning=true;if(BattleDire
 void ATLCBattleSimulationDirector::ResetSimulation(){
   bRunning=false;
   ClearEventTimers();
+  UGameplayStatics::SetGlobalTimeDilation(this,1.f);
   if(UFO)UFO->CancelAbduction();
   if(ProjectilePool)ProjectilePool->ResetPool();
   if(Commander){Commander->Destroy();Commander=nullptr;}
@@ -173,6 +174,8 @@ void ATLCBattleSimulationDirector::FireProjectileFrom(const FVector& Origin,cons
 void ATLCBattleSimulationDirector::HandleFighterEliminated(ATLCFighterCharacter* F){
   if(!F)return;
   if(F->CountsTowardNormalTeam()&&BattleDirector)BattleDirector->ReportElimination(F->GetTeam());
+  if(BattleDirector&&F->GetKind()==ETLCFighterKind::Robot)BattleDirector->SetBossAlive(ETLCTeam::Men,false);
+  if(BattleDirector&&F->GetKind()==ETLCFighterKind::Unicorn)BattleDirector->SetBossAlive(ETLCTeam::Women,false);
 }
 
 int32 ATLCBattleSimulationDirector::GetLivingNormalCount(ETLCTeam Team)const{
@@ -184,15 +187,15 @@ ATLCCommanderCharacter* ATLCBattleSimulationDirector::SpawnCommander(){
   if(Commander||!GetWorld())return Commander;
   const FVector Loc=GetActorLocation()+FVector(-ArenaSize.X*.38f,0,110.f);
   Commander=GetWorld()->SpawnActor<ATLCCommanderCharacter>(ATLCCommanderCharacter::StaticClass(),Loc,FRotator::ZeroRotator);
-  if(Commander)Commander->OnAbilityTriggered.AddDynamic(this,&ATLCBattleSimulationDirector::HandleCommanderAbility);
+  if(Commander){Commander->OnAbilityTriggered.AddDynamic(this,&ATLCBattleSimulationDirector::HandleCommanderAbility);if(BattleDirector)BattleDirector->SetHeroAlive(ETLCTeam::Men,true);}
   return Commander;
 }
 
 ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnRobot(){
-  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Men,ETLCFighterKind::Robot,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);if(CameraDirector){FTLCCameraInterest I;I.Location=F->GetActorLocation();I.Score=.82f;I.Reason="RobotSpawn";I.Subject=F;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}return F;
+  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Men,ETLCFighterKind::Robot,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);if(BattleDirector)BattleDirector->SetBossAlive(ETLCTeam::Men,true);if(CameraDirector){FTLCCameraInterest I;I.Location=F->GetActorLocation();I.Score=.82f;I.Reason="RobotSpawn";I.Subject=F;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}return F;
 }
 ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnUnicorn(){
-  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Women,ETLCFighterKind::Unicorn,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);if(CameraDirector){FTLCCameraInterest I;I.Location=F->GetActorLocation();I.Score=.84f;I.Reason="UnicornSpawn";I.Subject=F;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}return F;
+  ATLCFighterCharacter* F=SpawnFighter(ETLCTeam::Women,ETLCFighterKind::Unicorn,0,1);if(F){F->SetCountsTowardNormalTeam(false);F->SetWeapon(ETLCWeaponType::Fists);if(BattleDirector)BattleDirector->SetBossAlive(ETLCTeam::Women,true);if(CameraDirector){FTLCCameraInterest I;I.Location=F->GetActorLocation();I.Score=.84f;I.Reason="UnicornSpawn";I.Subject=F;CameraDirector->SubmitInterest(I);CameraDirector->ResolveCameraFocus();}}return F;
 }
 ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnGiant(ETLCTeam Team){
   const ETLCFighterKind K=Team==ETLCTeam::Women?ETLCFighterKind::FemaleGiant:ETLCFighterKind::MaleGiant;
@@ -289,7 +292,7 @@ int32 ATLCBattleSimulationDirector::SpawnReinforcements(ETLCTeam Team,int32 Requ
   if(!BattleDirector)return 0;
   const int32 Accepted=BattleDirector->AddReinforcements(Team,RequestedCount);
   if(Accepted<=0)return 0;
-  const int32 Existing=GetLivingNormalCount(Team)-Accepted;
+  const int32 Existing=GetLivingNormalCount(Team);
   const int32 NewTotal=Existing+Accepted;
   for(int32 I=0;I<Accepted;++I)SpawnFighter(Team,ETLCFighterKind::Normal,Existing+I,NewTotal);
   RefreshFormationGoals(Team);return Accepted;
