@@ -237,16 +237,24 @@ private:
 };
 
 UCLASS(Blueprintable)
+class USoundBase;
+class UAudioComponent;
+
 class TLCGENDERCLASH_API ATLCAudioDirector : public AActor {
   GENERATED_BODY()
 public:
   UFUNCTION(BlueprintCallable) void SetMusicState(ETLCMusicState State);
   UFUNCTION(BlueprintCallable) void UpdateMix(const FTLCTacticalSnapshot& Snapshot);
   UFUNCTION(BlueprintCallable) void ResetAudioState();
+  UFUNCTION(BlueprintCallable) bool PlayLocalCue(FName CueId);
+  UFUNCTION() void HandleAnnouncerLine(FName EventName,const FString& Line);
   UFUNCTION(BlueprintImplementableEvent) void SetBattlePaused(bool bPaused);
   UFUNCTION(BlueprintImplementableEvent) void ApplyMetaSoundParameters(float Intensity, float MenAdvantage, float WomenAdvantage, bool BossActive, bool FinalTen);
   UFUNCTION(BlueprintImplementableEvent) void TransitionMusicState(ETLCMusicState State);
   UFUNCTION(BlueprintImplementableEvent) void StopBattleAudio();
+  UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="TLC|Audio") TMap<FName,TSoftObjectPtr<USoundBase>> LocalCues;
+  UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="TLC|Audio") TSoftObjectPtr<USoundBase> BattleMusic;
 private:
+  UPROPERTY() TObjectPtr<UAudioComponent> MusicComponent;
   ETLCMusicState CurrentState = ETLCMusicState::PreBattle;
 };
