@@ -133,6 +133,12 @@ class TLCGENDERCLASH_API UTLCBattleRulesLibrary : public UBlueprintFunctionLibra
 public:
   UFUNCTION(BlueprintPure, Category="TLC|Battle")
   static FTLCBattleConfigurationResult ValidateConfiguration(const FTLCBattleConfiguration& Config, int32 PremiumCap = 100);
+  UFUNCTION(BlueprintPure, Category="TLC|Battle")
+  static bool IsLegalPhaseTransition(ETLCBattlePhase From,ETLCBattlePhase To);
+  UFUNCTION(BlueprintPure, Category="TLC|Battle")
+  static int32 AcceptedReinforcementCount(int32 MenAlive,int32 WomenAlive,int32 Requested,int32 PremiumCap=100);
+  UFUNCTION(BlueprintPure, Category="TLC|Battle")
+  static ETLCTeam ResolveEliminationWinner(int32 MenAlive,bool bMenBossAlive,int32 WomenAlive,bool bWomenBossAlive);
 };
 
 UCLASS()
