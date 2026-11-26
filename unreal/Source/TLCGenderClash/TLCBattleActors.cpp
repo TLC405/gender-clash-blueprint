@@ -107,7 +107,8 @@ void ATLCFighterCharacter::ApplyTeamVisuals(){
   TeamMarker->SetTextRenderColor(TeamColor);
 
   const FLinearColor Tint=FLinearColor(TeamColor);
-  for(UStaticMeshComponent* Part:{Torso,Head,LeftArm,RightArm,LeftLeg,RightLeg}){
+  TArray<UStaticMeshComponent*> Parts={Torso,Head,LeftArm,RightArm,LeftLeg,RightLeg};
+  for(UStaticMeshComponent* Part:Parts){
     if(!Part)continue;
     for(int32 I=0;I<Part->GetNumMaterials();++I){
       if(UMaterialInterface* Base=Part->GetMaterial(I)){
@@ -144,7 +145,7 @@ float ATLCFighterCharacter::GetDesiredMoveSpeed()const{
 
 void ATLCFighterCharacter::Tick(float Dt){
   Super::Tick(Dt);
-  if(!bAlive||bAbducting||!Simulation)return;
+  if(!bAlive||bAbducting||!Simulation||!Simulation->IsSimulationRunning())return;
   const float Now=GetWorld()?GetWorld()->GetTimeSeconds():0.f;
   if(RallyEndsAt>0.f&&Now>=RallyEndsAt){RallyEndsAt=-1.f;RallyMultiplier=1.f;}
   if(Now>=NextLocalDecisionAt){
