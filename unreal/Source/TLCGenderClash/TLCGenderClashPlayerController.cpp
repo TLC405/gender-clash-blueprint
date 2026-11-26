@@ -26,8 +26,8 @@ void ATLCGenderClashPlayerController::BeginPlay(){
 void ATLCGenderClashPlayerController::SetupInputComponent(){
   Super::SetupInputComponent();
   InputComponent->BindKey(EKeys::Space,IE_Pressed,this,&ATLCGenderClashPlayerController::StartKey);
-  InputComponent->BindKey(EKeys::P,IE_Pressed,this,&ATLCGenderClashPlayerController::PauseKey);
-  InputComponent->BindKey(EKeys::R,IE_Pressed,this,&ATLCGenderClashPlayerController::ResetKey);
+  FInputKeyBinding& PauseBinding=InputComponent->BindKey(EKeys::P,IE_Pressed,this,&ATLCGenderClashPlayerController::PauseKey);PauseBinding.bExecuteWhenPaused=true;
+  FInputKeyBinding& ResetBinding=InputComponent->BindKey(EKeys::R,IE_Pressed,this,&ATLCGenderClashPlayerController::ResetKey);ResetBinding.bExecuteWhenPaused=true;
   InputComponent->BindAxis(TEXT("CommanderForward"),this,&ATLCGenderClashPlayerController::CommanderForward);
   InputComponent->BindAxis(TEXT("CommanderRight"),this,&ATLCGenderClashPlayerController::CommanderRight);
 }
