@@ -28,10 +28,8 @@ void ATLCGenderClashPlayerController::SetupInputComponent(){
   InputComponent->BindKey(EKeys::Space,IE_Pressed,this,&ATLCGenderClashPlayerController::StartKey);
   InputComponent->BindKey(EKeys::P,IE_Pressed,this,&ATLCGenderClashPlayerController::PauseKey);
   InputComponent->BindKey(EKeys::R,IE_Pressed,this,&ATLCGenderClashPlayerController::ResetKey);
-  InputComponent->BindAxisKey(EKeys::W,this,&ATLCGenderClashPlayerController::CommanderForward);
-  InputComponent->BindAxisKey(EKeys::S,this,&ATLCGenderClashPlayerController::CommanderForward);
-  InputComponent->BindAxisKey(EKeys::D,this,&ATLCGenderClashPlayerController::CommanderRight);
-  InputComponent->BindAxisKey(EKeys::A,this,&ATLCGenderClashPlayerController::CommanderRight);
+  InputComponent->BindAxis(TEXT("CommanderForward"),this,&ATLCGenderClashPlayerController::CommanderForward);
+  InputComponent->BindAxis(TEXT("CommanderRight"),this,&ATLCGenderClashPlayerController::CommanderRight);
 }
 void ATLCGenderClashPlayerController::StartKey(){if(auto* GM=GetWorld()->GetAuthGameMode<ATLCVerticalSliceGameMode>())if(GM->GetSimulation())GM->GetSimulation()->StartSimulation();}
 void ATLCGenderClashPlayerController::PauseKey(){if(auto* GM=GetWorld()->GetAuthGameMode<ATLCVerticalSliceGameMode>())if(GM->GetBattleDirector())GM->GetBattleDirector()->PauseBattle();}
