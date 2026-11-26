@@ -96,6 +96,8 @@ ATLCFighterCharacter* ATLCBattleSimulationDirector::SpawnFighter(ETLCTeam Team,E
   if(Team==ETLCTeam::Women&&Kind==ETLCFighterKind::Normal&&bFuriosaMode)Kind=ETLCFighterKind::Furiosa;
   F->InitializeFighter(Team,NextAgentId++,Kind,Formation,this);
   F->SetRage(Team==ETLCTeam::Men?bMenRage:bWomenRage);
+  F->SetStrengthTuning(Team==ETLCTeam::Men?(.85f+MenStrengthValue*.04f):1.f);
+  F->SetSpeedTuning(Team==ETLCTeam::Women?(.78f+WomenSpeedValue*.04f):1.f);
   F->SetWeapon(Team==ETLCTeam::Men?MenWeapon:WomenWeapon);
   F->SetFormationGoal(Spawn);
   ApplyPresetPalette(F);
@@ -121,6 +123,16 @@ void ATLCBattleSimulationDirector::SetTeamFormation(ETLCTeam Team,ETLCFormation 
 void ATLCBattleSimulationDirector::SetTeamRage(ETLCTeam Team,bool bEnabled){
   if(Team==ETLCTeam::Men)bMenRage=bEnabled;else if(Team==ETLCTeam::Women)bWomenRage=bEnabled;
   for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==Team&&F->CountsTowardNormalTeam())F->SetRage(bEnabled);
+}
+void ATLCBattleSimulationDirector::SetMenStrength(float Value){
+  MenStrengthValue=FMath::Clamp(Value,1.f,10.f);
+  const float Multiplier=.85f+MenStrengthValue*.04f;
+  for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==ETLCTeam::Men&&F->CountsTowardNormalTeam())F->SetStrengthTuning(Multiplier);
+}
+void ATLCBattleSimulationDirector::SetWomenSpeed(float Value){
+  WomenSpeedValue=FMath::Clamp(Value,1.f,10.f);
+  const float Multiplier=.78f+WomenSpeedValue*.04f;
+  for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==ETLCTeam::Women&&F->CountsTowardNormalTeam())F->SetSpeedTuning(Multiplier);
 }
 void ATLCBattleSimulationDirector::SetFuriosaMode(bool bEnabled){
   bFuriosaMode=bEnabled;for(ATLCFighterCharacter* F:Fighters)if(F&&F->GetTeam()==ETLCTeam::Women&&F->CountsTowardNormalTeam())F->SetFuriosaState(bEnabled);
