@@ -171,7 +171,8 @@ float ATLCFighterCharacter::GetDesiredMoveSpeed()const{
   else if(Formation==ETLCFormation::Rush)FormationSpeed=1.22f;
   else if(Formation==ETLCFormation::Circle)FormationSpeed=.90f;
   else if(Formation==ETLCFormation::Columns)FormationSpeed=1.03f;
-  return 420.f*MovementScale*TeamSpeedMultiplier*Rage*RallyMultiplier*FormationSpeed;
+  const float Burst=(Kind==ETLCFighterKind::Unicorn&&SpecialBurstEndsAt>0.f&&GetWorld()&&GetWorld()->GetTimeSeconds()<SpecialBurstEndsAt)?1.85f:1.f;
+  return 420.f*MovementScale*TeamSpeedMultiplier*Rage*RallyMultiplier*FormationSpeed*Burst;
 }
 float ATLCFighterCharacter::GetFormationDamageMultiplier()const{
   if(Formation==ETLCFormation::Wedge)return 1.10f;
@@ -214,6 +215,7 @@ void ATLCFighterCharacter::Tick(float Dt){
     if(bClose)NextCloseDecisionAt=Now+Simulation->GetCloseDecisionInterval(AgentId);
     else NextLocalDecisionAt=Now+Simulation->GetLocalDecisionInterval(AgentId);
   }
+  UpdateSpecialCombat(Now);
   UpdateMovement(Dt);
   UpdateCombat(Now);
 }
@@ -272,6 +274,23 @@ void ATLCFighterCharacter::UpdateMovement(float Dt){
     GetCharacterMovement()->MaxWalkSpeed=GetDesiredMoveSpeed();
     AddMovementInput(Dir.GetSafeNormal(),1.f);
     if(!Dir.IsNearlyZero())SetActorRotation(Dir.Rotation());
+  }
+}
+
+void ATLCFighterCharacter::UpdateSpecialCombat(float Now){
+  if(!Simulation||!bAlive||bAbducting||Now<NextSpecialAt)return;
+  if(Kind==ETLCFighterKind::Robot){
+    if(CurrentTarget&&CurrentTarget->IsBattleAlive()&&FVector::Dist2D(GetActorLocation(),CurrentTarget->GetActorLocation())<=330.f){
+      Simulation->ExecuteBossSpecial(this);NextSpecialAt=Now+5.2f;
+    }
+  }else if(Kind==ETLCFighterKind::Unicorn){
+    if(CurrentTarget&&CurrentTarget->IsBattleAlive()&&FVector::Dist2D(GetActorLocation(),CurrentTarget->GetActorLocation())<=1000.f){
+      SpecialBurstEndsAt=Now+.75f;Simulation->ExecuteBossSpecial(this);NextSpecialAt=Now+4.2f;
+    }
+  }else if(Kind==ETLCFighterKind::MaleGiant||Kind==ETLCFighterKind::FemaleGiant){
+    if(CurrentTarget&&CurrentTarget->IsBattleAlive()&&FVector::Dist2D(GetActorLocation(),CurrentTarget->GetActorLocation())<=380.f){
+      Simulation->ExecuteBossSpecial(this);NextSpecialAt=Now+3.8f;
+    }
   }
 }
 
