@@ -144,6 +144,7 @@ bool ATLCBattleDirector::StartBattle(){
 
 bool ATLCBattleDirector::PauseBattle(){
   if(Phase==ETLCBattlePhase::Active || Phase==ETLCBattlePhase::SuddenDeath){
+    ResumePhaseAfterPause=Phase;
     if(!SetPhase(ETLCBattlePhase::Paused)) return false;
     if(GetWorld()) UGameplayStatics::SetGamePaused(GetWorld(),true);
     OnPauseChanged.Broadcast(true);
@@ -151,8 +152,7 @@ bool ATLCBattleDirector::PauseBattle(){
   }
   if(Phase==ETLCBattlePhase::Paused){
     if(GetWorld()) UGameplayStatics::SetGamePaused(GetWorld(),false);
-    const ETLCBattlePhase ResumePhase = SuddenDeathElapsed>0.f ? ETLCBattlePhase::SuddenDeath : ETLCBattlePhase::Active;
-    if(!SetPhase(ResumePhase)) return false;
+    if(!SetPhase(ResumePhaseAfterPause)) return false;
     OnPauseChanged.Broadcast(false);
     return true;
   }
@@ -174,6 +174,7 @@ bool ATLCBattleDirector::ResetBattle(){
   RecentCasualtyScore=0.f;
   SecondsSinceElimination=0.f;
   SuddenDeathElapsed=0.f;
+  ResumePhaseAfterPause=ETLCBattlePhase::Active;
 
   SetPhase(ETLCBattlePhase::Ready,true);
   OnPauseChanged.Broadcast(false);
