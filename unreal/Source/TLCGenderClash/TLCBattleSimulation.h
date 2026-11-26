@@ -52,6 +52,7 @@ public:
   UFUNCTION(BlueprintPure) int32 GetActiveProjectileCount()const;
   UFUNCTION(BlueprintPure) bool IsSimulationRunning()const{return bRunning;}
   UFUNCTION(BlueprintPure) ETLCBattlePreset GetCurrentPreset()const{return CurrentPreset;}
+  UFUNCTION(BlueprintPure) ATLCCommanderCharacter* GetCommander()const{return Commander;}
   const TArray<ATLCFighterCharacter*>& GetFightersNative()const{return Fighters;}
 
 private:
