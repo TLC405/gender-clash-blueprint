@@ -72,6 +72,8 @@ simple_secret=re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*['\"][A-Za-z0
 for path in REPO.rglob("*"):
     if not path.is_file() or ".git" in path.parts:
         continue
+    if path.resolve() == pathlib.Path(__file__).resolve():
+        continue
     if path.stat().st_size > 2_000_000:
         continue
     try: text=path.read_text(errors="ignore")
