@@ -73,6 +73,9 @@ ATLCFighterCharacter::ATLCFighterCharacter(){
   RightLeg->SetRelativeScale3D(FVector(.14f,.14f,.65f));
   RightLeg->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+  Hair=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Hair"));
+  Hair->SetupAttachment(GetRootComponent());Hair->SetStaticMesh(LoadSphere());Hair->SetRelativeLocation(FVector(0,0,150));Hair->SetRelativeScale3D(FVector(.31f,.31f,.16f));Hair->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
   TeamMarker=CreateDefaultSubobject<UTextRenderComponent>(TEXT("TeamMarker"));
   TeamMarker->SetupAttachment(GetRootComponent());
   TeamMarker->SetRelativeLocation(FVector(0,0,178));
@@ -94,6 +97,8 @@ void ATLCFighterCharacter::InitializeFighter(ETLCTeam InTeam,int32 InAgentId,ETL
 
 void ATLCFighterCharacter::ConfigureKind(){
   MaxHealth=100.f;DamageScale=1.f;MovementScale=1.f;SetActorScale3D(FVector::OneVector);
+  if(Team==ETLCTeam::Men&&Kind==ETLCFighterKind::Normal)SetActorScale3D(FVector(1.06f,1.08f,1.12f));
+  if(Team==ETLCTeam::Women&&Kind==ETLCFighterKind::Normal)SetActorScale3D(FVector(.98f,.96f,1.0f));
   if(Kind==ETLCFighterKind::Furiosa){MaxHealth=145.f;DamageScale=1.18f;MovementScale=1.04f;SetActorScale3D(FVector(1.12f));}
   if(Kind==ETLCFighterKind::Robot){MaxHealth=720.f;DamageScale=2.0f;MovementScale=.72f;SetActorScale3D(FVector(1.75f));}
   if(Kind==ETLCFighterKind::Unicorn){MaxHealth=560.f;DamageScale=1.65f;MovementScale=1.30f;SetActorScale3D(FVector(1.55f));}
@@ -102,11 +107,13 @@ void ATLCFighterCharacter::ConfigureKind(){
 }
 
 void ATLCFighterCharacter::ApplyTeamVisuals(){
-  const FColor TeamColor=Team==ETLCTeam::Men?FColor(40,115,255):Team==ETLCTeam::Women?FColor(235,55,115):FColor::White;
+  const FLinearColor DefaultBody=Team==ETLCTeam::Men?FLinearColor(.05f,.24f,.82f,1.f):Team==ETLCTeam::Women?FLinearColor(.82f,.04f,.24f,1.f):FLinearColor(.75f,.70f,.22f,1.f);
+  const FLinearColor DefaultMarker=Team==ETLCTeam::Men?FLinearColor(.20f,.55f,1.f,1.f):Team==ETLCTeam::Women?FLinearColor(1.f,.30f,.48f,1.f):FLinearColor(1.f,.82f,.18f,1.f);
+  const FLinearColor Tint=BodyTintOverride.A>0.f?BodyTintOverride:DefaultBody;
+  const FLinearColor Marker=MarkerTintOverride.A>0.f?MarkerTintOverride:DefaultMarker;
   TeamMarker->SetText(Team==ETLCTeam::Men?FText::FromString(TEXT("M")):Team==ETLCTeam::Women?FText::FromString(TEXT("W")):FText::FromString(TEXT("!")));
-  TeamMarker->SetTextRenderColor(TeamColor);
+  TeamMarker->SetTextRenderColor(Marker.ToFColor(true));
 
-  const FLinearColor Tint=FLinearColor(TeamColor);
   TArray<UStaticMeshComponent*> Parts={Torso,Head,LeftArm,RightArm,LeftLeg,RightLeg};
   for(UStaticMeshComponent* Part:Parts){
     if(!Part)continue;
@@ -118,9 +125,15 @@ void ATLCFighterCharacter::ApplyTeamVisuals(){
       }
     }
   }
-  if(Kind==ETLCFighterKind::FemaleGiant||Kind==ETLCFighterKind::Furiosa){
-    Head->SetRelativeScale3D(FVector(.34f,.34f,.30f));
+  if(Hair){
+    const bool bFemaleHair=(Team==ETLCTeam::Women&&Kind!=ETLCFighterKind::Furiosa);
+    Hair->SetVisibility(bFemaleHair);
+    if(bFemaleHair){
+      for(int32 I=0;I<Hair->GetNumMaterials();++I)if(UMaterialInterface* Base=Hair->GetMaterial(I)){UMaterialInstanceDynamic* Dyn=UMaterialInstanceDynamic::Create(Base,this);Dyn->SetVectorParameterValue(TEXT("Color"),FLinearColor(1.f,.72f,.16f,1.f));Hair->SetMaterial(I,Dyn);}
+      Hair->SetRelativeScale3D(Kind==ETLCFighterKind::FemaleGiant?FVector(.38f,.38f,.22f):FVector(.31f,.31f,.16f));
+    }
   }
+  if(Kind==ETLCFighterKind::FemaleGiant||Kind==ETLCFighterKind::Furiosa)Head->SetRelativeScale3D(FVector(.34f,.34f,.30f));
 }
 
 void ATLCFighterCharacter::ResetForBattle(){
@@ -137,6 +150,8 @@ void ATLCFighterCharacter::SetFuriosaState(bool bEnabled){
   Kind=bEnabled?ETLCFighterKind::Furiosa:ETLCFighterKind::Normal;ConfigureKind();ApplyTeamVisuals();
 }
 void ATLCFighterCharacter::SetMaxHealth(float NewMaxHealth){MaxHealth=FMath::Max(1.f,NewMaxHealth);Health=FMath::Min(Health,MaxHealth);}
+void ATLCFighterCharacter::Heal(float Amount){if(bAlive&&!bAbducting)Health=FMath::Clamp(Health+FMath::Max(0.f,Amount),0.f,MaxHealth);}
+void ATLCFighterCharacter::SetVisualPalette(const FLinearColor& BodyColor,const FLinearColor& MarkerColor){BodyTintOverride=BodyColor;MarkerTintOverride=MarkerColor;ApplyTeamVisuals();}
 void ATLCFighterCharacter::ApplyRallyBuff(float Multiplier,float DurationSeconds){
   RallyMultiplier=FMath::Max(1.f,Multiplier);
   RallyEndsAt=(GetWorld()?GetWorld()->GetTimeSeconds():0.f)+FMath::Max(0.f,DurationSeconds);
