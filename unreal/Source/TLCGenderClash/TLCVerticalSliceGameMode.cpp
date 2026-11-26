@@ -3,8 +3,9 @@
 #include "TLCBattleSimulation.h"
 #include "TLCArcadeRuntime.h"
 #include "TLCProceduralArena.h"
+#include "TLCGenderClashPlayerController.h"
 
-ATLCVerticalSliceGameMode::ATLCVerticalSliceGameMode(){PrimaryActorTick.bCanEverTick=false;}
+ATLCVerticalSliceGameMode::ATLCVerticalSliceGameMode(){PrimaryActorTick.bCanEverTick=false;PlayerControllerClass=ATLCGenderClashPlayerController::StaticClass();}
 
 void ATLCVerticalSliceGameMode::BeginPlay(){
   Super::BeginPlay();
