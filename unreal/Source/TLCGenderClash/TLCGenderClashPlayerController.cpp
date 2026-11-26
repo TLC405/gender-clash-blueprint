@@ -19,6 +19,7 @@ void ATLCGenderClashPlayerController::BeginPlay(){
     if(BattleHUD){
       BattleHUD->AddToViewport(10);
       BattleHUD->BindRuntime(GM->GetBattleDirector(),GM->GetSimulation(),GM->GetSpecialEventDirector(),SpectatorCamera);
+      BattleHUD->BindAnnouncer(Cast<ATLCAnnouncerDirector>(UGameplayStatics::GetActorOfClass(this,ATLCAnnouncerDirector::StaticClass())));
     }
   }
 }
