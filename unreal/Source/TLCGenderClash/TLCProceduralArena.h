@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TLCBattleSystems.h"
 #include "TLCProceduralArena.generated.h"
 
 class UStaticMeshComponent;
@@ -15,6 +16,7 @@ public:
 
   UPROPERTY(EditAnywhere,BlueprintReadWrite) FVector2D ArenaSize=FVector2D(4200.f,2300.f);
   UFUNCTION(BlueprintCallable) void BuildArena();
+  UFUNCTION(BlueprintCallable) void ApplyPreset(ETLCBattlePreset Preset);
 
 private:
   UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> GeneratedPieces;
