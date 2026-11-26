@@ -1,4 +1,7 @@
 #include "TLCArcadeRuntime.h"
+#include "TLCCommanderCharacter.h"
+#include "TLCAIIntegrationGatewaySubsystem.h"
+#include "Kismet/GameplayStatics.h"
 
 ATLCWeaponDirector::ATLCWeaponDirector(){
   PrimaryActorTick.bCanEverTick=false;
@@ -44,4 +47,58 @@ float ATLCPerformanceLODManager::ComputeQualityPressure(float Ms,int32 Fighters,
   const float FighterPressure=FMath::Clamp((Fighters-75.f)/25.f,0.f,1.f);
   const float ProjectilePressure=FMath::Clamp((Projectiles-100.f)/60.f,0.f,1.f);
   return FMath::Clamp(FramePressure*.55f+FighterPressure*.25f+ProjectilePressure*.20f,0.f,1.f);
+}
+
+
+ATLCBattleRuntimeCoordinator::ATLCBattleRuntimeCoordinator(){
+  PrimaryActorTick.bCanEverTick=false;
+}
+
+void ATLCBattleRuntimeCoordinator::BeginPlay(){
+  Super::BeginPlay();
+  RebindRuntimeSystems();
+}
+
+void ATLCBattleRuntimeCoordinator::RebindRuntimeSystems(){
+  if(BattleDirector){
+    BattleDirector->OnResetRequested.RemoveDynamic(this,&ATLCBattleRuntimeCoordinator::HandleResetRequested);
+    BattleDirector->OnPauseChanged.RemoveDynamic(this,&ATLCBattleRuntimeCoordinator::HandlePauseChanged);
+    BattleDirector->OnPhaseChanged.RemoveDynamic(this,&ATLCBattleRuntimeCoordinator::HandlePhaseChanged);
+  }
+
+  BattleDirector=Cast<ATLCBattleDirector>(UGameplayStatics::GetActorOfClass(GetWorld(),ATLCBattleDirector::StaticClass()));
+  SpecialEventDirector=Cast<ATLCSpecialEventDirector>(UGameplayStatics::GetActorOfClass(GetWorld(),ATLCSpecialEventDirector::StaticClass()));
+  AudioDirector=Cast<ATLCAudioDirector>(UGameplayStatics::GetActorOfClass(GetWorld(),ATLCAudioDirector::StaticClass()));
+  CameraDirector=Cast<ATLCCameraDirector>(UGameplayStatics::GetActorOfClass(GetWorld(),ATLCCameraDirector::StaticClass()));
+  AnnouncerDirector=Cast<ATLCAnnouncerDirector>(UGameplayStatics::GetActorOfClass(GetWorld(),ATLCAnnouncerDirector::StaticClass()));
+  Commander=Cast<ATLCCommanderCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(),ATLCCommanderCharacter::StaticClass()));
+  Gateway=GetGameInstance()?GetGameInstance()->GetSubsystem<UTLCAIIntegrationGatewaySubsystem>():nullptr;
+
+  if(BattleDirector){
+    BattleDirector->OnResetRequested.AddDynamic(this,&ATLCBattleRuntimeCoordinator::HandleResetRequested);
+    BattleDirector->OnPauseChanged.AddDynamic(this,&ATLCBattleRuntimeCoordinator::HandlePauseChanged);
+    BattleDirector->OnPhaseChanged.AddDynamic(this,&ATLCBattleRuntimeCoordinator::HandlePhaseChanged);
+    if(Gateway)Gateway->SetBattleContext(BattleDirector->GetMatchId(),BattleDirector->GetBattleGeneration());
+  }
+}
+
+void ATLCBattleRuntimeCoordinator::HandleResetRequested(){
+  if(SpecialEventDirector)SpecialEventDirector->ResetEventState();
+  if(AudioDirector)AudioDirector->ResetAudioState();
+  if(CameraDirector)CameraDirector->ClearInterests();
+  if(AnnouncerDirector)AnnouncerDirector->ResetAnnouncer();
+  if(Commander)Commander->ResetAbilityCooldowns();
+  if(Gateway)Gateway->CancelPendingRequests();
+  ResetPoolsAndPresentation();
+}
+
+void ATLCBattleRuntimeCoordinator::HandlePauseChanged(bool bPaused){
+  if(AudioDirector)AudioDirector->SetBattlePaused(bPaused);
+}
+
+void ATLCBattleRuntimeCoordinator::HandlePhaseChanged(ETLCBattlePhase NewPhase){
+  if(!BattleDirector||!Gateway)return;
+  if(NewPhase==ETLCBattlePhase::Active||NewPhase==ETLCBattlePhase::SuddenDeath||NewPhase==ETLCBattlePhase::Ready){
+    Gateway->SetBattleContext(BattleDirector->GetMatchId(),BattleDirector->GetBattleGeneration());
+  }
 }
