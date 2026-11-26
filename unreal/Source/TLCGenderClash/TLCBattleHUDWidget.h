@@ -18,6 +18,7 @@ class ATLCBattleDirector;
 class ATLCBattleSimulationDirector;
 class ATLCSpecialEventDirector;
 class ATLCSpectatorCameraActor;
+class ATLCAnnouncerDirector;
 
 UCLASS()
 class TLCGENDERCLASH_API UTLCBattleHUDWidget : public UUserWidget {
@@ -26,6 +27,7 @@ public:
   virtual void NativeConstruct() override;
   virtual void NativeTick(const FGeometry& MyGeometry,float InDeltaTime) override;
 
+  UFUNCTION(BlueprintCallable) void BindAnnouncer(ATLCAnnouncerDirector* InAnnouncer);
   UFUNCTION(BlueprintCallable) void BindRuntime(
     ATLCBattleDirector* InBattleDirector,
     ATLCBattleSimulationDirector* InSimulation,
@@ -37,6 +39,7 @@ private:
   UPROPERTY() TObjectPtr<ATLCBattleSimulationDirector> Simulation;
   UPROPERTY() TObjectPtr<ATLCSpecialEventDirector> EventDirector;
   UPROPERTY() TObjectPtr<ATLCSpectatorCameraActor> SpectatorCamera;
+  UPROPERTY() TObjectPtr<ATLCAnnouncerDirector> AnnouncerDirector;
 
   UPROPERTY() TObjectPtr<UCanvasPanel> RootCanvas;
   UPROPERTY() TObjectPtr<UTextBlock> MenScore;
@@ -100,6 +103,7 @@ private:
   UFUNCTION() void HandlePhaseChanged(ETLCBattlePhase Phase);
   UFUNCTION() void HandleBattleFinished(ETLCTeam Winner,FName Reason);
   UFUNCTION() void HandleSpecialEvent(ETLCSpecialEvent EventType);
+  UFUNCTION() void HandleAnnouncerLine(FName EventName,const FString& Line);
 
   UFUNCTION() void OnStart();
   UFUNCTION() void OnPause();
